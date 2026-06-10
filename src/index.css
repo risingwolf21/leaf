@@ -54,7 +54,7 @@
 @layer components {
   /* Rendered markdown preview styling */
   .markdown-preview {
-    @apply font-serif text-foreground;
+    @apply font-serif text-foreground text-[17px];
     line-height: 1.75;
   }
 
@@ -63,21 +63,21 @@
   }
 
   .markdown-preview h1 {
-    @apply text-3xl font-bold mt-8 mb-2;
+    @apply text-3xl font-bold font-sans mt-8 mb-2;
   }
 
   .markdown-preview h2 {
-    @apply text-2xl font-bold mt-8 mb-2;
+    @apply text-2xl font-bold font-sans mt-8 mb-2;
   }
 
   .markdown-preview h3 {
-    @apply text-xl font-bold mt-6 mb-2;
+    @apply text-xl font-bold font-sans mt-6 mb-2;
   }
 
   .markdown-preview h4,
   .markdown-preview h5,
   .markdown-preview h6 {
-    @apply text-lg font-bold mt-6 mb-2;
+    @apply text-lg font-bold font-sans mt-6 mb-2;
   }
 
   .markdown-preview p {
@@ -131,5 +131,35 @@
   .markdown-preview th,
   .markdown-preview td {
     @apply border border-border px-3 py-1.5 text-left;
+  }
+
+  /* TipTap placeholder text */
+  .markdown-preview p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    @apply text-muted-foreground;
+    pointer-events: none;
+  }
+
+  /* Task list checkboxes */
+  .markdown-preview ul[data-type='taskList'] {
+    @apply list-none pl-0;
+  }
+
+  .markdown-preview ul[data-type='taskList'] li {
+    @apply flex items-start gap-2;
+  }
+
+  .markdown-preview ul[data-type='taskList'] li > label {
+    @apply mt-1 select-none;
+  }
+
+  .markdown-preview ul[data-type='taskList'] li > div {
+    @apply flex-1;
+  }
+
+  .markdown-preview ul[data-type='taskList'] li[data-checked='true'] > div {
+    @apply text-muted-foreground line-through;
   }
 }
