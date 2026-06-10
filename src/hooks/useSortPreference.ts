@@ -1,0 +1,32 @@
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import type { SortBy } from '@/hooks/useNotes'
+
+const DEFAULT_SORT: SortBy = 'updated_at'
+const VALID_SORTS: SortBy[] = ['updated_at', 'created_at', 'title_asc', 'title_desc']
+
+function storageKey(userId: string) {
+  return `leaf-sort-${userId}`
+}
+
+/** Persists the note list sort preference to localStorage, scoped per user. */
+export function useSortPreference() {
+  const { user } = useAuth()
+  const [sortBy, setSortByState] = useState<SortBy>(DEFAULT_SORT)
+
+  useEffect(() => {
+    if (!user) return
+
+    const stored = localStorage.getItem(storageKey(user.id))
+    if (stored && (VALID_SORTS as string[]).includes(stored)) {
+      setSortByState(stored as SortBy)
+    }
+  }, [user])
+
+  const setSortBy = (next: SortBy) => {
+    setSortByState(next)
+    if (user) localStorage.setItem(storageKey(user.id), next)
+  }
+
+  return [sortBy, setSortBy] as const
+}

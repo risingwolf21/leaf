@@ -6,12 +6,14 @@ import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { TrashView } from '@/components/TrashView'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
+import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
 import type { Note, ViewMode } from '@/types'
 
 type MobileView = 'list' | 'editor'
 
 export default function AppPage() {
+  const [sortBy, setSortBy] = useSortPreference()
   const {
     notes,
     trashedNotes,
@@ -22,9 +24,10 @@ export default function AppPage() {
     restoreNote,
     permanentlyDeleteNote,
     emptyTrash,
+    togglePin,
     savingIds,
     refetch,
-  } = useNotes()
+  } = useNotes(sortBy)
   const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [showTrash, setShowTrash] = useState(false)
@@ -116,6 +119,8 @@ export default function AppPage() {
           trashCount={trashedNotes.length}
           showTrash={showTrash}
           currentFolderId={currentFolderId}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
           onNavigateFolder={setCurrentFolderId}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
@@ -125,6 +130,7 @@ export default function AppPage() {
           onDeleteFolder={handleDeleteFolder}
           onMoveNote={handleMoveNote}
           onSelectTrash={handleSelectTrash}
+          onTogglePin={togglePin}
         />
       </aside>
 
