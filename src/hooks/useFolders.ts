@@ -34,12 +34,12 @@ export function useFolders() {
   }, [user])
 
   const createFolder = useCallback(
-    async (name: string): Promise<Folder | null> => {
+    async (name: string, parentId: string | null = null): Promise<Folder | null> => {
       if (!user) return null
 
       const { data, error } = await supabase
         .from('folders')
-        .insert({ user_id: user.id, name })
+        .insert({ user_id: user.id, name, parent_id: parentId })
         .select()
         .single()
 
@@ -59,11 +59,25 @@ export function useFolders() {
     await supabase.from('folders').update({ name }).eq('id', id)
   }, [])
 
-  const deleteFolder = useCallback(async (id: string) => {
-    await supabase.from('notes').update({ folder_id: null }).eq('folder_id', id)
-    setFolders((prev) => prev.filter((folder) => folder.id !== id))
-    await supabase.from('folders').delete().eq('id', id)
-  }, [])
+  const deleteFolder = useCallback(
+    async (id: string) => {
+      // Deleting a folder cascades to its subfolders in the database, and notes
+      // in any of those folders are set back to Unfiled. Mirror that locally so
+      // the UI doesn't keep showing now-deleted descendant folders.
+      const idsToRemove = new Set<string>()
+      const collect = (folderId: string) => {
+        idsToRemove.add(folderId)
+        for (const folder of folders) {
+          if (folder.parent_id === folderId) collect(folder.id)
+        }
+      }
+      collect(id)
+
+      setFolders((prev) => prev.filter((folder) => !idsToRemove.has(folder.id)))
+      await supabase.from('folders').delete().eq('id', id)
+    },
+    [folders]
+  )
 
   const moveNote = useCallback(async (noteId: string, folderId: string | null) => {
     await supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)

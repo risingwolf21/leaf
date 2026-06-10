@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Folder,
   FolderInput,
@@ -26,8 +26,6 @@ import {
 import { cn } from '@/lib/utils'
 import type { Folder as FolderType, Note } from '@/types'
 
-const UNFILED_ID = 'unfiled'
-
 interface NoteListProps {
   notes: Note[]
   folders: FolderType[]
@@ -35,6 +33,8 @@ interface NoteListProps {
   activeNoteId: string | null
   trashCount: number
   showTrash: boolean
+  currentFolderId: string | null
+  onNavigateFolder: (folderId: string | null) => void
   onSelectNote: (note: Note) => void
   onCreateNote: () => void
   onDeleteNote: (id: string) => void
@@ -56,6 +56,20 @@ function getSubtitle(content: string) {
   return line.replace(/^#{1,6}\s+/, '').replace(/[*_`>~]/g, '')
 }
 
+/** Flattens the folder tree into a depth-first list with depth, for the "Move to folder" menu. */
+function flattenFolders(
+  folders: FolderType[],
+  parentId: string | null = null,
+  depth = 0
+): { folder: FolderType; depth: number }[] {
+  return folders
+    .filter((folder) => folder.parent_id === parentId)
+    .flatMap((folder) => [
+      { folder, depth },
+      ...flattenFolders(folders, folder.id, depth + 1),
+    ])
+}
+
 export function NoteList({
   notes,
   folders,
@@ -63,6 +77,8 @@ export function NoteList({
   activeNoteId,
   trashCount,
   showTrash,
+  currentFolderId,
+  onNavigateFolder,
   onSelectNote,
   onCreateNote,
   onDeleteNote,
@@ -72,7 +88,6 @@ export function NoteList({
   onMoveNote,
   onSelectTrash,
 }: NoteListProps) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const renameInputRef = useRef<HTMLInputElement>(null)
@@ -84,33 +99,21 @@ export function NoteList({
     }
   }, [renamingId])
 
-  const notesByFolder = useMemo(() => {
-    const map = new Map<string | null, Note[]>()
-    for (const note of notes) {
-      const key = note.folder_id
-      const list = map.get(key)
-      if (list) list.push(note)
-      else map.set(key, [note])
-    }
-    return map
-  }, [notes])
+  const currentFolder = folders.find((folder) => folder.id === currentFolderId) ?? null
 
-  const toggleCollapsed = (id: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  const subfolders = useMemo(
+    () => folders.filter((folder) => folder.parent_id === currentFolderId),
+    [folders, currentFolderId]
+  )
+
+  const currentNotes = useMemo(
+    () => notes.filter((note) => note.folder_id === currentFolderId),
+    [notes, currentFolderId]
+  )
+
+  const moveTargets = useMemo(() => flattenFolders(folders), [folders])
 
   const startRename = (id: string, currentName: string) => {
-    setCollapsed((prev) => {
-      if (!prev.has(id)) return prev
-      const next = new Set(prev)
-      next.delete(id)
-      return next
-    })
     setRenamingId(id)
     setRenameValue(currentName)
   }
@@ -132,7 +135,7 @@ export function NoteList({
         type="button"
         onClick={() => onSelectNote(note)}
         className={cn(
-          'w-full border-b border-border px-4 py-3 pl-9 text-left transition-colors hover:bg-accent',
+          'w-full border-b border-border px-4 py-3 text-left transition-colors hover:bg-accent',
           activeNoteId === note.id && 'bg-accent'
         )}
       >
@@ -167,12 +170,13 @@ export function NoteList({
               >
                 Unfiled
               </DropdownMenuItem>
-              {folders.length > 0 && <DropdownMenuSeparator />}
-              {folders.map((folder) => (
+              {moveTargets.length > 0 && <DropdownMenuSeparator />}
+              {moveTargets.map(({ folder, depth }) => (
                 <DropdownMenuItem
                   key={folder.id}
                   disabled={note.folder_id === folder.id}
                   onClick={() => onMoveNote(note.id, folder.id)}
+                  style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
                 >
                   {folder.name}
                 </DropdownMenuItem>
@@ -195,29 +199,18 @@ export function NoteList({
     </li>
   )
 
-  const renderSection = (
-    id: string,
-    name: string,
-    sectionNotes: Note[],
-    folder?: FolderType
-  ) => {
-    const isCollapsed = collapsed.has(id)
-    const isRenaming = renamingId === id
+  const renderFolder = (folder: FolderType) => {
+    const isRenaming = renamingId === folder.id
 
     return (
-      <li key={id}>
+      <li key={folder.id} className="group/folder">
         <div
           className={cn(
-            'group/folder flex w-full items-center gap-2 border-b border-border px-2 py-2 text-left transition-colors',
+            'flex w-full items-center gap-2 border-b border-border px-4 py-3 text-left transition-colors',
             !isRenaming && 'cursor-pointer hover:bg-accent'
           )}
-          onClick={() => !isRenaming && toggleCollapsed(id)}
+          onClick={() => !isRenaming && onNavigateFolder(folder.id)}
         >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
           <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
           {isRenaming ? (
             <input
@@ -225,33 +218,26 @@ export function NoteList({
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              onBlur={() => commitRename(id)}
+              onBlur={() => commitRename(folder.id)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') commitRename(id)
+                if (e.key === 'Enter') commitRename(folder.id)
                 if (e.key === 'Escape') setRenamingId(null)
               }}
               className="min-w-0 flex-1 rounded border border-input bg-background px-1 py-0.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           ) : (
-            <span
-              className="min-w-0 flex-1 truncate text-sm font-medium text-foreground"
-              onDoubleClick={(e) => {
-                if (!folder) return
-                e.stopPropagation()
-                startRename(folder.id, folder.name)
-              }}
-            >
-              {name}
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+              {folder.name}
             </span>
           )}
-          {folder && !isRenaming && (
+          {!isRenaming && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   aria-label="Folder actions"
                   onClick={(e) => e.stopPropagation()}
-                  className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover/folder:opacity-100 max-md:opacity-100"
+                  className="shrink-0 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover/folder:opacity-100 max-md:opacity-100"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -272,7 +258,7 @@ export function NoteList({
                     e.stopPropagation()
                     if (
                       window.confirm(
-                        `Delete "${folder.name}"? Notes inside will become Unfiled.`
+                        `Delete "${folder.name}"? Subfolders will also be deleted, and all notes inside will become Unfiled.`
                       )
                     ) {
                       onDeleteFolder(folder.id)
@@ -285,16 +271,27 @@ export function NoteList({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          {!isRenaming && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
         </div>
-        {!isCollapsed && (
-          <ul className="flex flex-col">{sectionNotes.map(renderNote)}</ul>
-        )}
       </li>
     )
   }
 
+  const isEmpty = subfolders.length === 0 && currentNotes.length === 0
+
   return (
     <div className="flex h-full flex-col">
+      {currentFolder && (
+        <button
+          type="button"
+          onClick={() => onNavigateFolder(currentFolder.parent_id)}
+          className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
+        >
+          <ChevronLeft className="h-4 w-4 shrink-0" />
+          <span className="truncate">{currentFolder.name}</span>
+        </button>
+      )}
+
       <div className="flex gap-2 border-b border-border p-3">
         <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
           <Plus className="h-4 w-4" />
@@ -309,16 +306,16 @@ export function NoteList({
       <ScrollArea className="flex-1">
         {loading ? (
           <p className="p-4 text-sm text-muted-foreground">Loading notes…</p>
-        ) : notes.length === 0 && folders.length === 0 ? (
+        ) : isEmpty ? (
           <p className="p-4 text-sm text-muted-foreground">
-            No notes yet. Create your first note to get started.
+            {currentFolder
+              ? 'This folder is empty.'
+              : 'No notes yet. Create your first note to get started.'}
           </p>
         ) : (
           <ul className="flex flex-col">
-            {folders.map((folder) =>
-              renderSection(folder.id, folder.name, notesByFolder.get(folder.id) ?? [], folder)
-            )}
-            {renderSection(UNFILED_ID, 'Unfiled', notesByFolder.get(null) ?? [])}
+            {subfolders.map(renderFolder)}
+            {currentNotes.map(renderNote)}
           </ul>
         )}
       </ScrollArea>
