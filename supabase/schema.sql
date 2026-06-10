@@ -20,6 +20,7 @@ create table public.notes (
   title       text not null default 'Untitled',
   content     text not null default '',
   folder_id   uuid references public.folders(id) on delete set null,
+  deleted_at  timestamptz default null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );

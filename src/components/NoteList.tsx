@@ -10,6 +10,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -32,6 +33,8 @@ interface NoteListProps {
   folders: FolderType[]
   loading: boolean
   activeNoteId: string | null
+  trashCount: number
+  showTrash: boolean
   onSelectNote: (note: Note) => void
   onCreateNote: () => void
   onDeleteNote: (id: string) => void
@@ -39,6 +42,7 @@ interface NoteListProps {
   onRenameFolder: (id: string, name: string) => void
   onDeleteFolder: (id: string) => void
   onMoveNote: (noteId: string, folderId: string | null) => void
+  onSelectTrash: () => void
 }
 
 function getSubtitle(content: string) {
@@ -57,6 +61,8 @@ export function NoteList({
   folders,
   loading,
   activeNoteId,
+  trashCount,
+  showTrash,
   onSelectNote,
   onCreateNote,
   onDeleteNote,
@@ -64,6 +70,7 @@ export function NoteList({
   onRenameFolder,
   onDeleteFolder,
   onMoveNote,
+  onSelectTrash,
 }: NoteListProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -315,6 +322,19 @@ export function NoteList({
           </ul>
         )}
       </ScrollArea>
+
+      <button
+        type="button"
+        onClick={onSelectTrash}
+        className={cn(
+          'flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
+          showTrash ? 'bg-accent text-foreground' : 'text-muted-foreground'
+        )}
+      >
+        <Trash2 className="h-4 w-4" />
+        <span className="flex-1">Trash</span>
+        {trashCount > 0 && <Badge variant="secondary">{trashCount}</Badge>}
+      </button>
     </div>
   )
 }
