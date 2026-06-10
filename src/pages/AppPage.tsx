@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
+import { TrashView } from '@/components/TrashView'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { cn } from '@/lib/utils'
@@ -10,15 +11,35 @@ import type { Note } from '@/types'
 type MobileView = 'list' | 'editor'
 
 export default function AppPage() {
-  const { notes, loading, createNote, updateNote, deleteNote, savingIds, refetch } = useNotes()
+  const {
+    notes,
+    trashedNotes,
+    loading,
+    createNote,
+    updateNote,
+    deleteNote,
+    restoreNote,
+    permanentlyDeleteNote,
+    emptyTrash,
+    savingIds,
+    refetch,
+  } = useNotes()
   const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
+  const [showTrash, setShowTrash] = useState(false)
   const [mobileView, setMobileView] = useState<MobileView>('list')
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
 
   const handleSelectNote = (note: Note) => {
     setActiveNoteId(note.id)
+    setShowTrash(false)
+    setMobileView('editor')
+  }
+
+  const handleSelectTrash = () => {
+    setActiveNoteId(null)
+    setShowTrash(true)
     setMobileView('editor')
   }
 
@@ -26,6 +47,7 @@ export default function AppPage() {
     const note = await createNote()
     if (note) {
       setActiveNoteId(note.id)
+      setShowTrash(false)
       setMobileView('editor')
     }
   }
@@ -63,6 +85,8 @@ export default function AppPage() {
           folders={folders}
           loading={loading}
           activeNoteId={activeNoteId}
+          trashCount={trashedNotes.length}
+          showTrash={showTrash}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}
@@ -70,6 +94,7 @@ export default function AppPage() {
           onRenameFolder={renameFolder}
           onDeleteFolder={handleDeleteFolder}
           onMoveNote={handleMoveNote}
+          onSelectTrash={handleSelectTrash}
         />
       </aside>
 
@@ -79,7 +104,14 @@ export default function AppPage() {
           mobileView === 'list' ? 'hidden md:block' : 'block'
         )}
       >
-        {activeNote ? (
+        {showTrash ? (
+          <TrashView
+            notes={trashedNotes}
+            onRestore={restoreNote}
+            onPermanentlyDelete={permanentlyDeleteNote}
+            onEmptyTrash={emptyTrash}
+          />
+        ) : activeNote ? (
           <NoteEditor
             note={activeNote}
             isSaving={savingIds.has(activeNote.id)}

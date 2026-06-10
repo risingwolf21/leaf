@@ -4,6 +4,7 @@ export interface Note {
   title: string
   content: string
   folder_id: string | null
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }

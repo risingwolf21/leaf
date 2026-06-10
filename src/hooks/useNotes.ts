@@ -13,9 +13,17 @@ function sortByUpdatedAtDesc(notes: Note[]) {
   )
 }
 
+function sortByDeletedAtDesc(notes: Note[]) {
+  return [...notes].sort(
+    (a, b) =>
+      new Date(b.deleted_at ?? 0).getTime() - new Date(a.deleted_at ?? 0).getTime()
+  )
+}
+
 export function useNotes() {
   const { user } = useAuth()
   const [notes, setNotes] = useState<Note[]>([])
+  const [trashedNotes, setTrashedNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
@@ -29,14 +37,31 @@ export function useNotes() {
     const { data, error } = await supabase
       .from('notes')
       .select('*')
+      .is('deleted_at', null)
       .order('updated_at', { ascending: false })
 
     if (!error && data) setNotes(data as Note[])
   }, [user])
 
+  const fetchTrashedNotes = useCallback(async () => {
+    if (!user) {
+      setTrashedNotes([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('updated_at', { ascending: false })
+
+    if (!error && data) setTrashedNotes(sortByDeletedAtDesc(data as Note[]))
+  }, [user])
+
   useEffect(() => {
     if (!user) {
       setNotes([])
+      setTrashedNotes([])
       setLoading(false)
       return
     }
@@ -44,14 +69,14 @@ export function useNotes() {
     let cancelled = false
     setLoading(true)
 
-    fetchNotes().then(() => {
+    Promise.all([fetchNotes(), fetchTrashedNotes()]).then(() => {
       if (!cancelled) setLoading(false)
     })
 
     return () => {
       cancelled = true
     }
-  }, [user, fetchNotes])
+  }, [user, fetchNotes, fetchTrashedNotes])
 
   // Clear any pending debounce timers on unmount.
   useEffect(() => {
@@ -129,9 +154,55 @@ export function useNotes() {
       return next
     })
 
-    setNotes((prev) => prev.filter((note) => note.id !== id))
+    const deletedAt = new Date().toISOString()
+
+    setNotes((prev) => {
+      const note = prev.find((n) => n.id === id)
+      if (note) {
+        const trashed = { ...note, deleted_at: deletedAt, updated_at: deletedAt }
+        setTrashedNotes((prevTrashed) => sortByDeletedAtDesc([trashed, ...prevTrashed]))
+      }
+      return prev.filter((n) => n.id !== id)
+    })
+
+    await supabase.from('notes').update({ deleted_at: deletedAt }).eq('id', id)
+  }, [])
+
+  const restoreNote = useCallback(async (id: string) => {
+    setTrashedNotes((prev) => {
+      const note = prev.find((n) => n.id === id)
+      if (note) {
+        const restored = { ...note, deleted_at: null }
+        setNotes((prevNotes) => sortByUpdatedAtDesc([restored, ...prevNotes]))
+      }
+      return prev.filter((n) => n.id !== id)
+    })
+
+    await supabase.from('notes').update({ deleted_at: null }).eq('id', id)
+  }, [])
+
+  const permanentlyDeleteNote = useCallback(async (id: string) => {
+    setTrashedNotes((prev) => prev.filter((note) => note.id !== id))
     await supabase.from('notes').delete().eq('id', id)
   }, [])
 
-  return { notes, loading, createNote, updateNote, deleteNote, savingIds, refetch: fetchNotes }
+  const emptyTrash = useCallback(async () => {
+    if (!user) return
+    setTrashedNotes([])
+    await supabase.from('notes').delete().eq('user_id', user.id).not('deleted_at', 'is', null)
+  }, [user])
+
+  return {
+    notes,
+    trashedNotes,
+    loading,
+    createNote,
+    updateNote,
+    deleteNote,
+    restoreNote,
+    permanentlyDeleteNote,
+    emptyTrash,
+    savingIds,
+    refetch: fetchNotes,
+  }
 }
