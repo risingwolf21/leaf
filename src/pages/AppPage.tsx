@@ -40,7 +40,7 @@ export default function AppPage() {
     <Layout showBackButton={mobileView === 'editor'} onBack={() => setMobileView('list')}>
       <aside
         className={cn(
-          'w-full shrink-0 border-r border-border md:block md:w-[280px]',
+          'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-[280px]',
           mobileView === 'editor' ? 'hidden' : 'block'
         )}
       >
@@ -56,7 +56,7 @@ export default function AppPage() {
 
       <main
         className={cn(
-          'min-w-0 flex-1',
+          'h-full min-w-0 flex-1 overflow-hidden',
           mobileView === 'list' ? 'hidden md:block' : 'block'
         )}
       >
