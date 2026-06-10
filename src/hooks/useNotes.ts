@@ -20,6 +20,20 @@ export function useNotes() {
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
+  const fetchNotes = useCallback(async () => {
+    if (!user) {
+      setNotes([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('updated_at', { ascending: false })
+
+    if (!error && data) setNotes(data as Note[])
+  }, [user])
+
   useEffect(() => {
     if (!user) {
       setNotes([])
@@ -30,20 +44,14 @@ export function useNotes() {
     let cancelled = false
     setLoading(true)
 
-    supabase
-      .from('notes')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (cancelled) return
-        if (!error && data) setNotes(data as Note[])
-        setLoading(false)
-      })
+    fetchNotes().then(() => {
+      if (!cancelled) setLoading(false)
+    })
 
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [user, fetchNotes])
 
   // Clear any pending debounce timers on unmount.
   useEffect(() => {
@@ -125,5 +133,5 @@ export function useNotes() {
     await supabase.from('notes').delete().eq('id', id)
   }, [])
 
-  return { notes, loading, createNote, updateNote, deleteNote, savingIds }
+  return { notes, loading, createNote, updateNote, deleteNote, savingIds, refetch: fetchNotes }
 }

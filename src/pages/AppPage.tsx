@@ -3,13 +3,15 @@ import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
 import { useNotes } from '@/hooks/useNotes'
+import { useFolders } from '@/hooks/useFolders'
 import { cn } from '@/lib/utils'
 import type { Note } from '@/types'
 
 type MobileView = 'list' | 'editor'
 
 export default function AppPage() {
-  const { notes, loading, createNote, updateNote, deleteNote, savingIds } = useNotes()
+  const { notes, loading, createNote, updateNote, deleteNote, savingIds, refetch } = useNotes()
+  const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<MobileView>('list')
 
@@ -36,6 +38,18 @@ export default function AppPage() {
     }
   }
 
+  const handleCreateFolder = () => createFolder('New folder')
+
+  const handleDeleteFolder = async (id: string) => {
+    await deleteFolder(id)
+    await refetch()
+  }
+
+  const handleMoveNote = async (noteId: string, folderId: string | null) => {
+    await moveNote(noteId, folderId)
+    await refetch()
+  }
+
   return (
     <Layout showBackButton={mobileView === 'editor'} onBack={() => setMobileView('list')}>
       <aside
@@ -46,11 +60,16 @@ export default function AppPage() {
       >
         <NoteList
           notes={notes}
+          folders={folders}
           loading={loading}
           activeNoteId={activeNoteId}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}
+          onCreateFolder={handleCreateFolder}
+          onRenameFolder={renameFolder}
+          onDeleteFolder={handleDeleteFolder}
+          onMoveNote={handleMoveNote}
         />
       </aside>
 
