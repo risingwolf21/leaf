@@ -30,6 +30,7 @@ export default function AppPage() {
   const [showTrash, setShowTrash] = useState(false)
   const [mobileView, setMobileView] = useState<MobileView>('list')
   const [mode, setMode] = useState<ViewMode>('preview')
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
 
@@ -46,7 +47,7 @@ export default function AppPage() {
   }
 
   const handleCreateNote = async () => {
-    const note = await createNote()
+    const note = await createNote(currentFolderId)
     if (note) {
       setActiveNoteId(note.id)
       setShowTrash(false)
@@ -62,7 +63,7 @@ export default function AppPage() {
     }
   }
 
-  const handleCreateFolder = () => createFolder('New folder')
+  const handleCreateFolder = () => createFolder('New folder', currentFolderId)
 
   const handleDeleteFolder = async (id: string) => {
     await deleteFolder(id)
@@ -75,7 +76,7 @@ export default function AppPage() {
   }
 
   const headerContent =
-    activeNote && !showTrash ? (
+    activeNote && !showTrash && mobileView === 'editor' ? (
       <>
         <input
           value={activeNote.title}
@@ -114,6 +115,8 @@ export default function AppPage() {
           activeNoteId={activeNoteId}
           trashCount={trashedNotes.length}
           showTrash={showTrash}
+          currentFolderId={currentFolderId}
+          onNavigateFolder={setCurrentFolderId}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}

@@ -87,12 +87,12 @@ export function useNotes() {
     }
   }, [])
 
-  const createNote = useCallback(async (): Promise<Note | null> => {
+  const createNote = useCallback(async (folderId: string | null = null): Promise<Note | null> => {
     if (!user) return null
 
     const { data, error } = await supabase
       .from('notes')
-      .insert({ user_id: user.id, title: 'Untitled', content: '' })
+      .insert({ user_id: user.id, title: 'Untitled', content: '', folder_id: folderId })
       .select()
       .single()
 
