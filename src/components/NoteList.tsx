@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ChevronLeft,
   ChevronRight,
   Folder,
   FolderInput,
   FolderPlus,
+  HelpCircle,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -437,18 +439,28 @@ export function NoteList({
         )}
       </ScrollArea>
 
-      <button
-        type="button"
-        onClick={onSelectTrash}
-        className={cn(
-          'flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
-          showTrash ? 'bg-accent text-foreground' : 'text-muted-foreground'
-        )}
-      >
-        <Trash2 className="h-4 w-4" />
-        <span className="flex-1">Trash</span>
-        {trashCount > 0 && <Badge variant="secondary">{trashCount}</Badge>}
-      </button>
+      <div className="flex shrink-0 items-stretch border-t border-border">
+        <button
+          type="button"
+          onClick={onSelectTrash}
+          className={cn(
+            'flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
+            showTrash ? 'bg-accent text-foreground' : 'text-muted-foreground'
+          )}
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="flex-1">Trash</span>
+          {trashCount > 0 && <Badge variant="secondary">{trashCount}</Badge>}
+        </button>
+        <Link
+          to="/help"
+          aria-label="Markdown guide"
+          title="Markdown guide"
+          className="flex shrink-0 items-center justify-center border-l border-border px-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <HelpCircle className="h-4 w-4" />
+        </Link>
+      </div>
     </div>
   )
 }
