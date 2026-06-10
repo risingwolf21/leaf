@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 221 39% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 221 39% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 220 13% 91%;
+    --secondary-foreground: 221 39% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 138 76% 97%;
+    --accent-foreground: 142 76% 30%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 142 76% 36%;
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  /* Rendered markdown preview styling */
+  .markdown-preview {
+    @apply font-serif text-foreground;
+    line-height: 1.75;
+  }
+
+  .markdown-preview > * + * {
+    @apply mt-4;
+  }
+
+  .markdown-preview h1 {
+    @apply text-3xl font-bold mt-8 mb-2;
+  }
+
+  .markdown-preview h2 {
+    @apply text-2xl font-bold mt-8 mb-2;
+  }
+
+  .markdown-preview h3 {
+    @apply text-xl font-bold mt-6 mb-2;
+  }
+
+  .markdown-preview h4,
+  .markdown-preview h5,
+  .markdown-preview h6 {
+    @apply text-lg font-bold mt-6 mb-2;
+  }
+
+  .markdown-preview p {
+    @apply leading-[1.75];
+  }
+
+  .markdown-preview a {
+    @apply text-primary underline underline-offset-2;
+  }
+
+  .markdown-preview ul {
+    @apply list-disc pl-6;
+  }
+
+  .markdown-preview ol {
+    @apply list-decimal pl-6;
+  }
+
+  .markdown-preview li + li {
+    @apply mt-1;
+  }
+
+  .markdown-preview blockquote {
+    @apply border-l-2 border-border pl-4 italic text-muted-foreground;
+  }
+
+  .markdown-preview hr {
+    @apply border-border my-6;
+  }
+
+  .markdown-preview code {
+    @apply font-mono text-sm bg-muted rounded px-1 py-0.5;
+  }
+
+  .markdown-preview pre {
+    @apply font-mono text-sm bg-muted rounded-lg p-4 overflow-x-auto;
+  }
+
+  .markdown-preview pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .markdown-preview img {
+    @apply rounded-lg max-w-full;
+  }
+
+  .markdown-preview table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .markdown-preview th,
+  .markdown-preview td {
+    @apply border border-border px-3 py-1.5 text-left;
+  }
+}
