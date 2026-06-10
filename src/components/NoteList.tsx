@@ -8,7 +8,9 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Search,
   Trash2,
+  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import type { Folder as FolderType, Note } from '@/types'
 
 interface NoteListProps {
@@ -54,6 +57,29 @@ function getSubtitle(content: string) {
   if (!line) return 'No additional text'
 
   return line.replace(/^#{1,6}\s+/, '').replace(/[*_`>~]/g, '')
+}
+
+/** Returns up to `maxLength` characters of `content`, centred on the first match of `query`. */
+function getSnippet(content: string, query: string, maxLength = 120) {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+  if (!normalized) return ''
+
+  const matchIndex = normalized.toLowerCase().indexOf(query.toLowerCase())
+  if (matchIndex === -1) {
+    return normalized.length > maxLength
+      ? `${normalized.slice(0, maxLength).trimEnd()}…`
+      : normalized
+  }
+
+  const matchCenter = matchIndex + query.length / 2
+  let start = Math.max(0, Math.round(matchCenter - maxLength / 2))
+  const end = Math.min(normalized.length, start + maxLength)
+  start = Math.max(0, end - maxLength)
+
+  let snippet = normalized.slice(start, end)
+  if (start > 0) snippet = `…${snippet.trimStart()}`
+  if (end < normalized.length) snippet = `${snippet.trimEnd()}…`
+  return snippet
 }
 
 /** Flattens the folder tree into a depth-first list with depth, for the "Move to folder" menu. */
@@ -91,6 +117,9 @@ export function NoteList({
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const renameInputRef = useRef<HTMLInputElement>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const { query, setQuery, results, isSearching } = useSearch()
 
   useEffect(() => {
     if (renamingId) {
@@ -98,6 +127,10 @@ export function NoteList({
       renameInputRef.current?.select()
     }
   }, [renamingId])
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus()
+  }, [searchOpen])
 
   const currentFolder = folders.find((folder) => folder.id === currentFolderId) ?? null
 
@@ -112,6 +145,19 @@ export function NoteList({
   )
 
   const moveTargets = useMemo(() => flattenFolders(folders), [folders])
+
+  const trimmedQuery = query.trim()
+  const showResults = searchOpen && trimmedQuery.length > 0
+
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setQuery('')
+  }
+
+  const handleSelectResult = (note: Note) => {
+    onSelectNote(note)
+    closeSearch()
+  }
 
   const startRename = (id: string, currentName: string) => {
     setRenamingId(id)
@@ -199,6 +245,33 @@ export function NoteList({
     </li>
   )
 
+  const renderResult = (note: Note) => {
+    const folderName = note.folder_id
+      ? folders.find((folder) => folder.id === note.folder_id)?.name ?? 'Unfiled'
+      : 'Unfiled'
+
+    return (
+      <li key={note.id}>
+        <button
+          type="button"
+          onClick={() => handleSelectResult(note)}
+          className={cn(
+            'w-full border-b border-border px-4 py-3 text-left transition-colors hover:bg-accent',
+            activeNoteId === note.id && 'bg-accent'
+          )}
+        >
+          <p className="truncate text-sm font-semibold text-foreground">
+            {note.title || 'Untitled'}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">{folderName}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {getSnippet(note.content, trimmedQuery)}
+          </p>
+        </button>
+      </li>
+    )
+  }
+
   const renderFolder = (folder: FolderType) => {
     const isRenaming = renamingId === folder.id
 
@@ -281,7 +354,7 @@ export function NoteList({
 
   return (
     <div className="flex h-full flex-col">
-      {currentFolder && (
+      {currentFolder && !showResults && (
         <button
           type="button"
           onClick={() => onNavigateFolder(currentFolder.parent_id)}
@@ -293,18 +366,62 @@ export function NoteList({
       )}
 
       <div className="flex gap-2 border-b border-border p-3">
-        <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
-          <Plus className="h-4 w-4" />
-          New note
-        </Button>
-        <Button onClick={handleCreateFolder} variant="outline" className="gap-2">
-          <FolderPlus className="h-4 w-4" />
-          New folder
-        </Button>
+        {searchOpen ? (
+          <div className="flex flex-1 items-center gap-2">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              ref={searchInputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') closeSearch()
+              }}
+              placeholder="Search notes…"
+              aria-label="Search notes"
+              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            />
+            <button
+              type="button"
+              aria-label="Close search"
+              onClick={closeSearch}
+              className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
+              <Plus className="h-4 w-4" />
+              New note
+            </Button>
+            <Button onClick={handleCreateFolder} variant="outline" className="gap-2">
+              <FolderPlus className="h-4 w-4" />
+              New folder
+            </Button>
+            <Button
+              onClick={() => setSearchOpen(true)}
+              variant="outline"
+              size="icon"
+              aria-label="Search notes"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
 
       <ScrollArea className="flex-1">
-        {loading ? (
+        {showResults ? (
+          trimmedQuery.length < MIN_QUERY_LENGTH ? null : isSearching &&
+            results.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">Searching…</p>
+          ) : results.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">No notes found</p>
+          ) : (
+            <ul className="flex flex-col">{results.map(renderResult)}</ul>
+          )
+        ) : loading ? (
           <p className="p-4 text-sm text-muted-foreground">Loading notes…</p>
         ) : isEmpty ? (
           <p className="p-4 text-sm text-muted-foreground">
