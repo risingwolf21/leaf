@@ -1,22 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { Code2, Pencil } from 'lucide-react'
+import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
-import { Toggle } from '@/components/ui/toggle'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
-import type { Note } from '@/types'
+import type { Note, ViewMode } from '@/types'
 
 interface NoteEditorProps {
   note: Note
   isSaving: boolean
+  mode: ViewMode
+  onModeChange: (mode: ViewMode) => void
   onChange: (id: string, fields: { title?: string; content?: string }) => void
 }
 
-type ViewMode = 'preview' | 'edit' | 'source'
-
-export function NoteEditor({ note, isSaving, onChange }: NoteEditorProps) {
-  const [mode, setMode] = useState<ViewMode>('preview')
+export function NoteEditor({ note, isSaving, mode, onModeChange, onChange }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
 
@@ -48,8 +46,8 @@ export function NoteEditor({ note, isSaving, onChange }: NoteEditorProps) {
   if (!editor) return null
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[680px] flex-col px-4 py-6 sm:px-6">
-      <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
+    <div className="mx-auto flex h-full w-full max-w-[680px] flex-col px-4 py-3 sm:px-6 md:py-6">
+      <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
         <input
           value={note.title}
           onChange={(e) => onChange(note.id, { title: e.target.value })}
@@ -60,24 +58,7 @@ export function NoteEditor({ note, isSaving, onChange }: NoteEditorProps) {
           <span className={cn('text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
             {isSaving ? 'Saving…' : 'Saved'}
           </span>
-          {mode !== 'preview' && (
-            <Toggle
-              size="sm"
-              pressed={mode === 'source'}
-              onPressedChange={(pressed) => setMode(pressed ? 'source' : 'edit')}
-              aria-label="Toggle source view"
-            >
-              <Code2 className="h-4 w-4" />
-            </Toggle>
-          )}
-          <Toggle
-            size="sm"
-            pressed={mode !== 'preview'}
-            onPressedChange={(pressed) => setMode(pressed ? 'edit' : 'preview')}
-            aria-label="Toggle edit mode"
-          >
-            <Pencil className="h-4 w-4" />
-          </Toggle>
+          <EditorModeToggle mode={mode} onModeChange={onModeChange} />
         </div>
       </div>
 

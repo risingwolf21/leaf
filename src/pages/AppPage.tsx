@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
+import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { TrashView } from '@/components/TrashView'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { cn } from '@/lib/utils'
-import type { Note } from '@/types'
+import type { Note, ViewMode } from '@/types'
 
 type MobileView = 'list' | 'editor'
 
@@ -28,6 +29,7 @@ export default function AppPage() {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [showTrash, setShowTrash] = useState(false)
   const [mobileView, setMobileView] = useState<MobileView>('list')
+  const [mode, setMode] = useState<ViewMode>('preview')
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
 
@@ -72,8 +74,33 @@ export default function AppPage() {
     await refetch()
   }
 
+  const headerContent =
+    activeNote && !showTrash ? (
+      <>
+        <input
+          value={activeNote.title}
+          onChange={(e) => updateNote(activeNote.id, { title: e.target.value })}
+          placeholder="Untitled"
+          className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+        />
+        <span
+          className={cn(
+            'shrink-0 text-xs',
+            savingIds.has(activeNote.id) ? 'text-muted-foreground' : 'text-primary'
+          )}
+        >
+          {savingIds.has(activeNote.id) ? 'Saving…' : 'Saved'}
+        </span>
+        <EditorModeToggle mode={mode} onModeChange={setMode} />
+      </>
+    ) : undefined
+
   return (
-    <Layout showBackButton={mobileView === 'editor'} onBack={() => setMobileView('list')}>
+    <Layout
+      showBackButton={mobileView === 'editor'}
+      onBack={() => setMobileView('list')}
+      headerContent={headerContent}
+    >
       <aside
         className={cn(
           'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-[280px]',
@@ -115,6 +142,8 @@ export default function AppPage() {
           <NoteEditor
             note={activeNote}
             isSaving={savingIds.has(activeNote.id)}
+            mode={mode}
+            onModeChange={setMode}
             onChange={updateNote}
           />
         ) : (

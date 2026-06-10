@@ -20,3 +20,5 @@ export interface AuthFormData {
   email: string
   password: string
 }
+
+export type ViewMode = 'preview' | 'edit' | 'source'
