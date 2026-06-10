@@ -23,7 +23,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5">
+    <div className="flex items-center gap-0.5 overflow-x-auto [&>*]:shrink-0">
       <Toggle
         size="sm"
         pressed={editor.isActive('heading', { level: 1 })}
