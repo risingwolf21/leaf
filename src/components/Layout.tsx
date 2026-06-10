@@ -13,7 +13,7 @@ export function Layout({ children, showBackButton, onBack }: LayoutProps) {
   const { signOut } = useAuth()
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
         <div className="flex items-center gap-2">
           {showBackButton && (
@@ -35,7 +35,7 @@ export function Layout({ children, showBackButton, onBack }: LayoutProps) {
           Sign out
         </Button>
       </header>
-      <div className="flex flex-1 overflow-hidden">{children}</div>
+      <div className="flex min-h-0 flex-1 overflow-hidden">{children}</div>
     </div>
   )
 }
