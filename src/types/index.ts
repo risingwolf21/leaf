@@ -10,6 +10,15 @@ export interface Note {
   updated_at: string
 }
 
+export interface NoteVersion {
+  id: string
+  note_id: string
+  user_id: string
+  content: string
+  title: string
+  saved_at: string
+}
+
 export interface Folder {
   id: string
   user_id: string

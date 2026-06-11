@@ -4,6 +4,7 @@ import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { TrashView } from '@/components/TrashView'
+import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { useSortPreference } from '@/hooks/useSortPreference'
@@ -34,6 +35,7 @@ export default function AppPage() {
   const [mobileView, setMobileView] = useState<MobileView>('list')
   const [mode, setMode] = useState<ViewMode>('preview')
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [versionHistoryNote, setVersionHistoryNote] = useState<Note | null>(null)
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
 
@@ -142,6 +144,7 @@ export default function AppPage() {
           onMoveNote={handleMoveNote}
           onSelectTrash={handleSelectTrash}
           onTogglePin={togglePin}
+          onShowVersionHistory={setVersionHistoryNote}
         />
       </aside>
 
@@ -174,6 +177,12 @@ export default function AppPage() {
           </div>
         )}
       </main>
+
+      <VersionHistorySheet
+        note={versionHistoryNote}
+        onOpenChange={(open) => !open && setVersionHistoryNote(null)}
+        updateNote={updateNote}
+      />
     </Layout>
   )
 }
