@@ -1,7 +1,6 @@
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Table from '@tiptap/extension-table'
@@ -10,6 +9,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
+import { ImageUpload } from '@/editor/extensions/ImageUpload'
 import { WikiLink } from '@/editor/extensions/WikiLink'
 
 export function createEditorExtensions(placeholder = ''): Extensions {
@@ -19,7 +19,7 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, autolink: true }),
-    Image,
+    ImageUpload,
     TaskList,
     TaskItem.configure({ nested: false }),
     Table.configure({ resizable: false }),
