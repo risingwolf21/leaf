@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Folder,
   FolderInput,
   FolderPlus,
@@ -9,6 +10,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Settings,
   Trash2,
   X,
 } from 'lucide-react'
@@ -26,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { downloadMarkdown, exportAllNotes } from '@/lib/export'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import type { Folder as FolderType, Note } from '@/types'
 
@@ -229,6 +232,10 @@ export function NoteList({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          <DropdownMenuItem onClick={() => downloadMarkdown(note.title, note.content)}>
+            <Download className="mr-2 h-4 w-4" />
+            Export as .md
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
             onClick={() => {
@@ -449,6 +456,24 @@ export function NoteList({
         <span className="flex-1">Trash</span>
         {trashCount > 0 && <Badge variant="secondary">{trashCount}</Badge>}
       </button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="flex-1">Settings</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top">
+          <DropdownMenuItem onClick={() => exportAllNotes(notes, folders)}>
+            <Download className="mr-2 h-4 w-4" />
+            Export all notes
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
