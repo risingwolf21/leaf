@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { Editor } from '@tiptap/react'
 import {
   Bold,
@@ -6,6 +7,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  ImagePlus,
   Italic,
   List,
   ListOrdered,
@@ -16,12 +18,25 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
+import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
+import { uploadImageAt } from '@/editor/extensions/ImageUpload'
 
 interface EditorToolbarProps {
   editor: Editor
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    const { view, state } = editor
+    uploadImageAt(view, file, state.selection.from)
+  }
+
   return (
     <div className="flex items-center gap-0.5 overflow-x-auto [&>*]:shrink-0">
       <Toggle
@@ -134,6 +149,26 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       >
         <Minus className="h-4 w-4" />
       </Button>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-9 px-2.5"
+        onClick={() => fileInputRef.current?.click()}
+        aria-label="Insert image"
+      >
+        <ImagePlus className="h-4 w-4" />
+      </Button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_IMAGE_TYPES.join(',')}
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </div>
   )
 }
