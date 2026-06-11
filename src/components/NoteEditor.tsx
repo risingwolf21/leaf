@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
@@ -8,13 +8,23 @@ import type { Note, ViewMode } from '@/types'
 
 interface NoteEditorProps {
   note: Note
+  notes: Note[]
   isSaving: boolean
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
   onChange: (id: string, fields: { title?: string; content?: string }) => void
+  onNavigateToNote: (title: string) => void
 }
 
-export function NoteEditor({ note, isSaving, mode, onModeChange, onChange }: NoteEditorProps) {
+export function NoteEditor({
+  note,
+  notes,
+  isSaving,
+  mode,
+  onModeChange,
+  onChange,
+  onNavigateToNote,
+}: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
 
@@ -42,6 +52,13 @@ export function NoteEditor({ note, isSaving, mode, onModeChange, onChange }: Not
       editor.commands.setContent(noteRef.current.content, false)
     }
   }, [mode, editor])
+
+  useLayoutEffect(() => {
+    if (!editor) return
+    editor.storage.wikiLink.noteTitles = new Set(notes.map((item) => item.title))
+    editor.storage.wikiLink.onNavigate = onNavigateToNote
+    editor.view.dispatch(editor.state.tr)
+  }, [editor, notes, onNavigateToNote])
 
   if (!editor) return null
 

@@ -5,7 +5,7 @@ import type { Note } from '@/types'
 
 const AUTOSAVE_DELAY = 1000
 
-type NoteFields = Partial<Pick<Note, 'title' | 'content'>>
+export type NoteFields = Partial<Pick<Note, 'title' | 'content'>>
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 
@@ -161,6 +161,12 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
         setNotes((prev) =>
           sortNotes(prev.map((note) => (note.id === id ? updated : note)), sortByRef.current)
         )
+
+        await supabase.rpc('save_note_version', {
+          p_note_id: id,
+          p_title: updated.title,
+          p_content: updated.content,
+        })
       }
 
       setSavingIds((prev) => {
