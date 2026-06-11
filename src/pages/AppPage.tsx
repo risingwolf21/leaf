@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
@@ -48,6 +48,17 @@ export default function AppPage() {
     setShowTrash(true)
     setMobileView('editor')
   }
+
+  const handleNavigateToNote = useCallback(
+    (title: string) => {
+      const target = notes.find((item) => item.title === title)
+      if (!target) return
+      setActiveNoteId(target.id)
+      setShowTrash(false)
+      setMobileView('editor')
+    },
+    [notes]
+  )
 
   const handleCreateNote = async () => {
     const note = await createNote(currentFolderId)
@@ -150,10 +161,12 @@ export default function AppPage() {
         ) : activeNote ? (
           <NoteEditor
             note={activeNote}
+            notes={notes}
             isSaving={savingIds.has(activeNote.id)}
             mode={mode}
             onModeChange={setMode}
             onChange={updateNote}
+            onNavigateToNote={handleNavigateToNote}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">

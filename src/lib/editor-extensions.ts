@@ -10,6 +10,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
+import { WikiLink } from '@/editor/extensions/WikiLink'
 
 export function createEditorExtensions(placeholder = ''): Extensions {
   return [
@@ -25,6 +26,7 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     TableRow,
     TableHeader,
     TableCell,
+    WikiLink,
     Markdown.configure({ html: false, transformPastedText: true }),
   ]
 }

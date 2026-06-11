@@ -118,6 +118,15 @@
     @apply text-primary underline underline-offset-2;
   }
 
+  /* Wiki-links ([[Note Title]]) */
+  .markdown-preview .wiki-link {
+    @apply cursor-pointer text-primary underline underline-offset-2;
+  }
+
+  .markdown-preview .wiki-link-broken {
+    @apply cursor-pointer text-destructive underline decoration-dashed underline-offset-2;
+  }
+
   .markdown-preview ul {
     @apply list-disc pl-6;
   }
