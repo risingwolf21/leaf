@@ -1,6 +1,6 @@
 -- Snapshot of a note's title/content taken on every auto-save, used for
 -- the version history drawer.
-create table public.note_versions (
+create table if not exists public.note_versions (
   id         uuid primary key default gen_random_uuid(),
   note_id    uuid not null references public.notes(id) on delete cascade,
   user_id    uuid not null references auth.users(id) on delete cascade,
@@ -9,19 +9,22 @@ create table public.note_versions (
   saved_at   timestamptz not null default now()
 );
 
-create index note_versions_note_id_saved_at_idx
+create index if not exists note_versions_note_id_saved_at_idx
   on public.note_versions (note_id, saved_at desc);
 
 alter table public.note_versions enable row level security;
 
+drop policy if exists "Users can view own versions" on public.note_versions;
 create policy "Users can view own versions"
   on public.note_versions for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own versions" on public.note_versions;
 create policy "Users can insert own versions"
   on public.note_versions for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own versions" on public.note_versions;
 create policy "Users can delete own versions"
   on public.note_versions for delete
   using (auth.uid() = user_id);

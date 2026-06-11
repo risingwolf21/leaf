@@ -1,12 +1,12 @@
 -- Full-text search across note titles and content
 alter table public.notes
-  add column search_vector tsvector
+  add column if not exists search_vector tsvector
   generated always as (
     setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
     setweight(to_tsvector('english', coalesce(content, '')), 'B')
   ) stored;
 
-create index notes_search_idx on public.notes using gin(search_vector);
+create index if not exists notes_search_idx on public.notes using gin(search_vector);
 
 -- Search the current user's own notes. This intentionally omits
 -- `security definer` and any client-supplied user id, relying on the
