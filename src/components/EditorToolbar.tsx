@@ -4,6 +4,7 @@ import {
   Bold,
   Code,
   Code2,
+  Columns,
   Heading1,
   Heading2,
   Heading3,
@@ -14,8 +15,19 @@ import {
   ListTodo,
   Minus,
   Quote,
+  Rows,
+  Table as TableIcon,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { LinkEditPopover } from '@/components/LinkEditPopover'
 import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
@@ -136,6 +148,71 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       >
         <ListTodo className="h-4 w-4" />
       </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <LinkEditPopover editor={editor} />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Toggle size="sm" pressed={editor.isActive('table')} aria-label="Table">
+            <TableIcon className="h-4 w-4" />
+          </Toggle>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {editor.isActive('table') ? (
+            <>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnBefore().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Insert column before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnAfter().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Insert column after
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteColumn().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Delete column
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Insert row above
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Insert row below
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Delete row
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeaderRow().run()}>
+                <TableIcon className="mr-2 h-4 w-4" />
+                Toggle header row
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete table
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem
+              onClick={() =>
+                editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+              }
+            >
+              <TableIcon className="mr-2 h-4 w-4" />
+              Insert table
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 

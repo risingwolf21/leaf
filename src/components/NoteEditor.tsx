@@ -1,11 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
-import { LinksPanel } from '@/components/LinksPanel'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
 import type { Note, ViewMode } from '@/types'
@@ -20,8 +16,6 @@ interface NoteEditorProps {
   onNavigateToNote: (title: string) => void
 }
 
-type MobilePanel = 'note' | 'links'
-
 export function NoteEditor({
   note,
   notes,
@@ -33,8 +27,6 @@ export function NoteEditor({
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
-  const isDesktop = useMediaQuery('(min-width: 768px)')
-  const [mobilePanel, setMobilePanel] = useState<MobilePanel>('note')
 
   const editor = useEditor(
     {
@@ -67,10 +59,6 @@ export function NoteEditor({
     editor.storage.wikiLink.onNavigate = onNavigateToNote
     editor.view.dispatch(editor.state.tr)
   }, [editor, notes, onNavigateToNote])
-
-  useEffect(() => {
-    setMobilePanel('note')
-  }, [note.id])
 
   if (!editor) return null
 
@@ -111,27 +99,7 @@ export function NoteEditor({
         </div>
       </div>
 
-      {isDesktop ? (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {editorContent}
-          <Separator className="my-6" />
-          <LinksPanel noteId={note.id} />
-        </div>
-      ) : (
-        <Tabs
-          value={mobilePanel}
-          onValueChange={(value) => setMobilePanel(value as MobilePanel)}
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {mobilePanel === 'note' ? editorContent : <LinksPanel noteId={note.id} />}
-          </div>
-          <TabsList className="mt-3 grid shrink-0 grid-cols-2">
-            <TabsTrigger value="note">Note</TabsTrigger>
-            <TabsTrigger value="links">Links</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
+      <div className="min-h-0 flex-1 overflow-y-auto">{editorContent}</div>
     </div>
   )
 }
