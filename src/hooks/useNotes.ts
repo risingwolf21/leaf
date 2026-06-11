@@ -7,10 +7,10 @@ const AUTOSAVE_DELAY = 1000
 
 type NoteFields = Partial<Pick<Note, 'title' | 'content'>>
 
-function sortByUpdatedAtDesc(notes: Note[]) {
-  return [...notes].sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  )
+export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
+
+function byUpdatedAtDesc(a: Note, b: Note) {
+  return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
 }
 
 function sortByDeletedAtDesc(notes: Note[]) {
@@ -20,13 +20,44 @@ function sortByDeletedAtDesc(notes: Note[]) {
   )
 }
 
-export function useNotes() {
+/** Pinned notes always come first (sorted by `updated_at desc`); the rest follow `sortBy`. */
+function sortNotes(notes: Note[], sortBy: SortBy) {
+  const pinned = notes.filter((note) => note.pinned).sort(byUpdatedAtDesc)
+  const rest = notes.filter((note) => !note.pinned)
+
+  switch (sortBy) {
+    case 'created_at':
+      rest.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      break
+    case 'title_asc':
+      rest.sort((a, b) => a.title.localeCompare(b.title))
+      break
+    case 'title_desc':
+      rest.sort((a, b) => b.title.localeCompare(a.title))
+      break
+    case 'updated_at':
+    default:
+      rest.sort(byUpdatedAtDesc)
+  }
+
+  return [...pinned, ...rest]
+}
+
+export function useNotes(sortBy: SortBy = 'updated_at') {
   const { user } = useAuth()
   const [notes, setNotes] = useState<Note[]>([])
   const [trashedNotes, setTrashedNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const sortByRef = useRef(sortBy)
+
+  // Re-sort the already-loaded notes whenever the sort preference changes,
+  // without refetching from Supabase.
+  useEffect(() => {
+    sortByRef.current = sortBy
+    setNotes((prev) => sortNotes(prev, sortBy))
+  }, [sortBy])
 
   const fetchNotes = useCallback(async () => {
     if (!user) {
@@ -38,9 +69,10 @@ export function useNotes() {
       .from('notes')
       .select('*')
       .is('deleted_at', null)
+      .order('pinned', { ascending: false })
       .order('updated_at', { ascending: false })
 
-    if (!error && data) setNotes(data as Note[])
+    if (!error && data) setNotes(sortNotes(data as Note[], sortByRef.current))
   }, [user])
 
   const fetchTrashedNotes = useCallback(async () => {
@@ -99,7 +131,7 @@ export function useNotes() {
     if (error || !data) return null
 
     const note = data as Note
-    setNotes((prev) => sortByUpdatedAtDesc([note, ...prev]))
+    setNotes((prev) => sortNotes([note, ...prev], sortByRef.current))
     return note
   }, [user])
 
@@ -127,7 +159,7 @@ export function useNotes() {
       if (!error && data) {
         const updated = data as Note
         setNotes((prev) =>
-          sortByUpdatedAtDesc(prev.map((note) => (note.id === id ? updated : note)))
+          sortNotes(prev.map((note) => (note.id === id ? updated : note)), sortByRef.current)
         )
       }
 
@@ -173,7 +205,7 @@ export function useNotes() {
       const note = prev.find((n) => n.id === id)
       if (note) {
         const restored = { ...note, deleted_at: null }
-        setNotes((prevNotes) => sortByUpdatedAtDesc([restored, ...prevNotes]))
+        setNotes((prevNotes) => sortNotes([restored, ...prevNotes], sortByRef.current))
       }
       return prev.filter((n) => n.id !== id)
     })
@@ -192,6 +224,17 @@ export function useNotes() {
     await supabase.from('notes').delete().eq('user_id', user.id).not('deleted_at', 'is', null)
   }, [user])
 
+  const togglePin = useCallback(async (id: string, pinned: boolean) => {
+    setNotes((prev) =>
+      sortNotes(
+        prev.map((note) => (note.id === id ? { ...note, pinned } : note)),
+        sortByRef.current
+      )
+    )
+
+    await supabase.from('notes').update({ pinned }).eq('id', id)
+  }, [])
+
   return {
     notes,
     trashedNotes,
@@ -202,6 +245,7 @@ export function useNotes() {
     restoreNote,
     permanentlyDeleteNote,
     emptyTrash,
+    togglePin,
     savingIds,
     refetch: fetchNotes,
   }
