@@ -63,7 +63,7 @@ export function NoteEditor({
   if (!editor) return null
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[680px] flex-col px-4 py-3 sm:px-6 md:py-6">
+    <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
       <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
         <input
           value={note.title}
