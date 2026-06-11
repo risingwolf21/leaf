@@ -8,6 +8,7 @@ import {
   FolderInput,
   FolderPlus,
   HelpCircle,
+  History,
   Moon,
   MoreHorizontal,
   Pencil,
@@ -61,6 +62,7 @@ interface NoteListProps {
   onMoveNote: (noteId: string, folderId: string | null) => void
   onSelectTrash: () => void
   onTogglePin: (noteId: string, pinned: boolean) => void
+  onShowVersionHistory: (note: Note) => void
 }
 
 function getSubtitle(content: string) {
@@ -131,6 +133,7 @@ export function NoteList({
   onMoveNote,
   onSelectTrash,
   onTogglePin,
+  onShowVersionHistory,
 }: NoteListProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
@@ -264,6 +267,11 @@ export function NoteList({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          <DropdownMenuItem onClick={() => setTimeout(() => onShowVersionHistory(note), 0)}>
+            <History className="mr-2 h-4 w-4" />
+            Version history
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-destructive focus:bg-destructive/10 focus:text-destructive"
             onClick={() => {
