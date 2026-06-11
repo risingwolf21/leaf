@@ -19,20 +19,6 @@ export interface NoteVersion {
   saved_at: string
 }
 
-export interface NoteLink {
-  id: string
-  note_id: string
-  user_id: string
-  display_text: string
-  url: string
-  show_preview: boolean
-  og_title: string | null
-  og_description: string | null
-  og_image: string | null
-  og_fetched_at: string | null
-  created_at: string
-}
-
 export interface Folder {
   id: string
   user_id: string
