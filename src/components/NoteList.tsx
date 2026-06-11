@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowUpDown,
-  ChevronLeft,
   ChevronRight,
-  Folder,
+  Folder as FolderIcon,
   FolderInput,
   FolderPlus,
   HelpCircle,
@@ -18,7 +17,6 @@ import {
   Search,
   Sun,
   Trash2,
-  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,9 +34,19 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import { useTheme } from '@/hooks/useTheme'
+import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { SortBy } from '@/hooks/useNotes'
 import type { Folder as FolderType, Note } from '@/types'
 
@@ -49,31 +57,25 @@ interface NoteListProps {
   activeNoteId: string | null
   trashCount: number
   showTrash: boolean
-  currentFolderId: string | null
+  selectedFolderId: string | 'all'
   sortBy: SortBy
   onSortChange: (sortBy: SortBy) => void
-  onNavigateFolder: (folderId: string | null) => void
+  onSelectFolder: (id: string | 'all') => void
   onSelectNote: (note: Note) => void
   onCreateNote: () => void
   onDeleteNote: (id: string) => void
-  onCreateFolder: () => Promise<FolderType | null>
-  onRenameFolder: (id: string, name: string) => void
+  onCreateFolder: () => void
   onDeleteFolder: (id: string) => void
   onMoveNote: (noteId: string, folderId: string | null) => void
   onSelectTrash: () => void
   onTogglePin: (noteId: string, pinned: boolean) => void
   onShowVersionHistory: (note: Note) => void
-}
-
-function getSubtitle(content: string) {
-  const line = content
-    .split('\n')
-    .map((l) => l.trim())
-    .find((l) => l.length > 0)
-
-  if (!line) return 'No additional text'
-
-  return line.replace(/^#{1,6}\s+/, '').replace(/[*_`>~]/g, '')
+  renamingFolderId: string | null
+  renameValue: string
+  onRenameValueChange: (value: string) => void
+  onStartRename: (folder: FolderType) => void
+  onCommitRename: (id: string) => void
+  onCancelRename: () => void
 }
 
 /** Returns up to `maxLength` characters of `content`, centred on the first match of `query`. */
@@ -120,240 +122,206 @@ export function NoteList({
   activeNoteId,
   trashCount,
   showTrash,
-  currentFolderId,
+  selectedFolderId,
   sortBy,
   onSortChange,
-  onNavigateFolder,
+  onSelectFolder,
   onSelectNote,
   onCreateNote,
   onDeleteNote,
   onCreateFolder,
-  onRenameFolder,
   onDeleteFolder,
   onMoveNote,
   onSelectTrash,
   onTogglePin,
   onShowVersionHistory,
+  renamingFolderId,
+  renameValue,
+  onRenameValueChange,
+  onStartRename,
+  onCommitRename,
+  onCancelRename,
 }: NoteListProps) {
-  const [renamingId, setRenamingId] = useState<string | null>(null)
-  const [renameValue, setRenameValue] = useState('')
-  const renameInputRef = useRef<HTMLInputElement>(null)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   const { query, setQuery, results, isSearching } = useSearch()
   const { theme, toggleTheme } = useTheme()
 
-  useEffect(() => {
-    if (renamingId) {
-      renameInputRef.current?.focus()
-      renameInputRef.current?.select()
-    }
-  }, [renamingId])
-
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus()
-  }, [searchOpen])
-
-  const currentFolder = folders.find((folder) => folder.id === currentFolderId) ?? null
-
-  const subfolders = useMemo(
-    () => folders.filter((folder) => folder.parent_id === currentFolderId),
-    [folders, currentFolderId]
-  )
-
-  const currentNotes = useMemo(
-    () => notes.filter((note) => note.folder_id === currentFolderId),
-    [notes, currentFolderId]
-  )
-
-  const pinnedNotes = useMemo(() => currentNotes.filter((note) => note.pinned), [currentNotes])
-  const unpinnedNotes = useMemo(() => currentNotes.filter((note) => !note.pinned), [currentNotes])
-
-  const moveTargets = useMemo(() => flattenFolders(folders), [folders])
-
   const trimmedQuery = query.trim()
-  const showResults = searchOpen && trimmedQuery.length > 0
-
-  const closeSearch = () => {
-    setSearchOpen(false)
-    setQuery('')
-  }
+  const showResults = trimmedQuery.length > 0
 
   const handleSelectResult = (note: Note) => {
     onSelectNote(note)
-    closeSearch()
+    setQuery('')
   }
 
-  const startRename = (id: string, currentName: string) => {
-    setRenamingId(id)
-    setRenameValue(currentName)
-  }
+  // Direct subfolders of the current navigation level (mobile/tablet drill-down only;
+  // on desktop, folder navigation lives in the FolderTree sidebar).
+  const childFolders = useMemo(() => {
+    const parentId = selectedFolderId === 'all' ? null : selectedFolderId
+    return folders.filter((folder) => folder.parent_id === parentId)
+  }, [folders, selectedFolderId])
 
-  const commitRename = (id: string) => {
-    const name = renameValue.trim()
-    if (name) onRenameFolder(id, name)
-    setRenamingId(null)
-  }
-
-  const handleCreateFolder = async () => {
-    const folder = await onCreateFolder()
-    if (folder) startRename(folder.id, folder.name)
-  }
-
-  const renderNote = (note: Note) => (
-    <li key={note.id} className="group relative">
-      <button
-        type="button"
-        onClick={() => onSelectNote(note)}
-        className={cn(
-          'w-full border-b border-border px-4 py-3 text-left transition-colors hover:bg-accent',
-          activeNoteId === note.id && 'bg-accent'
-        )}
-      >
-        <p className="truncate pr-8 text-sm font-medium text-foreground">
-          {note.title || 'Untitled'}
-        </p>
-        <p className="mt-0.5 truncate pr-8 text-xs text-muted-foreground">
-          {getSubtitle(note.content)}
-        </p>
-      </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Note actions"
-            onClick={(e) => e.stopPropagation()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onTogglePin(note.id, !note.pinned)}>
-            {note.pinned ? (
-              <>
-                <PinOff className="mr-2 h-4 w-4" />
-                Unpin note
-              </>
-            ) : (
-              <>
-                <Pin className="mr-2 h-4 w-4" />
-                Pin note
-              </>
-            )}
-          </DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to folder
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem
-                disabled={note.folder_id === null}
-                onClick={() => onMoveNote(note.id, null)}
-              >
-                Unfiled
-              </DropdownMenuItem>
-              {moveTargets.length > 0 && <DropdownMenuSeparator />}
-              {moveTargets.map(({ folder, depth }) => (
-                <DropdownMenuItem
-                  key={folder.id}
-                  disabled={note.folder_id === folder.id}
-                  onClick={() => onMoveNote(note.id, folder.id)}
-                  style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
-                >
-                  {folder.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuItem onClick={() => setTimeout(() => onShowVersionHistory(note), 0)}>
-            <History className="mr-2 h-4 w-4" />
-            Version history
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-            onClick={() => {
-              if (window.confirm('Delete this note? This cannot be undone.')) {
-                onDeleteNote(note.id)
-              }
-            }}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </li>
+  // "All Notes" is a recursive smart view of every note; a real folder shows only its direct notes.
+  const scopedNotes = useMemo(
+    () =>
+      selectedFolderId === 'all'
+        ? notes
+        : notes.filter((note) => note.folder_id === selectedFolderId),
+    [notes, selectedFolderId]
   )
 
-  const renderResult = (note: Note) => {
-    const folderName = note.folder_id
-      ? folders.find((folder) => folder.id === note.folder_id)?.name ?? 'Unfiled'
-      : 'Unfiled'
+  const pinnedNotes = useMemo(() => scopedNotes.filter((note) => note.pinned), [scopedNotes])
+  const unpinnedNotes = useMemo(() => scopedNotes.filter((note) => !note.pinned), [scopedNotes])
+
+  const moveTargets = useMemo(() => flattenFolders(folders), [folders])
+
+  const renderNoteItem = (note: Note) => {
+    const folderTag =
+      selectedFolderId === 'all'
+        ? (note.folder_id && folders.find((folder) => folder.id === note.folder_id)?.name) || 'Unfiled'
+        : null
+    const select = () => onSelectNote(note)
 
     return (
-      <li key={note.id}>
-        <button
-          type="button"
-          onClick={() => handleSelectResult(note)}
-          className={cn(
-            'w-full border-b border-border px-4 py-3 text-left transition-colors hover:bg-accent',
-            activeNoteId === note.id && 'bg-accent'
-          )}
-        >
-          <p className="truncate text-sm font-semibold text-foreground">
-            {note.title || 'Untitled'}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">{folderName}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {getSnippet(note.content, trimmedQuery)}
-          </p>
-        </button>
-      </li>
+      <Item
+        key={note.id}
+        variant={activeNoteId === note.id ? 'muted' : 'default'}
+        size="sm"
+        role="button"
+        tabIndex={0}
+        aria-current={activeNoteId === note.id || undefined}
+        onClick={select}
+        onKeyDown={onActivateKey(select)}
+        className="group cursor-pointer gap-2"
+      >
+        <ItemContent>
+          <ItemTitle className="truncate">{note.title || 'Untitled'}</ItemTitle>
+          <ItemDescription>
+            {folderTag ? `${folderTag} · ` : ''}
+            Edited {formatRelativeTime(note.updated_at)}
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Note actions"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onTogglePin(note.id, !note.pinned)}>
+                {note.pinned ? (
+                  <>
+                    <PinOff className="mr-2 h-4 w-4" />
+                    Unpin note
+                  </>
+                ) : (
+                  <>
+                    <Pin className="mr-2 h-4 w-4" />
+                    Pin note
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <FolderInput className="mr-2 h-4 w-4" />
+                  Move to folder
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem
+                    disabled={note.folder_id === null}
+                    onClick={() => onMoveNote(note.id, null)}
+                  >
+                    Unfiled
+                  </DropdownMenuItem>
+                  {moveTargets.length > 0 && <DropdownMenuSeparator />}
+                  {moveTargets.map(({ folder, depth }) => (
+                    <DropdownMenuItem
+                      key={folder.id}
+                      disabled={note.folder_id === folder.id}
+                      onClick={() => onMoveNote(note.id, folder.id)}
+                      style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
+                    >
+                      {folder.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuItem onClick={() => setTimeout(() => onShowVersionHistory(note), 0)}>
+                <History className="mr-2 h-4 w-4" />
+                Version history
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                onClick={() => {
+                  if (window.confirm('Delete this note? This cannot be undone.')) {
+                    onDeleteNote(note.id)
+                  }
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ItemActions>
+      </Item>
     )
   }
 
-  const renderFolder = (folder: FolderType) => {
-    const isRenaming = renamingId === folder.id
+  const renderFolderItem = (folder: FolderType) => {
+    const isRenaming = renamingFolderId === folder.id
+    const navigate = () => onSelectFolder(folder.id)
 
     return (
-      <li key={folder.id} className="group/folder">
-        <div
-          className={cn(
-            'flex w-full items-center gap-2 border-b border-border px-4 py-3 text-left transition-colors',
-            !isRenaming && 'cursor-pointer hover:bg-accent'
-          )}
-          onClick={() => !isRenaming && onNavigateFolder(folder.id)}
-        >
-          <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <Item
+        key={folder.id}
+        size="sm"
+        role="button"
+        tabIndex={0}
+        onClick={() => !isRenaming && navigate()}
+        onKeyDown={onActivateKey(() => !isRenaming && navigate())}
+        className="group cursor-pointer gap-2"
+      >
+        <ItemMedia>
+          <FolderIcon className="h-4 w-4 text-muted-foreground" />
+        </ItemMedia>
+        <ItemContent>
           {isRenaming ? (
             <input
-              ref={renameInputRef}
+              autoFocus
               value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
+              onChange={(e) => onRenameValueChange(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              onBlur={() => commitRename(folder.id)}
+              onBlur={() => onCommitRename(folder.id)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') commitRename(folder.id)
-                if (e.key === 'Escape') setRenamingId(null)
+                e.stopPropagation()
+                if (e.key === 'Enter') onCommitRename(folder.id)
+                if (e.key === 'Escape') onCancelRename()
               }}
               className="min-w-0 flex-1 rounded border border-input bg-background px-1 py-0.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           ) : (
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-              {folder.name}
-            </span>
+            <ItemTitle className="truncate">{folder.name}</ItemTitle>
           )}
-          {!isRenaming && (
+        </ItemContent>
+        {!isRenaming && (
+          <ItemActions>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   aria-label="Folder actions"
                   onClick={(e) => e.stopPropagation()}
-                  className="shrink-0 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover/folder:opacity-100 max-md:opacity-100"
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -362,12 +330,13 @@ export function NoteList({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation()
-                    startRename(folder.id, folder.name)
+                    onStartRename(folder)
                   }}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
                   Rename
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                   onClick={(e) => {
@@ -386,126 +355,123 @@ export function NoteList({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-          {!isRenaming && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-        </div>
-      </li>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </ItemActions>
+        )}
+      </Item>
     )
   }
 
-  const isEmpty = subfolders.length === 0 && currentNotes.length === 0
+  const renderResult = (note: Note) => {
+    const folderName = note.folder_id
+      ? folders.find((folder) => folder.id === note.folder_id)?.name ?? 'Unfiled'
+      : 'Unfiled'
+    const select = () => handleSelectResult(note)
+
+    return (
+      <Item
+        key={note.id}
+        variant={activeNoteId === note.id ? 'muted' : 'default'}
+        size="sm"
+        role="button"
+        tabIndex={0}
+        onClick={select}
+        onKeyDown={onActivateKey(select)}
+        className="cursor-pointer gap-2"
+      >
+        <ItemContent>
+          <ItemTitle className="truncate">{note.title || 'Untitled'}</ItemTitle>
+          <ItemDescription>
+            {folderName} · {getSnippet(note.content, trimmedQuery)}
+          </ItemDescription>
+        </ItemContent>
+      </Item>
+    )
+  }
+
+  const isEmpty = isDesktop
+    ? scopedNotes.length === 0
+    : childFolders.length === 0 && scopedNotes.length === 0
+
+  const emptyMessage =
+    selectedFolderId === 'all' ? 'No notes yet. Create your first note to get started.' : 'This folder is empty.'
 
   return (
     <div className="flex h-full flex-col">
-      {currentFolder && !showResults && (
-        <button
-          type="button"
-          onClick={() => onNavigateFolder(currentFolder.parent_id)}
-          className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
-        >
-          <ChevronLeft className="h-4 w-4 shrink-0" />
-          <span className="truncate">{currentFolder.name}</span>
-        </button>
-      )}
-
-      <div className="flex gap-2 border-b border-border p-3">
-        {searchOpen ? (
-          <div className="flex flex-1 items-center gap-2">
+      <div className="flex flex-col gap-2 border-b border-border p-3">
+        <div className="flex gap-2">
+          <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
+            <Plus className="h-4 w-4" />
+            New note
+          </Button>
+          <Button onClick={onCreateFolder} variant="outline" className="gap-2">
+            <FolderPlus className="h-4 w-4" />
+            New folder
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
-              ref={searchInputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') closeSearch()
-              }}
               placeholder="Search notes…"
               aria-label="Search notes"
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
-            <button
-              type="button"
-              aria-label="Close search"
-              onClick={closeSearch}
-              className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
-        ) : (
-          <>
-            <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
-              <Plus className="h-4 w-4" />
-              New note
-            </Button>
-            <Button onClick={handleCreateFolder} variant="outline" className="gap-2">
-              <FolderPlus className="h-4 w-4" />
-              New folder
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Sort notes">
-                  <ArrowUpDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={sortBy}
-                  onValueChange={(value) => onSortChange(value as SortBy)}
-                >
-                  <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="title_asc">Title A–Z</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="title_desc">Title Z–A</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="created_at">Date created</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              onClick={() => setSearchOpen(true)}
-              variant="outline"
-              size="icon"
-              aria-label="Search notes"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-          </>
-        )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Sort notes" className="shrink-0">
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={sortBy}
+                onValueChange={(value) => onSortChange(value as SortBy)}
+              >
+                <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="title_asc">Title A–Z</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="title_desc">Title Z–A</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="created_at">Date created</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
         {showResults ? (
-          trimmedQuery.length < MIN_QUERY_LENGTH ? null : isSearching &&
-            results.length === 0 ? (
+          trimmedQuery.length < MIN_QUERY_LENGTH ? (
+            <p className="p-4 text-sm text-muted-foreground">Keep typing to search…</p>
+          ) : isSearching && results.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">Searching…</p>
           ) : results.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">No notes found</p>
           ) : (
-            <ul className="flex flex-col">{results.map(renderResult)}</ul>
+            <ItemGroup className="gap-1 p-2">{results.map(renderResult)}</ItemGroup>
           )
         ) : loading ? (
           <p className="p-4 text-sm text-muted-foreground">Loading notes…</p>
         ) : isEmpty ? (
-          <p className="p-4 text-sm text-muted-foreground">
-            {currentFolder
-              ? 'This folder is empty.'
-              : 'No notes yet. Create your first note to get started.'}
-          </p>
+          <p className="p-4 text-sm text-muted-foreground">{emptyMessage}</p>
         ) : (
-          <ul className="flex flex-col">
-            {subfolders.map(renderFolder)}
+          <ItemGroup className="gap-1 p-2">
+            {!isDesktop && childFolders.map(renderFolderItem)}
             {pinnedNotes.length > 0 && (
-              <li className="px-4 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Pinned
-              </li>
+              </div>
             )}
-            {pinnedNotes.map(renderNote)}
-            {unpinnedNotes.map(renderNote)}
-          </ul>
+            {pinnedNotes.map(renderNoteItem)}
+            {unpinnedNotes.map(renderNoteItem)}
+          </ItemGroup>
         )}
       </ScrollArea>
 
-      <div className="flex shrink-0 items-stretch border-t border-border">
+      <div className="flex shrink-0 items-stretch border-t border-border pb-[env(safe-area-inset-bottom)]">
         <button
           type="button"
           onClick={onSelectTrash}

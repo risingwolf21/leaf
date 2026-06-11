@@ -1,17 +1,22 @@
 import { useCallback, useState } from 'react'
+import { FolderPlus, Plus } from 'lucide-react'
 import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { TrashView } from '@/components/TrashView'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
+import { FolderTree } from '@/components/FolderTree'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
-import type { Note, ViewMode } from '@/types'
+import type { Folder, Note, ViewMode } from '@/types'
 
 type MobileView = 'list' | 'editor'
+type FolderSelection = string | 'all'
 
 export default function AppPage() {
   const [sortBy, setSortBy] = useSortPreference()
@@ -34,10 +39,13 @@ export default function AppPage() {
   const [showTrash, setShowTrash] = useState(false)
   const [mobileView, setMobileView] = useState<MobileView>('list')
   const [mode, setMode] = useState<ViewMode>('preview')
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [selectedFolderId, setSelectedFolderId] = useState<FolderSelection>('all')
   const [versionHistoryNote, setVersionHistoryNote] = useState<Note | null>(null)
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
+  const currentFolder = folders.find((folder) => folder.id === selectedFolderId) ?? null
 
   const handleSelectNote = (note: Note) => {
     setActiveNoteId(note.id)
@@ -63,7 +71,8 @@ export default function AppPage() {
   )
 
   const handleCreateNote = async () => {
-    const note = await createNote(currentFolderId)
+    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
+    const note = await createNote(folderId)
     if (note) {
       setActiveNoteId(note.id)
       setShowTrash(false)
@@ -79,9 +88,43 @@ export default function AppPage() {
     }
   }
 
-  const handleCreateFolder = () => createFolder('New folder', currentFolderId)
+  const handleStartRename = (folder: Folder) => {
+    setRenamingFolderId(folder.id)
+    setRenameValue(folder.name)
+  }
+
+  const handleCommitRename = (id: string) => {
+    const name = renameValue.trim()
+    if (name) renameFolder(id, name)
+    setRenamingFolderId(null)
+  }
+
+  const handleCancelRename = () => setRenamingFolderId(null)
+
+  const handleCreateFolder = async () => {
+    const parentId = selectedFolderId === 'all' ? null : selectedFolderId
+    const folder = await createFolder('New folder', parentId)
+    if (folder) handleStartRename(folder)
+  }
 
   const handleDeleteFolder = async (id: string) => {
+    // Deletion cascades to subfolders; if the active selection points at the
+    // deleted folder or one of its descendants, fall back to its parent (or
+    // "All Notes" if it was a root folder) so the UI doesn't get stranded.
+    const idsToRemove = new Set<string>()
+    const collect = (folderId: string) => {
+      idsToRemove.add(folderId)
+      for (const folder of folders) {
+        if (folder.parent_id === folderId) collect(folder.id)
+      }
+    }
+    collect(id)
+
+    if (selectedFolderId !== 'all' && idsToRemove.has(selectedFolderId)) {
+      const deletedFolder = folders.find((folder) => folder.id === id)
+      setSelectedFolderId(deletedFolder?.parent_id ?? 'all')
+    }
+
     await deleteFolder(id)
     await refetch()
   }
@@ -90,6 +133,18 @@ export default function AppPage() {
     await moveNote(noteId, folderId)
     await refetch()
   }
+
+  const handleBack = () => {
+    if (mobileView === 'editor') {
+      setMobileView('list')
+      return
+    }
+    if (currentFolder) {
+      setSelectedFolderId(currentFolder.parent_id ?? 'all')
+    }
+  }
+
+  const showBackButton = mobileView === 'editor' || currentFolder !== null
 
   const headerContent =
     activeNote && !showTrash && mobileView === 'editor' ? (
@@ -110,17 +165,44 @@ export default function AppPage() {
         </span>
         <EditorModeToggle mode={mode} onModeChange={setMode} />
       </>
+    ) : mobileView === 'list' && currentFolder ? (
+      <>
+        <span className="min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
+          {currentFolder.name}
+        </span>
+        <div className="hidden shrink-0 items-center gap-1 sm:flex">
+          <Button variant="ghost" size="icon" onClick={handleCreateNote} aria-label="New note">
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleCreateFolder} aria-label="New folder">
+            <FolderPlus className="h-4 w-4" />
+          </Button>
+        </div>
+      </>
     ) : undefined
 
   return (
-    <Layout
-      showBackButton={mobileView === 'editor'}
-      onBack={() => setMobileView('list')}
-      headerContent={headerContent}
-    >
+    <Layout showBackButton={showBackButton} onBack={handleBack} headerContent={headerContent}>
+      <aside className="hidden h-full w-60 shrink-0 overflow-hidden border-r border-border md:block">
+        <ScrollArea className="h-full">
+          <FolderTree
+            folders={folders}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={setSelectedFolderId}
+            onDeleteFolder={handleDeleteFolder}
+            renamingFolderId={renamingFolderId}
+            renameValue={renameValue}
+            onRenameValueChange={setRenameValue}
+            onStartRename={handleStartRename}
+            onCommitRename={handleCommitRename}
+            onCancelRename={handleCancelRename}
+          />
+        </ScrollArea>
+      </aside>
+
       <aside
         className={cn(
-          'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-[340px]',
+          'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-80',
           mobileView === 'editor' ? 'hidden' : 'block'
         )}
       >
@@ -131,20 +213,25 @@ export default function AppPage() {
           activeNoteId={activeNoteId}
           trashCount={trashedNotes.length}
           showTrash={showTrash}
-          currentFolderId={currentFolderId}
+          selectedFolderId={selectedFolderId}
           sortBy={sortBy}
           onSortChange={setSortBy}
-          onNavigateFolder={setCurrentFolderId}
+          onSelectFolder={setSelectedFolderId}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}
           onCreateFolder={handleCreateFolder}
-          onRenameFolder={renameFolder}
           onDeleteFolder={handleDeleteFolder}
           onMoveNote={handleMoveNote}
           onSelectTrash={handleSelectTrash}
           onTogglePin={togglePin}
           onShowVersionHistory={setVersionHistoryNote}
+          renamingFolderId={renamingFolderId}
+          renameValue={renameValue}
+          onRenameValueChange={setRenameValue}
+          onStartRename={handleStartRename}
+          onCommitRename={handleCommitRename}
+          onCancelRename={handleCancelRename}
         />
       </aside>
 
