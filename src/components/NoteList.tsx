@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Folder,
@@ -9,6 +10,8 @@ import {
   HelpCircle,
   MoreHorizontal,
   Pencil,
+  Pin,
+  PinOff,
   Plus,
   Search,
   Trash2,
@@ -21,6 +24,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -29,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
+import type { SortBy } from '@/hooks/useNotes'
 import type { Folder as FolderType, Note } from '@/types'
 
 interface NoteListProps {
@@ -39,6 +46,8 @@ interface NoteListProps {
   trashCount: number
   showTrash: boolean
   currentFolderId: string | null
+  sortBy: SortBy
+  onSortChange: (sortBy: SortBy) => void
   onNavigateFolder: (folderId: string | null) => void
   onSelectNote: (note: Note) => void
   onCreateNote: () => void
@@ -48,6 +57,7 @@ interface NoteListProps {
   onDeleteFolder: (id: string) => void
   onMoveNote: (noteId: string, folderId: string | null) => void
   onSelectTrash: () => void
+  onTogglePin: (noteId: string, pinned: boolean) => void
 }
 
 function getSubtitle(content: string) {
@@ -106,6 +116,8 @@ export function NoteList({
   trashCount,
   showTrash,
   currentFolderId,
+  sortBy,
+  onSortChange,
   onNavigateFolder,
   onSelectNote,
   onCreateNote,
@@ -115,6 +127,7 @@ export function NoteList({
   onDeleteFolder,
   onMoveNote,
   onSelectTrash,
+  onTogglePin,
 }: NoteListProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
@@ -145,6 +158,9 @@ export function NoteList({
     () => notes.filter((note) => note.folder_id === currentFolderId),
     [notes, currentFolderId]
   )
+
+  const pinnedNotes = useMemo(() => currentNotes.filter((note) => note.pinned), [currentNotes])
+  const unpinnedNotes = useMemo(() => currentNotes.filter((note) => !note.pinned), [currentNotes])
 
   const moveTargets = useMemo(() => flattenFolders(folders), [folders])
 
@@ -206,6 +222,19 @@ export function NoteList({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onTogglePin(note.id, !note.pinned)}>
+            {note.pinned ? (
+              <>
+                <PinOff className="mr-2 h-4 w-4" />
+                Unpin note
+              </>
+            ) : (
+              <>
+                <Pin className="mr-2 h-4 w-4" />
+                Pin note
+              </>
+            )}
+          </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <FolderInput className="mr-2 h-4 w-4" />
@@ -401,6 +430,25 @@ export function NoteList({
               <FolderPlus className="h-4 w-4" />
               New folder
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Sort notes">
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={sortBy}
+                  onValueChange={(value) => onSortChange(value as SortBy)}
+                >
+                  <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="title_asc">Title A–Z</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="title_desc">Title Z–A</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="created_at">Date created</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               onClick={() => setSearchOpen(true)}
               variant="outline"
@@ -434,7 +482,13 @@ export function NoteList({
         ) : (
           <ul className="flex flex-col">
             {subfolders.map(renderFolder)}
-            {currentNotes.map(renderNote)}
+            {pinnedNotes.length > 0 && (
+              <li className="px-4 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Pinned
+              </li>
+            )}
+            {pinnedNotes.map(renderNote)}
+            {unpinnedNotes.map(renderNote)}
           </ul>
         )}
       </ScrollArea>
