@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ArrowLeft, Leaf, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
 import { cn } from '@/lib/utils'
 
 interface LayoutProps {
@@ -14,9 +15,10 @@ interface LayoutProps {
 
 export function Layout({ children, showBackButton, onBack, headerContent }: LayoutProps) {
   const { signOut } = useAuth()
+  useVisualViewportHeight()
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background">
+    <div className="flex h-[var(--app-height,100dvh)] flex-col overflow-hidden bg-background">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {showBackButton && (
