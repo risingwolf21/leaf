@@ -1,7 +1,11 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
+import { LinksPanel } from '@/components/LinksPanel'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
 import type { Note, ViewMode } from '@/types'
@@ -16,6 +20,8 @@ interface NoteEditorProps {
   onNavigateToNote: (title: string) => void
 }
 
+type MobilePanel = 'note' | 'links'
+
 export function NoteEditor({
   note,
   notes,
@@ -27,6 +33,8 @@ export function NoteEditor({
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel>('note')
 
   const editor = useEditor(
     {
@@ -35,7 +43,7 @@ export function NoteEditor({
       editable: false,
       editorProps: {
         attributes: {
-          class: 'markdown-preview min-h-full focus:outline-none pb-8',
+          class: 'markdown-preview min-h-[300px] focus:outline-none pb-8',
         },
       },
       onUpdate: ({ editor }) => {
@@ -60,7 +68,31 @@ export function NoteEditor({
     editor.view.dispatch(editor.state.tr)
   }, [editor, notes, onNavigateToNote])
 
+  useEffect(() => {
+    setMobilePanel('note')
+  }, [note.id])
+
   if (!editor) return null
+
+  const editorContent =
+    mode === 'source' ? (
+      <textarea
+        value={note.content}
+        onChange={(e) => onChange(note.id, { content: e.target.value })}
+        placeholder="Start writing…"
+        spellCheck
+        className="min-h-[300px] w-full resize-none bg-transparent font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground"
+      />
+    ) : (
+      <>
+        {mode === 'edit' && (
+          <div className="mb-2 rounded-md border border-border p-1">
+            <EditorToolbar editor={editor} />
+          </div>
+        )}
+        <EditorContent editor={editor} />
+      </>
+    )
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
@@ -79,25 +111,26 @@ export function NoteEditor({
         </div>
       </div>
 
-      {mode === 'source' ? (
-        <textarea
-          value={note.content}
-          onChange={(e) => onChange(note.id, { content: e.target.value })}
-          placeholder="Start writing…"
-          spellCheck
-          className="h-full w-full flex-1 resize-none bg-transparent font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground"
-        />
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          {mode === 'edit' && (
-            <div className="mb-2 shrink-0 rounded-md border border-border p-1">
-              <EditorToolbar editor={editor} />
-            </div>
-          )}
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <EditorContent editor={editor} className="h-full" />
-          </div>
+      {isDesktop ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {editorContent}
+          <Separator className="my-6" />
+          <LinksPanel noteId={note.id} />
         </div>
+      ) : (
+        <Tabs
+          value={mobilePanel}
+          onValueChange={(value) => setMobilePanel(value as MobilePanel)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {mobilePanel === 'note' ? editorContent : <LinksPanel noteId={note.id} />}
+          </div>
+          <TabsList className="mt-3 grid shrink-0 grid-cols-2">
+            <TabsTrigger value="note">Note</TabsTrigger>
+            <TabsTrigger value="links">Links</TabsTrigger>
+          </TabsList>
+        </Tabs>
       )}
     </div>
   )
