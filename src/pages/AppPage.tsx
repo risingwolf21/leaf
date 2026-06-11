@@ -120,7 +120,7 @@ export default function AppPage() {
     >
       <aside
         className={cn(
-          'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-[280px]',
+          'h-full w-full shrink-0 overflow-hidden border-r border-border md:block md:w-[340px]',
           mobileView === 'editor' ? 'hidden' : 'block'
         )}
       >
