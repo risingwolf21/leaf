@@ -5,10 +5,12 @@ import {
   Folder,
   FolderInput,
   FolderPlus,
+  Moon,
   MoreHorizontal,
   Pencil,
   Plus,
   Search,
+  Sun,
   Trash2,
   X,
 } from 'lucide-react'
@@ -27,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
+import { useTheme } from '@/hooks/useTheme'
 import type { Folder as FolderType, Note } from '@/types'
 
 interface NoteListProps {
@@ -120,6 +123,7 @@ export function NoteList({
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const { query, setQuery, results, isSearching } = useSearch()
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     if (renamingId) {
@@ -448,6 +452,16 @@ export function NoteList({
         <Trash2 className="h-4 w-4" />
         <span className="flex-1">Trash</span>
         {trashCount > 0 && <Badge variant="secondary">{trashCount}</Badge>}
+      </button>
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        <span className="flex-1">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
       </button>
     </div>
   )
