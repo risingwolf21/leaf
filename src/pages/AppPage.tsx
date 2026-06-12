@@ -153,6 +153,7 @@ export default function AppPage() {
           value={activeNote.title}
           onChange={(e) => updateNote(activeNote.id, { title: e.target.value })}
           placeholder="Untitled"
+          tabIndex={-1}
           className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
         />
         <span
