@@ -2,8 +2,6 @@ import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import Sidebar, { SidebarContent } from '@/components/Sidebar'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
-import { useNotesContext } from '@/context/NotesContext'
 import { cn } from '@/lib/utils'
 
 interface AppShellProps {
@@ -20,7 +18,6 @@ interface AppShellProps {
 export function AppShell({ headerContent, children }: AppShellProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { mobileSidebarOpen, setMobileSidebarOpen } = useNotesContext()
 
   const isDetail = location.pathname !== '/app'
 
@@ -39,12 +36,6 @@ export function AppShell({ headerContent, children }: AppShellProps) {
       <main className={cn('h-full min-w-0 flex-1 overflow-hidden', isDetail ? 'block' : 'hidden md:block')}>
         {children}
       </main>
-
-      <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-        <SheetContent side="left" className="gap-0 p-0 md:hidden">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
     </Layout>
   )
 }

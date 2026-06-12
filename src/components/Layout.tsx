@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft, Leaf, Menu, PanelLeft } from 'lucide-react'
+import { ArrowLeft, Leaf, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNotesContext } from '@/context/NotesContext'
 import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
@@ -14,7 +14,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children, showBackButton, onBack, headerContent }: LayoutProps) {
-  const { setMobileSidebarOpen, toggleSidebar } = useNotesContext()
+  const { toggleSidebar } = useNotesContext()
   const keyboardOpen = useVisualViewportHeight()
 
   return (
@@ -40,20 +40,9 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setMobileSidebarOpen(true)}
-              aria-label="Open sidebar"
-              className="-ml-2 shrink-0 md:hidden"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          )}
-          {showBackButton && (
-            <Button
-              variant="ghost"
-              size="icon"
               onClick={onBack}
               aria-label="Back to notes"
-              className="shrink-0 md:hidden"
+              className="-ml-2 shrink-0 md:hidden"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
