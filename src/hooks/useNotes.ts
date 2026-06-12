@@ -119,21 +119,29 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     }
   }, [])
 
-  const createNote = useCallback(async (folderId: string | null = null): Promise<Note | null> => {
-    if (!user) return null
+  const createNote = useCallback(
+    async (folderId: string | null = null, fields: NoteFields = {}): Promise<Note | null> => {
+      if (!user) return null
 
-    const { data, error } = await supabase
-      .from('notes')
-      .insert({ user_id: user.id, title: 'Untitled', content: '', folder_id: folderId })
-      .select()
-      .single()
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({
+          user_id: user.id,
+          title: fields.title ?? 'Untitled',
+          content: fields.content ?? '',
+          folder_id: folderId,
+        })
+        .select()
+        .single()
 
-    if (error || !data) return null
+      if (error || !data) return null
 
-    const note = data as Note
-    setNotes((prev) => sortNotes([note, ...prev], sortByRef.current))
-    return note
-  }, [user])
+      const note = data as Note
+      setNotes((prev) => sortNotes([note, ...prev], sortByRef.current))
+      return note
+    },
+    [user]
+  )
 
   const updateNote = useCallback((id: string, fields: NoteFields) => {
     // Optimistic local update so the UI feels instant.

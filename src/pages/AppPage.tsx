@@ -4,7 +4,9 @@ import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
+import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
 import { SharePopover } from '@/components/SharePopover'
+import { TemplatesView } from '@/components/TemplatesView'
 import { TrashView } from '@/components/TrashView'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import { FolderTree } from '@/components/FolderTree'
@@ -13,8 +15,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { useSortPreference } from '@/hooks/useSortPreference'
+import { useTemplates } from '@/hooks/useTemplates'
 import { cn } from '@/lib/utils'
-import type { Folder, Note, ViewMode } from '@/types'
+import type { AnyTemplate, Folder, Note, ViewMode } from '@/types'
 
 type MobileView = 'list' | 'editor'
 type FolderSelection = string | 'all'
@@ -38,8 +41,11 @@ export default function AppPage() {
     refetch,
   } = useNotes(sortBy)
   const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
+  const { templates, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
+    useTemplates(createNote)
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [showTrash, setShowTrash] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
   const [mobileView, setMobileView] = useState<MobileView>('list')
   const [mode, setMode] = useState<ViewMode>('preview')
   const [selectedFolderId, setSelectedFolderId] = useState<FolderSelection>('all')
@@ -53,12 +59,21 @@ export default function AppPage() {
   const handleSelectNote = (note: Note) => {
     setActiveNoteId(note.id)
     setShowTrash(false)
+    setShowTemplates(false)
     setMobileView('editor')
   }
 
   const handleSelectTrash = () => {
     setActiveNoteId(null)
     setShowTrash(true)
+    setShowTemplates(false)
+    setMobileView('editor')
+  }
+
+  const handleSelectTemplates = () => {
+    setActiveNoteId(null)
+    setShowTrash(false)
+    setShowTemplates(true)
     setMobileView('editor')
   }
 
@@ -68,6 +83,7 @@ export default function AppPage() {
       if (!target) return
       setActiveNoteId(target.id)
       setShowTrash(false)
+      setShowTemplates(false)
       setMobileView('editor')
     },
     [notes]
@@ -79,6 +95,18 @@ export default function AppPage() {
     if (note) {
       setActiveNoteId(note.id)
       setShowTrash(false)
+      setShowTemplates(false)
+      setMobileView('editor')
+    }
+  }
+
+  const handleSelectTemplate = async (template: AnyTemplate) => {
+    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
+    const note = await createNoteFromTemplate(template, folderId)
+    if (note) {
+      setActiveNoteId(note.id)
+      setShowTrash(false)
+      setShowTemplates(false)
       setMobileView('editor')
     }
   }
@@ -169,6 +197,7 @@ export default function AppPage() {
         </span>
         <SharePopover note={activeNote} onShare={shareNote} onUnshare={unshareNote} />
         <EditorModeToggle mode={mode} onModeChange={setMode} />
+        <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={saveAsTemplate} />
       </>
     ) : mobileView === 'list' && currentFolder ? (
       <>
@@ -214,21 +243,25 @@ export default function AppPage() {
         <NoteList
           notes={notes}
           folders={folders}
+          templates={templates}
           loading={loading}
           activeNoteId={activeNoteId}
           trashCount={trashedNotes.length}
           showTrash={showTrash}
+          showTemplates={showTemplates}
           selectedFolderId={selectedFolderId}
           sortBy={sortBy}
           onSortChange={setSortBy}
           onSelectFolder={setSelectedFolderId}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
+          onSelectTemplate={handleSelectTemplate}
           onDeleteNote={handleDeleteNote}
           onCreateFolder={handleCreateFolder}
           onDeleteFolder={handleDeleteFolder}
           onMoveNote={handleMoveNote}
           onSelectTrash={handleSelectTrash}
+          onSelectTemplates={handleSelectTemplates}
           onTogglePin={togglePin}
           onShowVersionHistory={setVersionHistoryNote}
           renamingFolderId={renamingFolderId}
@@ -246,7 +279,15 @@ export default function AppPage() {
           mobileView === 'list' ? 'hidden md:block' : 'block'
         )}
       >
-        {showTrash ? (
+        {showTemplates ? (
+          <TemplatesView
+            templates={templates}
+            onUseTemplate={handleSelectTemplate}
+            onSaveTemplate={saveAsTemplate}
+            onRenameTemplate={renameTemplate}
+            onDeleteTemplate={deleteTemplate}
+          />
+        ) : showTrash ? (
           <TrashView
             notes={trashedNotes}
             onRestore={restoreNote}
@@ -264,6 +305,7 @@ export default function AppPage() {
             onNavigateToNote={handleNavigateToNote}
             onShare={shareNote}
             onUnshare={unshareNote}
+            onSaveAsTemplate={saveAsTemplate}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
