@@ -101,7 +101,7 @@ function DialogContent({
 const dialogHeaderVariants = cva("flex flex-col", {
   variants: {
     variant: {
-      default: "gap-2 p-4",
+      default: "min-w-0 gap-2 p-4",
       appbar: "pt-safe-top sticky top-0 z-50 w-full bg-background/95 supports-[backdrop-filter]:bg-background border-b shadow-sm shrink-0",
     }
   },

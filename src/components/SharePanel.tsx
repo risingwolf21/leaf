@@ -107,10 +107,10 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="truncate pr-6">Share “{note.title || 'Untitled'}”</DialogTitle>
+          <DialogTitle className="min-w-0 flex-1 truncate pr-6">Share “{note.title || 'Untitled'}”</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-5">
           <div className="flex flex-col gap-2">
             <h3 className="text-sm font-medium text-foreground">Share with people</h3>
             <div className="flex flex-col gap-2 sm:flex-row">
