@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowUpDown,
   ChevronRight,
@@ -46,46 +46,13 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { TemplatePicker } from '@/components/TemplatePicker'
+import { useNotesContext } from '@/context/NotesContext'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import { useTheme } from '@/hooks/useTheme'
 import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { SortBy } from '@/hooks/useNotes'
-import type { AnyTemplate, Folder as FolderType, Note, SharedNote, Template } from '@/types'
-
-interface NoteListProps {
-  notes: Note[]
-  sharedNotes: SharedNote[]
-  folders: FolderType[]
-  templates: Template[]
-  loading: boolean
-  activeNoteId: string | null
-  trashCount: number
-  showTrash: boolean
-  showTemplates: boolean
-  selectedFolderId: string | 'all'
-  sortBy: SortBy
-  onSortChange: (sortBy: SortBy) => void
-  onSelectFolder: (id: string | 'all') => void
-  onSelectNote: (note: Note) => void
-  onCreateNote: () => void
-  onSelectTemplate: (template: AnyTemplate) => void
-  onDeleteNote: (id: string) => void
-  onCreateFolder: () => void
-  onDeleteFolder: (id: string) => void
-  onMoveNote: (noteId: string, folderId: string | null) => void
-  onSelectTrash: () => void
-  onSelectTemplates: () => void
-  onTogglePin: (noteId: string, pinned: boolean) => void
-  onShowVersionHistory: (note: Note) => void
-  onRemoveSharedNote: (id: string) => void
-  renamingFolderId: string | null
-  renameValue: string
-  onRenameValueChange: (value: string) => void
-  onStartRename: (folder: FolderType) => void
-  onCommitRename: (id: string) => void
-  onCancelRename: () => void
-}
+import type { AnyTemplate, Folder as FolderType, Note, SharedNote } from '@/types'
 
 /** Returns up to `maxLength` characters of `content`, centred on the first match of `query`. */
 function getSnippet(content: string, query: string, maxLength = 120) {
@@ -124,49 +91,77 @@ function flattenFolders(
     ])
 }
 
-export function NoteList({
-  notes,
-  sharedNotes,
-  folders,
-  templates,
-  loading,
-  activeNoteId,
-  trashCount,
-  showTrash,
-  showTemplates,
-  selectedFolderId,
-  sortBy,
-  onSortChange,
-  onSelectFolder,
-  onSelectNote,
-  onCreateNote,
-  onSelectTemplate,
-  onDeleteNote,
-  onCreateFolder,
-  onDeleteFolder,
-  onMoveNote,
-  onSelectTrash,
-  onSelectTemplates,
-  onTogglePin,
-  onShowVersionHistory,
-  onRemoveSharedNote,
-  renamingFolderId,
-  renameValue,
-  onRenameValueChange,
-  onStartRename,
-  onCommitRename,
-  onCancelRename,
-}: NoteListProps) {
+export function NoteList() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { noteId } = useParams<{ noteId: string }>()
+  const {
+    notes,
+    sharedNotes,
+    folders,
+    templates,
+    loading,
+    trashedNotes,
+    selectedFolderId,
+    setSelectedFolderId,
+    sortBy,
+    setSortBy,
+    createNote,
+    createNoteFromTemplate,
+    deleteNote,
+    togglePin,
+    handleMoveNote,
+    handleCreateFolder,
+    handleDeleteFolder,
+    openVersionHistory,
+    removeSelfFromNote,
+    renamingFolderId,
+    renameValue,
+    setRenameValue,
+    handleStartRename,
+    handleCommitRename,
+    handleCancelRename,
+  } = useNotesContext()
+
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const { query, setQuery, results, isSearching } = useSearch()
   const { theme, toggleTheme } = useTheme()
 
+  const activeNoteId = noteId ?? null
+  const showTrash = location.pathname === '/app/trash'
+  const showTemplates = location.pathname === '/app/templates'
+  const trashCount = trashedNotes.length
+
   const trimmedQuery = query.trim()
   const showResults = trimmedQuery.length > 0
 
+  const handleSelectNote = (note: Note) => navigate(`/app/notes/${note.id}`)
+
   const handleSelectResult = (note: Note) => {
-    onSelectNote(note)
+    handleSelectNote(note)
     setQuery('')
+  }
+
+  const handleCreateNote = async () => {
+    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
+    const note = await createNote(folderId)
+    if (note) navigate(`/app/notes/${note.id}`)
+  }
+
+  const handleSelectTemplate = async (template: AnyTemplate) => {
+    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
+    const note = await createNoteFromTemplate(template, folderId)
+    if (note) navigate(`/app/notes/${note.id}`)
+  }
+
+  const handleDeleteNote = async (id: string) => {
+    await deleteNote(id)
+    if (activeNoteId === id) navigate('/app')
+  }
+
+  const handleRemoveSharedNote = async (id: string) => {
+    await removeSelfFromNote(id)
+    if (activeNoteId === id) navigate('/app')
   }
 
   // Direct subfolders of the current navigation level (mobile/tablet drill-down only;
@@ -198,7 +193,7 @@ export function NoteList({
       selectedFolderId === 'all'
         ? (note.folder_id && folders.find((folder) => folder.id === note.folder_id)?.name) || 'Unfiled'
         : null
-    const select = () => onSelectNote(note)
+    const select = () => handleSelectNote(note)
 
     return (
       <Item
@@ -221,8 +216,7 @@ export function NoteList({
         </ItemContent>
         <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
+            <DropdownMenuTrigger render={<button
                 type="button"
                 aria-label="Note actions"
                 onClick={(e) => e.stopPropagation()}
@@ -230,10 +224,11 @@ export function NoteList({
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <MoreHorizontal className="h-4 w-4" />
-              </button>
+              </button>}>
+              
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onTogglePin(note.id, !note.pinned)}>
+              <DropdownMenuItem onClick={() => togglePin(note.id, !note.pinned)}>
                 {note.pinned ? (
                   <>
                     <PinOff className="mr-2 h-4 w-4" />
@@ -254,7 +249,7 @@ export function NoteList({
                 <DropdownMenuSubContent>
                   <DropdownMenuItem
                     disabled={note.folder_id === null}
-                    onClick={() => onMoveNote(note.id, null)}
+                    onClick={() => handleMoveNote(note.id, null)}
                   >
                     Unfiled
                   </DropdownMenuItem>
@@ -263,7 +258,7 @@ export function NoteList({
                     <DropdownMenuItem
                       key={folder.id}
                       disabled={note.folder_id === folder.id}
-                      onClick={() => onMoveNote(note.id, folder.id)}
+                      onClick={() => handleMoveNote(note.id, folder.id)}
                       style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
                     >
                       {folder.name}
@@ -271,7 +266,7 @@ export function NoteList({
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              <DropdownMenuItem onClick={() => setTimeout(() => onShowVersionHistory(note), 0)}>
+              <DropdownMenuItem onClick={() => setTimeout(() => openVersionHistory(note), 0)}>
                 <History className="mr-2 h-4 w-4" />
                 Version history
               </DropdownMenuItem>
@@ -280,7 +275,7 @@ export function NoteList({
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                 onClick={() => {
                   if (window.confirm('Delete this note? This cannot be undone.')) {
-                    onDeleteNote(note.id)
+                    handleDeleteNote(note.id)
                   }
                 }}
               >
@@ -297,7 +292,7 @@ export function NoteList({
   const renderSharedNoteItem = (note: SharedNote) => {
     const RoleIcon = note.my_role === 'editor' ? Pencil : Eye
     const roleLabel = note.my_role === 'editor' ? 'Can edit' : 'Can view'
-    const select = () => onSelectNote(note)
+    const select = () => handleSelectNote(note)
 
     return (
       <Item
@@ -322,8 +317,7 @@ export function NoteList({
         </ItemContent>
         <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
+            <DropdownMenuTrigger render={ <button
                 type="button"
                 aria-label="Note actions"
                 onClick={(e) => e.stopPropagation()}
@@ -331,14 +325,15 @@ export function NoteList({
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <MoreHorizontal className="h-4 w-4" />
-              </button>
+              </button>}>
+             
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                 onClick={() => {
                   if (window.confirm('Remove this note from your shared notes?')) {
-                    onRemoveSharedNote(note.id)
+                    handleRemoveSharedNote(note.id)
                   }
                 }}
               >
@@ -354,7 +349,7 @@ export function NoteList({
 
   const renderFolderItem = (folder: FolderType) => {
     const isRenaming = renamingFolderId === folder.id
-    const navigate = () => onSelectFolder(folder.id)
+    const navigateToFolder = () => setSelectedFolderId(folder.id)
 
     return (
       <Item
@@ -362,8 +357,8 @@ export function NoteList({
         size="sm"
         role="button"
         tabIndex={0}
-        onClick={() => !isRenaming && navigate()}
-        onKeyDown={onActivateKey(() => !isRenaming && navigate())}
+        onClick={() => !isRenaming && navigateToFolder()}
+        onKeyDown={onActivateKey(() => !isRenaming && navigateToFolder())}
         className="group cursor-pointer gap-2"
       >
         <ItemMedia>
@@ -374,13 +369,13 @@ export function NoteList({
             <input
               autoFocus
               value={renameValue}
-              onChange={(e) => onRenameValueChange(e.target.value)}
+              onChange={(e) => setRenameValue(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              onBlur={() => onCommitRename(folder.id)}
+              onBlur={() => handleCommitRename(folder.id)}
               onKeyDown={(e) => {
                 e.stopPropagation()
-                if (e.key === 'Enter') onCommitRename(folder.id)
-                if (e.key === 'Escape') onCancelRename()
+                if (e.key === 'Enter') handleCommitRename(folder.id)
+                if (e.key === 'Escape') handleCancelRename()
               }}
               className="min-w-0 flex-1 rounded border border-input bg-background px-1 py-0.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
@@ -391,8 +386,7 @@ export function NoteList({
         {!isRenaming && (
           <ItemActions>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
+              <DropdownMenuTrigger render={<button
                   type="button"
                   aria-label="Folder actions"
                   onClick={(e) => e.stopPropagation()}
@@ -400,13 +394,14 @@ export function NoteList({
                   className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <MoreHorizontal className="h-4 w-4" />
-                </button>
+                </button>}>
+                
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation()
-                    onStartRename(folder)
+                    handleStartRename(folder)
                   }}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
@@ -422,7 +417,7 @@ export function NoteList({
                         `Delete "${folder.name}"? Subfolders will also be deleted, and all notes inside will become Unfiled.`
                       )
                     ) {
-                      onDeleteFolder(folder.id)
+                      handleDeleteFolder(folder.id)
                     }
                   }}
                 >
@@ -478,10 +473,10 @@ export function NoteList({
         <div className="flex gap-2">
           <TemplatePicker
             templates={templates}
-            onCreateBlank={onCreateNote}
-            onSelectTemplate={onSelectTemplate}
+            onCreateBlank={handleCreateNote}
+            onSelectTemplate={handleSelectTemplate}
           />
-          <Button onClick={onCreateFolder} variant="outline" className="gap-2">
+          <Button onClick={handleCreateFolder} variant="outline" className="gap-2">
             <FolderPlus className="h-4 w-4" />
             New folder
           </Button>
@@ -498,17 +493,16 @@ export function NoteList({
             />
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Sort notes" className="shrink-0">
+            <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="Sort notes" className="shrink-0">
                 <ArrowUpDown className="h-4 w-4" />
-              </Button>
+              </Button>}>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 value={sortBy}
-                onValueChange={(value) => onSortChange(value as SortBy)}
+                onValueChange={(value) => setSortBy(value as SortBy)}
               >
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
                 <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="title_asc">Title A–Z</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="title_desc">Title Z–A</DropdownMenuRadioItem>
@@ -559,7 +553,7 @@ export function NoteList({
       <div className="flex shrink-0 items-stretch border-t border-border pb-[env(safe-area-inset-bottom)]">
         <button
           type="button"
-          onClick={onSelectTemplates}
+          onClick={() => navigate('/app/templates')}
           className={cn(
             'flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
             showTemplates ? 'bg-accent text-foreground' : 'text-muted-foreground'
@@ -570,7 +564,7 @@ export function NoteList({
         </button>
         <button
           type="button"
-          onClick={onSelectTrash}
+          onClick={() => navigate('/app/trash')}
           className={cn(
             'flex flex-1 items-center gap-2 border-l border-border px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
             showTrash ? 'bg-accent text-foreground' : 'text-muted-foreground'

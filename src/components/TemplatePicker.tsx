@@ -37,15 +37,13 @@ export function TemplatePicker({ templates, onCreateBlank, onSelectTemplate }: T
         New note
       </Button>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
+        <PopoverTrigger render={<Button
             size="icon"
             aria-label="New note from template"
             className="shrink-0 rounded-l-none border-l border-primary-foreground/20"
           >
             <ChevronDown className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
+          </Button>}/>
         <PopoverContent align="end" className="w-72 p-2">
           <p className="px-2 pb-2 pt-1 text-sm font-medium text-foreground">New from template</p>
           <ItemGroup className="gap-1">

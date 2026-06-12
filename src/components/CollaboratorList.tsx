@@ -71,11 +71,11 @@ export function CollaboratorList({
             <Avatar email={collaborator.email} />
             <p className="min-w-0 flex-1 truncate text-sm text-foreground">{collaborator.email}</p>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="shrink-0 gap-1">
+              <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="shrink-0 gap-1">
                   {ROLE_LABELS[collaborator.role]}
                   <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
+                </Button>}>
+                
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuRadioGroup

@@ -2,8 +2,8 @@ import { Image } from '@tiptap/extension-image'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import type { EditorView } from '@tiptap/pm/view'
-import { toast } from '@/hooks/use-toast'
 import { uploadNoteImage, validateImageFile } from '@/lib/image-upload'
+import { toast } from 'sonner'
 
 interface UploadMeta {
   add?: { id: object; pos: number }
@@ -43,7 +43,7 @@ function getImageFiles(fileList: FileList | null | undefined): File[] {
 export function uploadImageAt(view: EditorView, file: File, pos: number) {
   const validationError = validateImageFile(file)
   if (validationError) {
-    toast({ title: 'Cannot upload image', description: validationError, variant: 'destructive' })
+    toast.error('Cannot upload image', { description: validationError })
     return
   }
 
@@ -61,10 +61,8 @@ export function uploadImageAt(view: EditorView, file: File, pos: number) {
     })
     .catch((error: unknown) => {
       view.dispatch(view.state.tr.setMeta(imageUploadPluginKey, { remove: { id } } satisfies UploadMeta))
-      toast({
-        title: 'Image upload failed',
+      toast.error('Image upload failed', {
         description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
       })
     })
 }

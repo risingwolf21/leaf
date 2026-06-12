@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from '@/hooks/use-toast'
 import type { NoteFields } from '@/hooks/useNotes'
 import type { SharedNote } from '@/types'
+import { toast } from 'sonner'
 
 const AUTOSAVE_DELAY = 1000
 const LAST_SEEN_KEY_PREFIX = 'leaf:shared-notes-last-seen:'
@@ -72,7 +72,7 @@ export function useSharedNotes() {
       const mostRecent = unseen.reduce((latest, note) =>
         new Date(note.shared_since) > new Date(latest.shared_since) ? note : latest
       )
-      toast({ description: `${mostRecent.owner_email} shared a note with you.` })
+      toast(`${mostRecent.owner_email} shared a note with you.`)
     }
 
     localStorage.setItem(key, new Date().toISOString())

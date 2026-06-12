@@ -16,13 +16,13 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Toggle } from '@/components/ui/toggle'
 import { CollaboratorList } from '@/components/CollaboratorList'
 import { useAuth } from '@/hooks/useAuth'
 import { useCollaborators } from '@/hooks/useCollaborators'
 import { formatDate } from '@/lib/utils'
 import type { NoteFields } from '@/hooks/useNotes'
 import type { Note, ShareRole } from '@/types'
+import { Toggle } from './ui/toggle'
 
 interface SharePanelProps {
   note: Note
@@ -100,17 +100,17 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Toggle size="sm" pressed={isShared} aria-label="Share note">
+      <DialogTrigger render={<Toggle size="sm" pressed={isShared} aria-label="Share note">
           <Share2 className="h-4 w-4" />
-        </Toggle>
+        </Toggle>}>
+        
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="truncate pr-6">Share “{note.title || 'Untitled'}”</DialogTitle>
+          <DialogTitle className="min-w-0 flex-1 truncate pr-6">Share “{note.title || 'Untitled'}”</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-5">
           <div className="flex flex-col gap-2">
             <h3 className="text-sm font-medium text-foreground">Share with people</h3>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -126,11 +126,10 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
               />
               <div className="flex gap-2">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="shrink-0 gap-1">
+                  <DropdownMenuTrigger render={ <Button variant="outline" size="sm" className="shrink-0 gap-1">
                       {ROLE_LABELS[inviteRole]}
                       <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
+                    </Button>}>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     <DropdownMenuRadioGroup
@@ -190,11 +189,11 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
               <>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="shrink-0 gap-1">
+                    <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="shrink-0 gap-1">
                         {ROLE_LABELS[note.share_link_role]}
                         <ChevronDown className="h-3.5 w-3.5" />
-                      </Button>
+                      </Button>}>
+                      
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuRadioGroup

@@ -37,11 +37,9 @@ export function TrashView({ notes, onRestore, onPermanentlyDelete, onEmptyTrash 
       <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-foreground">Trash</h1>
         <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={notes.length === 0}>
+          <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={notes.length === 0}>
               Empty trash
-            </Button>
-          </AlertDialogTrigger>
+            </Button>}/>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Empty trash?</AlertDialogTitle>

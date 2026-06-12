@@ -153,15 +153,13 @@ export function TemplatesView({
                       {!isRenaming && (
                         <ItemActions>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
+                            <DropdownMenuTrigger render={<button
                                 type="button"
                                 aria-label="Template actions"
                                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
+                              </button>}/>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => onUseTemplate({ type: 'custom', template })}
