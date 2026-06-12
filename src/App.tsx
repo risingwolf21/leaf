@@ -8,6 +8,7 @@ import NoteListPage from '@/pages/NoteListPage'
 import NoteEditorPage from '@/pages/NoteEditorPage'
 import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
+import SettingsPage from '@/pages/SettingsPage'
 import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
@@ -32,6 +33,7 @@ function App() {
               <Route path="notes/:noteId" element={<NoteEditorPage />} />
               <Route path="trash" element={<TrashPage />} />
               <Route path="templates" element={<TemplatesPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route
               path="/help"

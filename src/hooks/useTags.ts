@@ -51,6 +51,18 @@ export function useTags() {
     await supabase.from('tags').delete().eq('id', id)
   }, [])
 
+  const renameTag = useCallback(async (id: string, name: string) => {
+    const trimmed = name.trim().toLowerCase().slice(0, 50)
+    if (!trimmed) return
+
+    setTags((prev) =>
+      prev
+        .map((tag) => (tag.id === id ? { ...tag, name: trimmed } : tag))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    )
+    await supabase.from('tags').update({ name: trimmed }).eq('id', id)
+  }, [])
+
   const getNotesForTag = useCallback(async (tagId: string): Promise<Note[]> => {
     const { data, error } = await supabase
       .from('note_tags')
@@ -123,6 +135,7 @@ export function useTags() {
     loading,
     updateTagColor,
     deleteTag,
+    renameTag,
     getNotesForTag,
     addTagToNote,
     removeTagFromNote,

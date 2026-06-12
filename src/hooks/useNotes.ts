@@ -22,7 +22,7 @@ function sortByDeletedAtDesc(notes: Note[]) {
 }
 
 /** Pinned notes always come first (sorted by `updated_at desc`); the rest follow `sortBy`. */
-function sortNotes<T extends Note>(notes: T[], sortBy: SortBy): T[] {
+export function sortNotes<T extends Note>(notes: T[], sortBy: SortBy): T[] {
   const pinned = notes.filter((note) => note.pinned).sort(byUpdatedAtDesc)
   const rest = notes.filter((note) => !note.pinned)
 

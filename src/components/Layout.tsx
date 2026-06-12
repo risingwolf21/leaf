@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft, Leaf, LogOut } from 'lucide-react'
+import { ArrowLeft, Leaf, Menu, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/hooks/useAuth'
+import { useNotesContext } from '@/context/NotesContext'
 import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
 import { cn } from '@/lib/utils'
 
@@ -9,12 +9,12 @@ interface LayoutProps {
   children: ReactNode
   showBackButton: boolean
   onBack: () => void
-  /** Mobile-only header content (e.g. note title + mode toggles) that replaces the brand/sign-out. */
+  /** Mobile-only header content (e.g. note title + mode toggles) that replaces the brand. */
   headerContent?: ReactNode
 }
 
 export function Layout({ children, showBackButton, onBack, headerContent }: LayoutProps) {
-  const { signOut } = useAuth()
+  const { setMobileSidebarOpen, toggleSidebar } = useNotesContext()
   const keyboardOpen = useVisualViewportHeight()
 
   return (
@@ -26,13 +26,34 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
         )}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+            className="-ml-2 hidden shrink-0 md:flex"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+          {showBackButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open sidebar"
+              className="-ml-2 shrink-0 md:hidden"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
           {showBackButton && (
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
               aria-label="Back to notes"
-              className="-ml-2 shrink-0 md:hidden"
+              className="shrink-0 md:hidden"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -44,12 +65,6 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
             <Leaf className="h-5 w-5 text-primary" />
             <span className="text-lg font-semibold text-foreground">Leaf</span>
           </div>
-        </div>
-        <div className={cn('shrink-0', headerContent && 'hidden md:block')}>
-          <Button variant="ghost" size="sm" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
         </div>
       </header>
       <div className="flex min-h-0 flex-1 overflow-hidden">{children}</div>
