@@ -56,6 +56,20 @@ export interface Folder {
   created_at: string
 }
 
+export interface Tag {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
+  /** Number of non-trashed notes with this tag, present when fetched via `get_tags_with_counts`. */
+  note_count?: number
+}
+
+export interface NoteWithTags extends Note {
+  tags: Tag[]
+}
+
 export interface AuthFormData {
   email: string
   password: string

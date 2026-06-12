@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import type { Note } from '@/types'
+import { mergeTags, syncContentTags } from '@/lib/tags'
+import type { Note, NoteWithTags, Tag } from '@/types'
 
 const AUTOSAVE_DELAY = 1000
 
@@ -9,7 +10,7 @@ export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_ro
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 
-function byUpdatedAtDesc(a: Note, b: Note) {
+function byUpdatedAtDesc<T extends Note>(a: T, b: T) {
   return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
 }
 
@@ -21,7 +22,7 @@ function sortByDeletedAtDesc(notes: Note[]) {
 }
 
 /** Pinned notes always come first (sorted by `updated_at desc`); the rest follow `sortBy`. */
-function sortNotes(notes: Note[], sortBy: SortBy) {
+function sortNotes<T extends Note>(notes: T[], sortBy: SortBy): T[] {
   const pinned = notes.filter((note) => note.pinned).sort(byUpdatedAtDesc)
   const rest = notes.filter((note) => !note.pinned)
 
@@ -43,9 +44,14 @@ function sortNotes(notes: Note[], sortBy: SortBy) {
   return [...pinned, ...rest]
 }
 
-export function useNotes(sortBy: SortBy = 'updated_at') {
+/**
+ * @param onTagsSynced Called (fire-and-forget) whenever a debounced content
+ * save syncs new `#hashtag`s to the `tags` table, so the global tag list
+ * (e.g. note counts) can be refreshed.
+ */
+export function useNotes(sortBy: SortBy = 'updated_at', onTagsSynced?: () => void) {
   const { user } = useAuth()
-  const [notes, setNotes] = useState<Note[]>([])
+  const [notes, setNotes] = useState<NoteWithTags[]>([])
   const [trashedNotes, setTrashedNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
@@ -65,15 +71,9 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
       return
     }
 
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .order('pinned', { ascending: false })
-      .order('updated_at', { ascending: false })
+    const { data, error } = await supabase.rpc('get_notes_with_tags')
 
-    if (!error && data) setNotes(sortNotes(data as Note[], sortByRef.current))
+    if (!error && data) setNotes(sortNotes(data as NoteWithTags[], sortByRef.current))
   }, [user])
 
   const fetchTrashedNotes = useCallback(async () => {
@@ -122,7 +122,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
   }, [])
 
   const createNote = useCallback(
-    async (folderId: string | null = null, fields: NoteFields = {}): Promise<Note | null> => {
+    async (folderId: string | null = null, fields: NoteFields = {}): Promise<NoteWithTags | null> => {
       if (!user) return null
 
       const { data, error } = await supabase
@@ -138,7 +138,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
 
       if (error || !data) return null
 
-      const note = data as Note
+      const note: NoteWithTags = { ...(data as Note), tags: [] }
       setNotes((prev) => sortNotes([note, ...prev], sortByRef.current))
       return note
     },
@@ -169,7 +169,10 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
       if (!error && data) {
         const updated = data as Note
         setNotes((prev) =>
-          sortNotes(prev.map((note) => (note.id === id ? updated : note)), sortByRef.current)
+          sortNotes(
+            prev.map((note) => (note.id === id ? { ...updated, tags: note.tags } : note)),
+            sortByRef.current
+          )
         )
 
         await supabase.rpc('save_note_version', {
@@ -177,6 +180,19 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
           p_title: updated.title,
           p_content: updated.content,
         })
+
+        if ('content' in fields && user) {
+          syncContentTags(user.id, id, updated.content).then((syncedTags) => {
+            if (syncedTags.length === 0) return
+
+            setNotes((prev) =>
+              prev.map((note) =>
+                note.id === id ? { ...note, tags: mergeTags(note.tags, syncedTags) } : note
+              )
+            )
+            onTagsSynced?.()
+          })
+        }
       }
 
       setSavingIds((prev) => {
@@ -187,7 +203,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     }, AUTOSAVE_DELAY)
 
     timers.current.set(id, timer)
-  }, [])
+  }, [user, onTagsSynced])
 
   const deleteNote = useCallback(async (id: string) => {
     const existing = timers.current.get(id)
@@ -220,7 +236,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     setTrashedNotes((prev) => {
       const note = prev.find((n) => n.id === id)
       if (note) {
-        const restored = { ...note, deleted_at: null }
+        const restored: NoteWithTags = { ...note, deleted_at: null, tags: [] }
         setNotes((prevNotes) => sortNotes([restored, ...prevNotes], sortByRef.current))
       }
       return prev.filter((n) => n.id !== id)
@@ -276,6 +292,10 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     await supabase.from('notes').update({ share_token: null, shared_at: null }).eq('id', id)
   }, [])
 
+  const setNoteTags = useCallback((id: string, tags: Tag[]) => {
+    setNotes((prev) => prev.map((note) => (note.id === id ? { ...note, tags } : note)))
+  }, [])
+
   return {
     notes,
     trashedNotes,
@@ -289,6 +309,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     togglePin,
     shareNote,
     unshareNote,
+    setNoteTags,
     savingIds,
     refetch: fetchNotes,
   }
