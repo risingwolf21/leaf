@@ -83,5 +83,28 @@ export function useFolders() {
     await supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
   }, [])
 
-  return { folders, loading, createFolder, renameFolder, deleteFolder, moveNote }
+  const moveFolder = useCallback(
+    async (folderId: string, newParentId: string | null) => {
+      if (folderId === newParentId) return
+
+      // Prevent nesting a folder inside itself or one of its own descendants.
+      if (newParentId) {
+        const isDescendant = (id: string): boolean => {
+          const folder = folders.find((item) => item.id === id)
+          if (!folder || !folder.parent_id) return false
+          if (folder.parent_id === folderId) return true
+          return isDescendant(folder.parent_id)
+        }
+        if (isDescendant(newParentId)) return
+      }
+
+      setFolders((prev) =>
+        prev.map((folder) => (folder.id === folderId ? { ...folder, parent_id: newParentId } : folder))
+      )
+      await supabase.from('folders').update({ parent_id: newParentId }).eq('id', folderId)
+    },
+    [folders]
+  )
+
+  return { folders, loading, createFolder, renameFolder, deleteFolder, moveNote, moveFolder }
 }

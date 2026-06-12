@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft, Leaf, LogOut } from 'lucide-react'
+import { ArrowLeft, Leaf, LogOut, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useNotesContext } from '@/context/NotesContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ interface LayoutProps {
 
 export function Layout({ children, showBackButton, onBack, headerContent }: LayoutProps) {
   const { signOut } = useAuth()
+  const { setMobileSidebarOpen } = useNotesContext()
   const keyboardOpen = useVisualViewportHeight()
 
   return (
@@ -30,9 +32,20 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open sidebar"
+              className="-ml-2 shrink-0 md:hidden"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
+          {showBackButton && (
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onBack}
               aria-label="Back to notes"
-              className="-ml-2 shrink-0 md:hidden"
+              className="shrink-0 md:hidden"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>

@@ -1,16 +1,21 @@
-import { createContext, useCallback, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useNotes } from '@/hooks/useNotes'
 import type { NoteFields, SortBy } from '@/hooks/useNotes'
+import { useCollapsedFolders } from '@/hooks/useCollapsedFolders'
 import { useFolders } from '@/hooks/useFolders'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { useTags } from '@/hooks/useTags'
 import { useTemplates } from '@/hooks/useTemplates'
 import { useSortPreference } from '@/hooks/useSortPreference'
+import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import type { AnyTemplate, Folder, Note, NoteWithTags, SharedNote, Tag, Template } from '@/types'
 
 export type FolderSelection = string | 'all'
+export type SidebarMode = 'files' | 'search' | 'tags'
+
+const SIDEBAR_STORAGE_KEY = 'leaf-sidebar'
 
 interface NotesContextValue {
   notes: NoteWithTags[]
@@ -32,6 +37,7 @@ interface NotesContextValue {
   tagsLoading: boolean
   updateTagColor: (id: string, color: string) => Promise<void>
   deleteTag: (id: string) => Promise<void>
+  renameTag: (id: string, name: string) => Promise<void>
   getNotesForTag: (tagId: string) => Promise<Note[]>
   addTagToNote: (noteId: string, tagName: string) => Promise<void>
   removeTagFromNote: (noteId: string, tagId: string) => Promise<void>
@@ -39,7 +45,6 @@ interface NotesContextValue {
   folders: Folder[]
   selectedFolderId: FolderSelection
   setSelectedFolderId: (id: FolderSelection) => void
-  currentFolder: Folder | null
   renamingFolderId: string | null
   renameValue: string
   setRenameValue: (value: string) => void
@@ -47,8 +52,31 @@ interface NotesContextValue {
   handleCommitRename: (id: string) => void
   handleCancelRename: () => void
   handleCreateFolder: () => Promise<void>
+  handleCreateSubfolder: (parentId: string) => Promise<void>
   handleDeleteFolder: (id: string) => Promise<void>
   handleMoveNote: (noteId: string, folderId: string | null) => Promise<void>
+  moveFolder: (folderId: string, newParentId: string | null) => Promise<void>
+
+  renamingNoteId: string | null
+  noteRenameValue: string
+  setNoteRenameValue: (value: string) => void
+  handleStartNoteRename: (note: Note) => void
+  handleCommitNoteRename: (id: string) => void
+  handleCancelNoteRename: () => void
+
+  collapsedFolderIds: Set<string>
+  toggleFolderCollapsed: (id: string) => void
+
+  sidebarMode: SidebarMode
+  setSidebarMode: (mode: SidebarMode) => void
+  sidebarOpen: boolean
+  toggleSidebar: () => void
+  mobileSidebarOpen: boolean
+  setMobileSidebarOpen: (open: boolean) => void
+
+  tagFilter: Set<string>
+  toggleTagFilter: (tagId: string) => void
+  clearTagFilter: () => void
 
   templates: Template[]
   saveAsTemplate: (name: string, content: string) => Promise<void>
@@ -80,8 +108,9 @@ export function useNotesContext() {
 /**
  * Layout-route provider for everything under `/app`: owns the notes/folders/
  * templates/shared-notes data plus cross-cutting UI state (folder selection,
- * folder rename, version history) that must survive navigation between the
- * note list, editor, trash and templates routes.
+ * folder/note rename, sidebar mode/collapse, tag filter, version history)
+ * that must survive navigation between the note list, editor, trash and
+ * templates routes.
  */
 export function NotesProvider() {
   const [sortBy, setSortBy] = useSortPreference()
@@ -90,6 +119,7 @@ export function NotesProvider() {
     loading: tagsLoading,
     updateTagColor,
     deleteTag,
+    renameTag,
     getNotesForTag,
     addTagToNote: addTagLink,
     removeTagFromNote: removeTagLink,
@@ -112,7 +142,7 @@ export function NotesProvider() {
     savingIds,
     refetch,
   } = useNotes(sortBy, refetchTags)
-  const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
+  const { folders, createFolder, renameFolder, deleteFolder, moveNote, moveFolder } = useFolders()
   const { templates, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
     useTemplates(createNote)
   const {
@@ -122,13 +152,55 @@ export function NotesProvider() {
     updateSharedNote,
     removeSelfFromNote,
   } = useSharedNotes()
+  const { collapsedFolderIds, toggleFolderCollapsed } = useCollapsedFolders()
 
   const [selectedFolderId, setSelectedFolderId] = useState<FolderSelection>('all')
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null)
+  const [noteRenameValue, setNoteRenameValue] = useState('')
   const [versionHistoryNote, setVersionHistoryNote] = useState<Note | null>(null)
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>('files')
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [tagFilter, setTagFilter] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpenState] = useState(
+    () => localStorage.getItem(SIDEBAR_STORAGE_KEY) !== 'closed'
+  )
 
-  const currentFolder = folders.find((folder) => folder.id === selectedFolderId) ?? null
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpenState((prev) => {
+      const next = !prev
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? 'open' : 'closed')
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault()
+        toggleSidebar()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [toggleSidebar])
+
+  const toggleTagFilter = useCallback((tagId: string) => {
+    setTagFilter((prev) => {
+      if (tagId === UNTAGGED_FILTER_ID) {
+        return prev.has(UNTAGGED_FILTER_ID) ? new Set() : new Set([UNTAGGED_FILTER_ID])
+      }
+
+      const next = new Set(prev)
+      next.delete(UNTAGGED_FILTER_ID)
+      if (next.has(tagId)) next.delete(tagId)
+      else next.add(tagId)
+      return next
+    })
+  }, [])
+
+  const clearTagFilter = useCallback(() => setTagFilter(new Set()), [])
 
   const handleStartRename = useCallback((folder: Folder) => {
     setRenamingFolderId(folder.id)
@@ -151,6 +223,14 @@ export function NotesProvider() {
     const folder = await createFolder('New folder', parentId)
     if (folder) handleStartRename(folder)
   }, [selectedFolderId, createFolder, handleStartRename])
+
+  const handleCreateSubfolder = useCallback(
+    async (parentId: string) => {
+      const folder = await createFolder('New folder', parentId)
+      if (folder) handleStartRename(folder)
+    },
+    [createFolder, handleStartRename]
+  )
 
   const handleDeleteFolder = useCallback(
     async (id: string) => {
@@ -184,6 +264,21 @@ export function NotesProvider() {
     },
     [moveNote, refetch]
   )
+
+  const handleStartNoteRename = useCallback((note: Note) => {
+    setRenamingNoteId(note.id)
+    setNoteRenameValue(note.title)
+  }, [])
+
+  const handleCommitNoteRename = useCallback(
+    (id: string) => {
+      updateNote(id, { title: noteRenameValue.trim() })
+      setRenamingNoteId(null)
+    },
+    [noteRenameValue, updateNote]
+  )
+
+  const handleCancelNoteRename = useCallback(() => setRenamingNoteId(null), [])
 
   const addTagToNote = useCallback(
     async (noteId: string, tagName: string) => {
@@ -230,6 +325,7 @@ export function NotesProvider() {
     tagsLoading,
     updateTagColor,
     deleteTag,
+    renameTag,
     getNotesForTag,
     addTagToNote,
     removeTagFromNote,
@@ -237,7 +333,6 @@ export function NotesProvider() {
     folders,
     selectedFolderId,
     setSelectedFolderId,
-    currentFolder,
     renamingFolderId,
     renameValue,
     setRenameValue,
@@ -245,8 +340,31 @@ export function NotesProvider() {
     handleCommitRename,
     handleCancelRename,
     handleCreateFolder,
+    handleCreateSubfolder,
     handleDeleteFolder,
     handleMoveNote,
+    moveFolder,
+
+    renamingNoteId,
+    noteRenameValue,
+    setNoteRenameValue,
+    handleStartNoteRename,
+    handleCommitNoteRename,
+    handleCancelNoteRename,
+
+    collapsedFolderIds,
+    toggleFolderCollapsed,
+
+    sidebarMode,
+    setSidebarMode,
+    sidebarOpen,
+    toggleSidebar,
+    mobileSidebarOpen,
+    setMobileSidebarOpen,
+
+    tagFilter,
+    toggleTagFilter,
+    clearTagFilter,
 
     templates,
     saveAsTemplate,

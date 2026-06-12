@@ -3,6 +3,9 @@ import type { Tag } from '@/types'
 
 export const DEFAULT_TAG_COLOR = '#6B7280'
 
+/** Sentinel id used in the sidebar's tag filter set to represent "Untagged notes". */
+export const UNTAGGED_FILTER_ID = '__untagged__'
+
 /** 8 preset swatches for the tag colour picker: grey, blue, green, yellow, orange, red, purple, teal. */
 export const TAG_COLOR_PRESETS = [
   '#6B7280',
