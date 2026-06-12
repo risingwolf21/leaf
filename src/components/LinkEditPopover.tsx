@@ -90,7 +90,7 @@ export function LinkEditPopover({ editor }: LinkEditPopoverProps) {
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Toggle size="sm" pressed={editor.isActive('link')} aria-label="Link">
-          <LinkIcon className="h-4 w-4" />
+          <LinkIcon className="h-5 w-5" />
         </Toggle>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72">
