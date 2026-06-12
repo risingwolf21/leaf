@@ -26,6 +26,16 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
         )}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+            className="-ml-2 hidden shrink-0 md:flex"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
           {showBackButton && (
             <Button
               variant="ghost"
@@ -55,11 +65,6 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
             <Leaf className="h-5 w-5 text-primary" />
             <span className="text-lg font-semibold text-foreground">Leaf</span>
           </div>
-        </div>
-        <div className="hidden shrink-0 md:block">
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar" title="Toggle sidebar">
-            <PanelLeft className="h-4 w-4" />
-          </Button>
         </div>
       </header>
       <div className="flex min-h-0 flex-1 overflow-hidden">{children}</div>
