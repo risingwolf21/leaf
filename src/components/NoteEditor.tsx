@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
+import { SharePopover } from '@/components/SharePopover'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
 import type { Note, ViewMode } from '@/types'
@@ -14,6 +15,8 @@ interface NoteEditorProps {
   onModeChange: (mode: ViewMode) => void
   onChange: (id: string, fields: { title?: string; content?: string }) => void
   onNavigateToNote: (title: string) => void
+  onShare: (id: string) => Promise<string>
+  onUnshare: (id: string) => Promise<void>
 }
 
 export function NoteEditor({
@@ -24,6 +27,8 @@ export function NoteEditor({
   onModeChange,
   onChange,
   onNavigateToNote,
+  onShare,
+  onUnshare,
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
@@ -95,6 +100,7 @@ export function NoteEditor({
           <span className={cn('text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
             {isSaving ? 'Saving…' : 'Saved'}
           </span>
+          <SharePopover note={note} onShare={onShare} onUnshare={onUnshare} />
           <EditorModeToggle mode={mode} onModeChange={onModeChange} />
         </div>
       </div>
