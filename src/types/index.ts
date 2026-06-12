@@ -8,6 +8,8 @@ export interface Note {
   deleted_at: string | null
   created_at: string
   updated_at: string
+  share_token: string | null
+  shared_at: string | null
 }
 
 export interface NoteVersion {

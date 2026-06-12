@@ -4,6 +4,7 @@ import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
+import { SharePopover } from '@/components/SharePopover'
 import { TrashView } from '@/components/TrashView'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import { FolderTree } from '@/components/FolderTree'
@@ -31,6 +32,8 @@ export default function AppPage() {
     permanentlyDeleteNote,
     emptyTrash,
     togglePin,
+    shareNote,
+    unshareNote,
     savingIds,
     refetch,
   } = useNotes(sortBy)
@@ -164,6 +167,7 @@ export default function AppPage() {
         >
           {savingIds.has(activeNote.id) ? 'Saving…' : 'Saved'}
         </span>
+        <SharePopover note={activeNote} onShare={shareNote} onUnshare={unshareNote} />
         <EditorModeToggle mode={mode} onModeChange={setMode} />
       </>
     ) : mobileView === 'list' && currentFolder ? (
@@ -258,6 +262,8 @@ export default function AppPage() {
             onModeChange={setMode}
             onChange={updateNote}
             onNavigateToNote={handleNavigateToNote}
+            onShare={shareNote}
+            onUnshare={unshareNote}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">

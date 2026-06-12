@@ -241,6 +241,31 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     await supabase.from('notes').update({ pinned }).eq('id', id)
   }, [])
 
+  const shareNote = useCallback(async (id: string): Promise<string> => {
+    const token = crypto.randomUUID().replace(/-/g, '')
+    const sharedAt = new Date().toISOString()
+
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === id ? { ...note, share_token: token, shared_at: sharedAt } : note
+      )
+    )
+
+    await supabase.from('notes').update({ share_token: token, shared_at: sharedAt }).eq('id', id)
+
+    return `${window.location.origin}${import.meta.env.BASE_URL}shared/${token}`
+  }, [])
+
+  const unshareNote = useCallback(async (id: string) => {
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === id ? { ...note, share_token: null, shared_at: null } : note
+      )
+    )
+
+    await supabase.from('notes').update({ share_token: null, shared_at: null }).eq('id', id)
+  }, [])
+
   return {
     notes,
     trashedNotes,
@@ -252,6 +277,8 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     permanentlyDeleteNote,
     emptyTrash,
     togglePin,
+    shareNote,
+    unshareNote,
     savingIds,
     refetch: fetchNotes,
   }

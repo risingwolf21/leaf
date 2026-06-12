@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import AuthPage from '@/pages/AuthPage'
 import AppPage from '@/pages/AppPage'
 import HelpPage from '@/pages/HelpPage'
+import SharedNotePage from '@/pages/SharedNotePage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <BrowserRouter basename="/leaf">
           <Routes>
             <Route path="/" element={<AuthPage />} />
+            <Route path="/shared/:token" element={<SharedNotePage />} />
             <Route
               path="/app"
               element={
