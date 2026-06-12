@@ -10,7 +10,7 @@ import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
 import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 
 function App() {
   return (

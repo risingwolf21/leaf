@@ -498,11 +498,11 @@ export function NoteList() {
               </Button>}>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 value={sortBy}
                 onValueChange={(value) => setSortBy(value as SortBy)}
               >
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
                 <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="title_asc">Title A–Z</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="title_desc">Title Z–A</DropdownMenuRadioItem>
