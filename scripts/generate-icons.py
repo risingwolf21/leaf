@@ -1,55 +1,50 @@
-"""Generate simple leaf-shaped PWA icons as raw PNGs (no external deps)."""
-import math
-import struct
-import zlib
+"""Generate PWA icons: the Lucide "Leaf" glyph in green (#16A34A) on a white
+square, matching the leaf icon shown in the app header.
 
-GREEN = (22, 163, 74, 255)  # #16A34A
-WHITE = (255, 255, 255, 255)
+Requires Playwright (used to rasterize the SVG to PNG).
+"""
+import asyncio
+import os
+
+from playwright.async_api import async_playwright
+
+GREEN = '#16A34A'
+LEAF_PATHS = [
+    'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z',
+    'M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12',
+]
+ICON_RATIO = 0.6  # leaf glyph occupies 60% of the canvas, centered
 
 
-def make_icon(path: str, size: int) -> None:
-    cx = cy = size / 2
-    R = size * 0.254
-    offset = size * 0.137
-    tip = math.sqrt(R * R - offset * offset)
-    stem_half = size * 0.027
-    stem_len = size * 0.137
+def build_svg(size: int) -> str:
+    scale = (size * ICON_RATIO) / 24
+    pad = (size - 24 * scale) / 2
+    paths = '\n    '.join(f'<path d="{d}"/>' for d in LEAF_PATHS)
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 {size} {size}">
+  <rect width="{size}" height="{size}" fill="#ffffff"/>
+  <g transform="translate({pad} {pad}) scale({scale})" fill="none" stroke="{GREEN}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    {paths}
+  </g>
+</svg>'''
 
-    angle = math.radians(45)
-    cos_a, sin_a = math.cos(angle), math.sin(angle)
 
-    raw = bytearray()
-    for y in range(size):
-        raw.append(0)  # filter type: None
-        for x in range(size):
-            dx = x + 0.5 - cx
-            dy = y + 0.5 - cy
-            rx = dx * cos_a + dy * sin_a
-            ry = -dx * sin_a + dy * cos_a
+async def main() -> None:
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(args=['--no-sandbox'])
+        page = await browser.new_page()
 
-            d1 = (rx - offset) ** 2 + ry ** 2
-            d2 = (rx + offset) ** 2 + ry ** 2
-            in_leaf = d1 <= R * R and d2 <= R * R
-            in_stem = abs(rx) <= stem_half and -(tip + stem_len) <= ry <= -tip + 1
+        for size in (192, 512):
+            await page.set_viewport_size({'width': size, 'height': size})
+            svg = build_svg(size)
+            await page.set_content(
+                f'<!DOCTYPE html><html><head><style>html,body{{margin:0;padding:0}}</style></head><body>{svg}</body></html>'
+            )
+            out_path = os.path.join('public', 'icons', f'icon-{size}.png')
+            await page.screenshot(path=out_path)
+            print(f'Generated {out_path}')
 
-            color = WHITE if (in_leaf or in_stem) else GREEN
-            raw.extend(color)
-
-    compressed = zlib.compress(bytes(raw), 9)
-
-    def chunk(tag: bytes, data: bytes) -> bytes:
-        c = tag + data
-        return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xFFFFFFFF)
-
-    sig = b'\x89PNG\r\n\x1a\n'
-    ihdr = struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0)
-    png = sig + chunk(b'IHDR', ihdr) + chunk(b'IDAT', compressed) + chunk(b'IEND', b'')
-
-    with open(path, 'wb') as f:
-        f.write(png)
+        await browser.close()
 
 
 if __name__ == '__main__':
-    make_icon('public/icons/icon-192.png', 192)
-    make_icon('public/icons/icon-512.png', 512)
-    print('Generated icons/icon-192.png and icons/icon-512.png')
+    asyncio.run(main())
