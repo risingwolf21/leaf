@@ -154,10 +154,10 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       <LinkEditPopover editor={editor} />
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Toggle size="sm" pressed={editor.isActive('table')} aria-label="Table">
+        <DropdownMenuTrigger render={<Toggle size="sm" pressed={editor.isActive('table')} aria-label="Table">
             <TableIcon className="h-5 w-5" />
-          </Toggle>
+          </Toggle>}>
+          
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {editor.isActive('table') ? (

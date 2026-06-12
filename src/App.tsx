@@ -3,7 +3,6 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { NotesProvider } from '@/context/NotesContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Toaster } from '@/components/ui/toaster'
 import AuthPage from '@/pages/AuthPage'
 import NoteListPage from '@/pages/NoteListPage'
 import NoteEditorPage from '@/pages/NoteEditorPage'
@@ -11,6 +10,7 @@ import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
 import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
+import { Toaster } from 'sonner'
 
 function App() {
   return (

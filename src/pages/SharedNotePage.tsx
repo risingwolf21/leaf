@@ -62,9 +62,7 @@ export default function SharedNotePage() {
           <span className="text-lg font-semibold text-foreground">Leaf</span>
         </Link>
         {note && (
-          <Button asChild size="sm">
-            <Link to="/">Open in Leaf</Link>
-          </Button>
+          <Button render={<Link to="/">Open in Leaf</Link>} size="sm" />
         )}
       </header>
 
@@ -82,9 +80,7 @@ export default function SharedNotePage() {
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <h1 className="text-xl font-semibold text-foreground">This note is no longer available.</h1>
             <p className="text-sm text-muted-foreground">The link may have been revoked by its owner.</p>
-            <Button asChild>
-              <Link to="/">Open Leaf</Link>
-            </Button>
+            <Button render={<Link to="/">Open Leaf</Link>}/>
           </div>
         )}
       </main>

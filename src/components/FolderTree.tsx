@@ -111,8 +111,7 @@ export function FolderTree({
           {!isRenaming && (
             <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
+                <DropdownMenuTrigger render={ <button
                     type="button"
                     aria-label="Folder actions"
                     onClick={(e) => e.stopPropagation()}
@@ -120,7 +119,7 @@ export function FolderTree({
                     className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                   >
                     <MoreHorizontal className="h-4 w-4" />
-                  </button>
+                  </button>}>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem

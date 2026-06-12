@@ -216,8 +216,7 @@ export function NoteList() {
         </ItemContent>
         <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
+            <DropdownMenuTrigger render={<button
                 type="button"
                 aria-label="Note actions"
                 onClick={(e) => e.stopPropagation()}
@@ -225,7 +224,8 @@ export function NoteList() {
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <MoreHorizontal className="h-4 w-4" />
-              </button>
+              </button>}>
+              
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => togglePin(note.id, !note.pinned)}>
@@ -317,8 +317,7 @@ export function NoteList() {
         </ItemContent>
         <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
+            <DropdownMenuTrigger render={ <button
                 type="button"
                 aria-label="Note actions"
                 onClick={(e) => e.stopPropagation()}
@@ -326,7 +325,8 @@ export function NoteList() {
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <MoreHorizontal className="h-4 w-4" />
-              </button>
+              </button>}>
+             
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
@@ -386,8 +386,7 @@ export function NoteList() {
         {!isRenaming && (
           <ItemActions>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
+              <DropdownMenuTrigger render={<button
                   type="button"
                   aria-label="Folder actions"
                   onClick={(e) => e.stopPropagation()}
@@ -395,7 +394,8 @@ export function NoteList() {
                   className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <MoreHorizontal className="h-4 w-4" />
-                </button>
+                </button>}>
+                
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -493,10 +493,9 @@ export function NoteList() {
             />
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Sort notes" className="shrink-0">
+            <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="Sort notes" className="shrink-0">
                 <ArrowUpDown className="h-4 w-4" />
-              </Button>
+              </Button>}>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Sort by</DropdownMenuLabel>

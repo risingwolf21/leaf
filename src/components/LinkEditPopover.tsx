@@ -5,7 +5,7 @@ import { Link as LinkIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Toggle } from '@/components/ui/toggle'
+import { Toggle } from './ui/toggle'
 
 interface LinkEditPopoverProps {
   editor: Editor
@@ -88,10 +88,10 @@ export function LinkEditPopover({ editor }: LinkEditPopoverProps) {
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Toggle size="sm" pressed={editor.isActive('link')} aria-label="Link">
+      <PopoverTrigger render={<Toggle size="sm" pressed={editor.isActive('link')} aria-label="Link">
           <LinkIcon className="h-5 w-5" />
-        </Toggle>
+        </Toggle>}>
+        
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72">
         <div className="flex flex-col gap-3">
