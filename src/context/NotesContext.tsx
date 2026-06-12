@@ -4,18 +4,19 @@ import { useNotes } from '@/hooks/useNotes'
 import type { NoteFields, SortBy } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
+import { useTags } from '@/hooks/useTags'
 import { useTemplates } from '@/hooks/useTemplates'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
-import type { AnyTemplate, Folder, Note, SharedNote, Template } from '@/types'
+import type { AnyTemplate, Folder, Note, NoteWithTags, SharedNote, Tag, Template } from '@/types'
 
 export type FolderSelection = string | 'all'
 
 interface NotesContextValue {
-  notes: Note[]
+  notes: NoteWithTags[]
   trashedNotes: Note[]
   loading: boolean
-  createNote: (folderId?: string | null, fields?: NoteFields) => Promise<Note | null>
+  createNote: (folderId?: string | null, fields?: NoteFields) => Promise<NoteWithTags | null>
   updateNote: (id: string, fields: NoteFields) => void
   deleteNote: (id: string) => Promise<void>
   restoreNote: (id: string) => Promise<void>
@@ -26,6 +27,14 @@ interface NotesContextValue {
   unshareNote: (id: string) => Promise<void>
   savingIds: Set<string>
   refetch: () => Promise<void>
+
+  tags: Tag[]
+  tagsLoading: boolean
+  updateTagColor: (id: string, color: string) => Promise<void>
+  deleteTag: (id: string) => Promise<void>
+  getNotesForTag: (tagId: string) => Promise<Note[]>
+  addTagToNote: (noteId: string, tagName: string) => Promise<void>
+  removeTagFromNote: (noteId: string, tagId: string) => Promise<void>
 
   folders: Folder[]
   selectedFolderId: FolderSelection
@@ -77,6 +86,16 @@ export function useNotesContext() {
 export function NotesProvider() {
   const [sortBy, setSortBy] = useSortPreference()
   const {
+    tags,
+    loading: tagsLoading,
+    updateTagColor,
+    deleteTag,
+    getNotesForTag,
+    addTagToNote: addTagLink,
+    removeTagFromNote: removeTagLink,
+    refetch: refetchTags,
+  } = useTags()
+  const {
     notes,
     trashedNotes,
     loading,
@@ -89,9 +108,10 @@ export function NotesProvider() {
     togglePin,
     shareNote,
     unshareNote,
+    setNoteTags,
     savingIds,
     refetch,
-  } = useNotes(sortBy)
+  } = useNotes(sortBy, refetchTags)
   const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
   const { templates, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
     useTemplates(createNote)
@@ -165,6 +185,29 @@ export function NotesProvider() {
     [moveNote, refetch]
   )
 
+  const addTagToNote = useCallback(
+    async (noteId: string, tagName: string) => {
+      const tag = await addTagLink(noteId, tagName)
+      if (!tag) return
+
+      const note = notes.find((n) => n.id === noteId)
+      if (!note || note.tags.some((t) => t.id === tag.id)) return
+
+      setNoteTags(noteId, [...note.tags, tag])
+    },
+    [addTagLink, notes, setNoteTags]
+  )
+
+  const removeTagFromNote = useCallback(
+    async (noteId: string, tagId: string) => {
+      const note = notes.find((n) => n.id === noteId)
+      if (note) setNoteTags(noteId, note.tags.filter((t) => t.id !== tagId))
+
+      await removeTagLink(noteId, tagId)
+    },
+    [notes, setNoteTags, removeTagLink]
+  )
+
   const openVersionHistory = useCallback((note: Note) => setVersionHistoryNote(note), [])
 
   const value: NotesContextValue = {
@@ -182,6 +225,14 @@ export function NotesProvider() {
     unshareNote,
     savingIds,
     refetch,
+
+    tags,
+    tagsLoading,
+    updateTagColor,
+    deleteTag,
+    getNotesForTag,
+    addTagToNote,
+    removeTagFromNote,
 
     folders,
     selectedFolderId,

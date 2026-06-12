@@ -4,10 +4,11 @@ import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
 import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
 import { SharePanel } from '@/components/SharePanel'
+import { TagBar } from '@/components/TagBar'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
 import type { NoteFields } from '@/hooks/useNotes'
-import type { Note, ShareRole, ViewMode } from '@/types'
+import type { Note, ShareRole, Tag, ViewMode } from '@/types'
 
 export interface SharedContext {
   role: ShareRole
@@ -16,6 +17,8 @@ export interface SharedContext {
 interface NoteEditorProps {
   note: Note
   notes: Note[]
+  noteTags: Tag[]
+  allTags: Tag[]
   isSaving: boolean
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
@@ -24,6 +27,8 @@ interface NoteEditorProps {
   onShare: (id: string) => Promise<string>
   onUnshare: (id: string) => Promise<void>
   onSaveAsTemplate: (name: string, content: string) => Promise<void>
+  onAddTag: (noteId: string, tagName: string) => Promise<void>
+  onRemoveTag: (noteId: string, tagId: string) => Promise<void>
   /** Set when viewing a note shared by another user; restricts editing and sharing controls. */
   sharedContext?: SharedContext
 }
@@ -31,6 +36,8 @@ interface NoteEditorProps {
 export function NoteEditor({
   note,
   notes,
+  noteTags,
+  allTags,
   isSaving,
   mode,
   onModeChange,
@@ -39,6 +46,8 @@ export function NoteEditor({
   onShare,
   onUnshare,
   onSaveAsTemplate,
+  onAddTag,
+  onRemoveTag,
   sharedContext,
 }: NoteEditorProps) {
   const noteRef = useRef(note)
@@ -136,6 +145,16 @@ export function NoteEditor({
           {!sharedContext && <SaveAsTemplatePopover note={note} onSaveAsTemplate={onSaveAsTemplate} />}
         </div>
       </div>
+
+      {!sharedContext && (
+        <TagBar
+          noteId={note.id}
+          tags={noteTags}
+          allTags={allTags}
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+        />
+      )}
 
       <div className="min-h-0 flex-1 overflow-y-auto">{editorContent}</div>
     </div>

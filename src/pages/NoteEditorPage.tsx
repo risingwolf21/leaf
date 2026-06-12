@@ -26,6 +26,9 @@ export default function NoteEditorPage() {
     shareNote,
     unshareNote,
     saveAsTemplate,
+    tags,
+    addTagToNote,
+    removeTagFromNote,
   } = useNotesContext()
 
   const ownNote = notes.find((note) => note.id === noteId) ?? null
@@ -86,6 +89,8 @@ export default function NoteEditorPage() {
       <NoteEditor
         note={activeNote}
         notes={notes}
+        noteTags={ownNote?.tags ?? []}
+        allTags={tags}
         isSaving={isSaving}
         mode={mode}
         onModeChange={setMode}
@@ -94,6 +99,8 @@ export default function NoteEditorPage() {
         onShare={shareNote}
         onUnshare={unshareNote}
         onSaveAsTemplate={saveAsTemplate}
+        onAddTag={addTagToNote}
+        onRemoveTag={removeTagFromNote}
         sharedContext={sharedContext}
       />
     </AppShell>
