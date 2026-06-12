@@ -8,12 +8,12 @@ import {
   FolderPlus,
   HelpCircle,
   History,
+  LayoutTemplate,
   Moon,
   MoreHorizontal,
   Pencil,
   Pin,
   PinOff,
-  Plus,
   Search,
   Sun,
   Trash2,
@@ -43,31 +43,36 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
+import { TemplatePicker } from '@/components/TemplatePicker'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import { useTheme } from '@/hooks/useTheme'
 import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { SortBy } from '@/hooks/useNotes'
-import type { Folder as FolderType, Note } from '@/types'
+import type { AnyTemplate, Folder as FolderType, Note, Template } from '@/types'
 
 interface NoteListProps {
   notes: Note[]
   folders: FolderType[]
+  templates: Template[]
   loading: boolean
   activeNoteId: string | null
   trashCount: number
   showTrash: boolean
+  showTemplates: boolean
   selectedFolderId: string | 'all'
   sortBy: SortBy
   onSortChange: (sortBy: SortBy) => void
   onSelectFolder: (id: string | 'all') => void
   onSelectNote: (note: Note) => void
   onCreateNote: () => void
+  onSelectTemplate: (template: AnyTemplate) => void
   onDeleteNote: (id: string) => void
   onCreateFolder: () => void
   onDeleteFolder: (id: string) => void
   onMoveNote: (noteId: string, folderId: string | null) => void
   onSelectTrash: () => void
+  onSelectTemplates: () => void
   onTogglePin: (noteId: string, pinned: boolean) => void
   onShowVersionHistory: (note: Note) => void
   renamingFolderId: string | null
@@ -118,21 +123,25 @@ function flattenFolders(
 export function NoteList({
   notes,
   folders,
+  templates,
   loading,
   activeNoteId,
   trashCount,
   showTrash,
+  showTemplates,
   selectedFolderId,
   sortBy,
   onSortChange,
   onSelectFolder,
   onSelectNote,
   onCreateNote,
+  onSelectTemplate,
   onDeleteNote,
   onCreateFolder,
   onDeleteFolder,
   onMoveNote,
   onSelectTrash,
+  onSelectTemplates,
   onTogglePin,
   onShowVersionHistory,
   renamingFolderId,
@@ -400,10 +409,11 @@ export function NoteList({
     <div className="flex h-full flex-col">
       <div className="flex flex-col gap-2 border-b border-border p-3">
         <div className="flex gap-2">
-          <Button onClick={onCreateNote} className="flex-1 justify-center gap-2">
-            <Plus className="h-4 w-4" />
-            New note
-          </Button>
+          <TemplatePicker
+            templates={templates}
+            onCreateBlank={onCreateNote}
+            onSelectTemplate={onSelectTemplate}
+          />
           <Button onClick={onCreateFolder} variant="outline" className="gap-2">
             <FolderPlus className="h-4 w-4" />
             New folder
@@ -474,9 +484,20 @@ export function NoteList({
       <div className="flex shrink-0 items-stretch border-t border-border pb-[env(safe-area-inset-bottom)]">
         <button
           type="button"
-          onClick={onSelectTrash}
+          onClick={onSelectTemplates}
           className={cn(
             'flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
+            showTemplates ? 'bg-accent text-foreground' : 'text-muted-foreground'
+          )}
+        >
+          <LayoutTemplate className="h-4 w-4" />
+          <span className="flex-1">Templates</span>
+        </button>
+        <button
+          type="button"
+          onClick={onSelectTrash}
+          className={cn(
+            'flex flex-1 items-center gap-2 border-l border-border px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent',
             showTrash ? 'bg-accent text-foreground' : 'text-muted-foreground'
           )}
         >

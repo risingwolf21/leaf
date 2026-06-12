@@ -1,3 +1,5 @@
+import type { BuiltinTemplate } from '@/lib/templates'
+
 export interface Note {
   id: string
   user_id: string
@@ -35,3 +37,16 @@ export interface AuthFormData {
 }
 
 export type ViewMode = 'preview' | 'edit' | 'source'
+
+export interface Template {
+  id: string
+  user_id: string
+  name: string
+  content: string
+  created_at: string
+}
+
+/** Union used by the template picker UI to handle built-in and custom templates uniformly. */
+export type AnyTemplate =
+  | { type: 'builtin'; template: BuiltinTemplate }
+  | { type: 'custom'; template: Template }
