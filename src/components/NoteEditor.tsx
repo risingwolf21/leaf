@@ -3,10 +3,15 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
 import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
-import { SharePopover } from '@/components/SharePopover'
+import { SharePanel } from '@/components/SharePanel'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
-import type { Note, ViewMode } from '@/types'
+import type { NoteFields } from '@/hooks/useNotes'
+import type { Note, ShareRole, ViewMode } from '@/types'
+
+export interface SharedContext {
+  role: ShareRole
+}
 
 interface NoteEditorProps {
   note: Note
@@ -14,11 +19,13 @@ interface NoteEditorProps {
   isSaving: boolean
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
-  onChange: (id: string, fields: { title?: string; content?: string }) => void
+  onChange: (id: string, fields: NoteFields) => void
   onNavigateToNote: (title: string) => void
   onShare: (id: string) => Promise<string>
   onUnshare: (id: string) => Promise<void>
   onSaveAsTemplate: (name: string, content: string) => Promise<void>
+  /** Set when viewing a note shared by another user; restricts editing and sharing controls. */
+  sharedContext?: SharedContext
 }
 
 export function NoteEditor({
@@ -32,9 +39,12 @@ export function NoteEditor({
   onShare,
   onUnshare,
   onSaveAsTemplate,
+  sharedContext,
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
+
+  const isReadOnly = sharedContext?.role === 'viewer'
 
   const editor = useEditor(
     {
@@ -55,11 +65,11 @@ export function NoteEditor({
 
   useEffect(() => {
     if (!editor) return
-    editor.setEditable(mode === 'edit', false)
+    editor.setEditable(!isReadOnly && mode === 'edit', false)
     if (mode !== 'source') {
       editor.commands.setContent(noteRef.current.content, false)
     }
-  }, [mode, editor])
+  }, [mode, editor, isReadOnly])
 
   useLayoutEffect(() => {
     if (!editor) return
@@ -69,6 +79,24 @@ export function NoteEditor({
   }, [editor, notes, onNavigateToNote])
 
   if (!editor) return null
+
+  if (isReadOnly) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
+        <div className="mb-4 shrink-0">
+          <h1 className="hidden truncate text-2xl font-semibold text-foreground md:block">
+            {note.title || 'Untitled'}
+          </h1>
+          <div className="mt-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm text-secondary-foreground">
+            You can view this note but cannot edit it.
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
+    )
+  }
 
   const editorContent =
     mode === 'source' ? (
@@ -103,9 +131,9 @@ export function NoteEditor({
           <span className={cn('text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
             {isSaving ? 'Saving…' : 'Saved'}
           </span>
-          <SharePopover note={note} onShare={onShare} onUnshare={onUnshare} />
+          {!sharedContext && <SharePanel note={note} onShare={onShare} onUnshare={onUnshare} onChange={onChange} />}
           <EditorModeToggle mode={mode} onModeChange={onModeChange} />
-          <SaveAsTemplatePopover note={note} onSaveAsTemplate={onSaveAsTemplate} />
+          {!sharedContext && <SaveAsTemplatePopover note={note} onSaveAsTemplate={onSaveAsTemplate} />}
         </div>
       </div>
 

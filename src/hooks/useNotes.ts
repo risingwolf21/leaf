@@ -5,7 +5,7 @@ import type { Note } from '@/types'
 
 const AUTOSAVE_DELAY = 1000
 
-export type NoteFields = Partial<Pick<Note, 'title' | 'content'>>
+export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_role'>>
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 
@@ -68,6 +68,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     const { data, error } = await supabase
       .from('notes')
       .select('*')
+      .eq('user_id', user.id)
       .is('deleted_at', null)
       .order('pinned', { ascending: false })
       .order('updated_at', { ascending: false })
@@ -84,6 +85,7 @@ export function useNotes(sortBy: SortBy = 'updated_at') {
     const { data, error } = await supabase
       .from('notes')
       .select('*')
+      .eq('user_id', user.id)
       .not('deleted_at', 'is', null)
       .order('updated_at', { ascending: false })
 
