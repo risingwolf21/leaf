@@ -1,5 +1,7 @@
 import type { BuiltinTemplate } from '@/lib/templates'
 
+export type ShareRole = 'viewer' | 'editor'
+
 export interface Note {
   id: string
   user_id: string
@@ -12,6 +14,29 @@ export interface Note {
   updated_at: string
   share_token: string | null
   shared_at: string | null
+  share_link_role: ShareRole
+}
+
+export interface Profile {
+  id: string
+  email: string
+}
+
+export interface NoteCollaborator {
+  id: string
+  note_id: string
+  owner_id: string
+  user_id: string
+  role: ShareRole
+  created_at: string
+  email: string
+}
+
+/** A note shared with the current user, for the "Shared with me" sidebar section. */
+export interface SharedNote extends Note {
+  owner_email: string
+  my_role: ShareRole
+  shared_since: string
 }
 
 export interface NoteVersion {

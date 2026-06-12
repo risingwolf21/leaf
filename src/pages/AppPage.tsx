@@ -3,9 +3,10 @@ import { FolderPlus, Plus } from 'lucide-react'
 import { Layout } from '@/components/Layout'
 import { NoteList } from '@/components/NoteList'
 import { NoteEditor } from '@/components/NoteEditor'
+import type { SharedContext } from '@/components/NoteEditor'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
-import { SharePopover } from '@/components/SharePopover'
+import { SharePanel } from '@/components/SharePanel'
 import { TemplatesView } from '@/components/TemplatesView'
 import { TrashView } from '@/components/TrashView'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNotes } from '@/hooks/useNotes'
 import { useFolders } from '@/hooks/useFolders'
+import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { useTemplates } from '@/hooks/useTemplates'
 import { cn } from '@/lib/utils'
@@ -43,6 +45,12 @@ export default function AppPage() {
   const { folders, createFolder, renameFolder, deleteFolder, moveNote } = useFolders()
   const { templates, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
     useTemplates(createNote)
+  const {
+    sharedNotes,
+    savingIds: sharedSavingIds,
+    updateSharedNote,
+    removeSelfFromNote,
+  } = useSharedNotes()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [showTrash, setShowTrash] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
@@ -53,7 +61,18 @@ export default function AppPage() {
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
-  const activeNote = notes.find((note) => note.id === activeNoteId) ?? null
+  const ownActiveNote = notes.find((note) => note.id === activeNoteId) ?? null
+  const sharedActiveNote = ownActiveNote
+    ? null
+    : sharedNotes.find((note) => note.id === activeNoteId) ?? null
+  const activeNote: Note | null = ownActiveNote ?? sharedActiveNote
+  const sharedContext: SharedContext | undefined = sharedActiveNote
+    ? { role: sharedActiveNote.my_role }
+    : undefined
+  const handleChangeActiveNote = sharedContext ? updateSharedNote : updateNote
+  const isSavingActive = activeNote
+    ? (sharedContext ? sharedSavingIds : savingIds).has(activeNote.id)
+    : false
   const currentFolder = folders.find((folder) => folder.id === selectedFolderId) ?? null
 
   const handleSelectNote = (note: Note) => {
@@ -119,6 +138,14 @@ export default function AppPage() {
     }
   }
 
+  const handleRemoveSharedNote = async (id: string) => {
+    await removeSelfFromNote(id)
+    if (activeNoteId === id) {
+      setActiveNoteId(null)
+      setMobileView('list')
+    }
+  }
+
   const handleStartRename = (folder: Folder) => {
     setRenamingFolderId(folder.id)
     setRenameValue(folder.name)
@@ -176,28 +203,36 @@ export default function AppPage() {
   }
 
   const showBackButton = mobileView === 'editor' || currentFolder !== null
+  const isReadOnlyActive = sharedContext?.role === 'viewer'
 
   const headerContent =
     activeNote && !showTrash && mobileView === 'editor' ? (
       <>
         <input
           value={activeNote.title}
-          onChange={(e) => updateNote(activeNote.id, { title: e.target.value })}
+          onChange={(e) => handleChangeActiveNote(activeNote.id, { title: e.target.value })}
           placeholder="Untitled"
           tabIndex={-1}
+          readOnly={isReadOnlyActive}
           className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
         />
-        <span
-          className={cn(
-            'shrink-0 text-xs',
-            savingIds.has(activeNote.id) ? 'text-muted-foreground' : 'text-primary'
-          )}
-        >
-          {savingIds.has(activeNote.id) ? 'Saving…' : 'Saved'}
-        </span>
-        <SharePopover note={activeNote} onShare={shareNote} onUnshare={unshareNote} />
-        <EditorModeToggle mode={mode} onModeChange={setMode} />
-        <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={saveAsTemplate} />
+        {!isReadOnlyActive && (
+          <span
+            className={cn(
+              'shrink-0 text-xs',
+              isSavingActive ? 'text-muted-foreground' : 'text-primary'
+            )}
+          >
+            {isSavingActive ? 'Saving…' : 'Saved'}
+          </span>
+        )}
+        {!sharedContext && (
+          <SharePanel note={activeNote} onShare={shareNote} onUnshare={unshareNote} onChange={updateNote} />
+        )}
+        {!isReadOnlyActive && <EditorModeToggle mode={mode} onModeChange={setMode} />}
+        {!sharedContext && (
+          <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={saveAsTemplate} />
+        )}
       </>
     ) : mobileView === 'list' && currentFolder ? (
       <>
@@ -242,6 +277,7 @@ export default function AppPage() {
       >
         <NoteList
           notes={notes}
+          sharedNotes={sharedNotes}
           folders={folders}
           templates={templates}
           loading={loading}
@@ -264,6 +300,7 @@ export default function AppPage() {
           onSelectTemplates={handleSelectTemplates}
           onTogglePin={togglePin}
           onShowVersionHistory={setVersionHistoryNote}
+          onRemoveSharedNote={handleRemoveSharedNote}
           renamingFolderId={renamingFolderId}
           renameValue={renameValue}
           onRenameValueChange={setRenameValue}
@@ -298,14 +335,15 @@ export default function AppPage() {
           <NoteEditor
             note={activeNote}
             notes={notes}
-            isSaving={savingIds.has(activeNote.id)}
+            isSaving={isSavingActive}
             mode={mode}
             onModeChange={setMode}
-            onChange={updateNote}
+            onChange={handleChangeActiveNote}
             onNavigateToNote={handleNavigateToNote}
             onShare={shareNote}
             onUnshare={unshareNote}
             onSaveAsTemplate={saveAsTemplate}
+            sharedContext={sharedContext}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowUpDown,
   ChevronRight,
+  Eye,
   Folder as FolderIcon,
   FolderInput,
   FolderPlus,
@@ -17,6 +18,7 @@ import {
   Search,
   Sun,
   Trash2,
+  UserX,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,10 +51,11 @@ import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
 import { useTheme } from '@/hooks/useTheme'
 import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { SortBy } from '@/hooks/useNotes'
-import type { AnyTemplate, Folder as FolderType, Note, Template } from '@/types'
+import type { AnyTemplate, Folder as FolderType, Note, SharedNote, Template } from '@/types'
 
 interface NoteListProps {
   notes: Note[]
+  sharedNotes: SharedNote[]
   folders: FolderType[]
   templates: Template[]
   loading: boolean
@@ -75,6 +78,7 @@ interface NoteListProps {
   onSelectTemplates: () => void
   onTogglePin: (noteId: string, pinned: boolean) => void
   onShowVersionHistory: (note: Note) => void
+  onRemoveSharedNote: (id: string) => void
   renamingFolderId: string | null
   renameValue: string
   onRenameValueChange: (value: string) => void
@@ -122,6 +126,7 @@ function flattenFolders(
 
 export function NoteList({
   notes,
+  sharedNotes,
   folders,
   templates,
   loading,
@@ -144,6 +149,7 @@ export function NoteList({
   onSelectTemplates,
   onTogglePin,
   onShowVersionHistory,
+  onRemoveSharedNote,
   renamingFolderId,
   renameValue,
   onRenameValueChange,
@@ -181,6 +187,9 @@ export function NoteList({
 
   const pinnedNotes = useMemo(() => scopedNotes.filter((note) => note.pinned), [scopedNotes])
   const unpinnedNotes = useMemo(() => scopedNotes.filter((note) => !note.pinned), [scopedNotes])
+
+  // Shared notes aren't part of any folder, so the section only appears in "All Notes".
+  const showSharedSection = selectedFolderId === 'all' && sharedNotes.length > 0
 
   const moveTargets = useMemo(() => flattenFolders(folders), [folders])
 
@@ -277,6 +286,64 @@ export function NoteList({
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ItemActions>
+      </Item>
+    )
+  }
+
+  const renderSharedNoteItem = (note: SharedNote) => {
+    const RoleIcon = note.my_role === 'editor' ? Pencil : Eye
+    const roleLabel = note.my_role === 'editor' ? 'Can edit' : 'Can view'
+    const select = () => onSelectNote(note)
+
+    return (
+      <Item
+        key={note.id}
+        variant={activeNoteId === note.id ? 'muted' : 'default'}
+        size="sm"
+        role="button"
+        tabIndex={0}
+        aria-current={activeNoteId === note.id || undefined}
+        onClick={select}
+        onKeyDown={onActivateKey(select)}
+        className="group cursor-pointer gap-2"
+      >
+        <ItemContent>
+          <ItemTitle className="truncate">{note.title || 'Untitled'}</ItemTitle>
+          <ItemDescription className="flex items-center gap-1">
+            <span title={roleLabel} className="shrink-0">
+              <RoleIcon className="h-3 w-3" aria-hidden="true" />
+            </span>
+            <span className="truncate">{note.owner_email}</span>
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Note actions"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                onClick={() => {
+                  if (window.confirm('Remove this note from your shared notes?')) {
+                    onRemoveSharedNote(note.id)
+                  }
+                }}
+              >
+                <UserX className="mr-2 h-4 w-4" />
+                Remove from shared
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -399,8 +466,8 @@ export function NoteList({
   }
 
   const isEmpty = isDesktop
-    ? scopedNotes.length === 0
-    : childFolders.length === 0 && scopedNotes.length === 0
+    ? scopedNotes.length === 0 && !showSharedSection
+    : childFolders.length === 0 && scopedNotes.length === 0 && !showSharedSection
 
   const emptyMessage =
     selectedFolderId === 'all' ? 'No notes yet. Create your first note to get started.' : 'This folder is empty.'
@@ -477,6 +544,14 @@ export function NoteList({
             )}
             {pinnedNotes.map(renderNoteItem)}
             {unpinnedNotes.map(renderNoteItem)}
+            {showSharedSection && (
+              <>
+                <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Shared with me
+                </div>
+                {sharedNotes.map(renderSharedNoteItem)}
+              </>
+            )}
           </ItemGroup>
         )}
       </ScrollArea>
