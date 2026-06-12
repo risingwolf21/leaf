@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
-import { ArrowLeft, Leaf, LogOut, Menu } from 'lucide-react'
+import { ArrowLeft, Leaf, Menu, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNotesContext } from '@/context/NotesContext'
-import { useAuth } from '@/hooks/useAuth'
 import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
 import { cn } from '@/lib/utils'
 
@@ -10,13 +9,12 @@ interface LayoutProps {
   children: ReactNode
   showBackButton: boolean
   onBack: () => void
-  /** Mobile-only header content (e.g. note title + mode toggles) that replaces the brand/sign-out. */
+  /** Mobile-only header content (e.g. note title + mode toggles) that replaces the brand. */
   headerContent?: ReactNode
 }
 
 export function Layout({ children, showBackButton, onBack, headerContent }: LayoutProps) {
-  const { signOut } = useAuth()
-  const { setMobileSidebarOpen } = useNotesContext()
+  const { setMobileSidebarOpen, toggleSidebar } = useNotesContext()
   const keyboardOpen = useVisualViewportHeight()
 
   return (
@@ -58,10 +56,9 @@ export function Layout({ children, showBackButton, onBack, headerContent }: Layo
             <span className="text-lg font-semibold text-foreground">Leaf</span>
           </div>
         </div>
-        <div className={cn('shrink-0', headerContent && 'hidden md:block')}>
-          <Button variant="ghost" size="sm" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            Sign out
+        <div className="hidden shrink-0 md:block">
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Toggle sidebar" title="Toggle sidebar">
+            <PanelLeft className="h-4 w-4" />
           </Button>
         </div>
       </header>

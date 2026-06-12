@@ -1,4 +1,4 @@
-import { ChevronRight, Folder, Leaf, PanelLeftClose, Search, Settings, Tag } from 'lucide-react'
+import { ChevronRight, Folder, Search, Settings, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -18,27 +18,10 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
 /** Sidebar contents shared by the desktop sidebar, the mobile inline panel, and the mobile drawer. */
 export function SidebarContent() {
   const navigate = useNavigate()
-  const { sidebarMode, setSidebarMode, toggleSidebar } = useNotesContext()
+  const { sidebarMode, setSidebarMode } = useNotesContext()
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
-        <div className="flex items-center gap-2">
-          <Leaf className="h-5 w-5 text-primary" />
-          <span className="text-lg font-semibold text-foreground">Leaf</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={toggleSidebar}
-          aria-label="Collapse sidebar"
-          title="Collapse sidebar"
-          className="hidden md:flex"
-        >
-          <PanelLeftClose className="h-4 w-4" />
-        </Button>
-      </div>
-
       <div className="flex shrink-0 gap-1 border-b border-border p-1.5">
         {MODES.map(({ id, label, icon: Icon }) => (
           <button
