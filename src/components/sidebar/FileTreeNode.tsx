@@ -6,6 +6,7 @@ import {
   Folder as FolderIcon,
   FolderInput,
   FolderPlus,
+  GripVertical,
   MoreHorizontal,
   Pencil,
   Pin,
@@ -78,7 +79,6 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
     handleCreateSubfolder,
     moveFolder,
     createNote,
-    setMobileSidebarOpen,
   } = useNotesContext()
 
   const subfolders = folders.filter((item) => item.parent_id === folder.id)
@@ -107,14 +107,13 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
     const note = await createNote(folder.id)
     if (note) {
       navigate(`/app/notes/${note.id}`)
-      setMobileSidebarOpen(false)
     }
   }
 
   return (
     <div className="flex flex-col gap-1">
       <div ref={setDropRef} className={cn('rounded-md', showDropHighlight && 'bg-accent ring-1 ring-primary')}>
-        <div ref={setDragRef} {...attributes} {...listeners} className={cn(isDragging && 'opacity-40')}>
+        <div ref={setDragRef} className={cn(isDragging && 'opacity-40')}>
           <Item
             variant={isSelected ? 'muted' : 'default'}
             size="sm"
@@ -126,6 +125,17 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
             className="group cursor-pointer gap-2"
             style={{ paddingLeft: `${0.75 + depth * INDENT_REM}rem` }}
           >
+            <button
+              type="button"
+              aria-label="Drag to move"
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="shrink-0 cursor-grab touch-none rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 active:cursor-grabbing max-md:opacity-100"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
             {hasChildren ? (
               <button
                 type="button"
@@ -279,7 +289,6 @@ function NoteNode({ note, depth }: { note: NoteWithTags; depth: number }) {
     addTagToNote,
     deleteNote,
     shareNote,
-    setMobileSidebarOpen,
   } = useNotesContext()
 
   const isActive = activeNoteId === note.id
@@ -292,7 +301,6 @@ function NoteNode({ note, depth }: { note: NoteWithTags; depth: number }) {
 
   const open = () => {
     navigate(`/app/notes/${note.id}`)
-    setMobileSidebarOpen(false)
   }
 
   const moveTargets = flattenFolders(folders)
@@ -310,7 +318,7 @@ function NoteNode({ note, depth }: { note: NoteWithTags; depth: number }) {
   }
 
   return (
-    <div ref={setDragRef} {...attributes} {...listeners} className={cn(isDragging && 'opacity-40')}>
+    <div ref={setDragRef} className={cn(isDragging && 'opacity-40')}>
       <Item
         variant={isActive ? 'muted' : 'default'}
         size="sm"
@@ -325,6 +333,17 @@ function NoteNode({ note, depth }: { note: NoteWithTags; depth: number }) {
         )}
         style={{ paddingLeft: `${0.75 + depth * INDENT_REM}rem` }}
       >
+        <button
+          type="button"
+          aria-label="Drag to move"
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="shrink-0 cursor-grab touch-none rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 active:cursor-grabbing max-md:opacity-100"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
         <span className="size-5 shrink-0" />
         <ItemMedia>
           <FileText className="h-4 w-4 text-muted-foreground" />

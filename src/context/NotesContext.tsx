@@ -71,8 +71,6 @@ interface NotesContextValue {
   setSidebarMode: (mode: SidebarMode) => void
   sidebarOpen: boolean
   toggleSidebar: () => void
-  mobileSidebarOpen: boolean
-  setMobileSidebarOpen: (open: boolean) => void
 
   tagFilter: Set<string>
   toggleTagFilter: (tagId: string) => void
@@ -161,7 +159,6 @@ export function NotesProvider() {
   const [noteRenameValue, setNoteRenameValue] = useState('')
   const [versionHistoryNote, setVersionHistoryNote] = useState<Note | null>(null)
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>('files')
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [tagFilter, setTagFilter] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpenState] = useState(
     () => localStorage.getItem(SIDEBAR_STORAGE_KEY) !== 'closed'
@@ -359,8 +356,6 @@ export function NotesProvider() {
     setSidebarMode,
     sidebarOpen,
     toggleSidebar,
-    mobileSidebarOpen,
-    setMobileSidebarOpen,
 
     tagFilter,
     toggleTagFilter,

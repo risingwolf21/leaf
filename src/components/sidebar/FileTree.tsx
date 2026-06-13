@@ -151,14 +151,12 @@ function UnfiledSection({ notes, showHeading }: { notes: NoteWithTags[]; showHea
 function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: string) => Promise<void> }) {
   const navigate = useNavigate()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
-  const { setMobileSidebarOpen } = useNotesContext()
   const isActive = activeNoteId === note.id
   const RoleIcon = note.my_role === 'editor' ? Pencil : Eye
   const roleLabel = note.my_role === 'editor' ? 'Can edit' : 'Can view'
 
   const open = () => {
     navigate(`/app/notes/${note.id}`)
-    setMobileSidebarOpen(false)
   }
 
   const handleRemove = async () => {

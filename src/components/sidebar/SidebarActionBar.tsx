@@ -9,8 +9,7 @@ import type { AnyTemplate } from '@/types'
 /** Files mode action bar: new note (with template picker), new folder, and sort. */
 export function SidebarActionBar() {
   const navigate = useNavigate()
-  const { selectedFolderId, createNote, createNoteFromTemplate, templates, handleCreateFolder, setMobileSidebarOpen } =
-    useNotesContext()
+  const { selectedFolderId, createNote, createNoteFromTemplate, templates, handleCreateFolder } = useNotesContext()
 
   const targetFolderId = selectedFolderId === 'all' ? null : selectedFolderId
 
@@ -18,7 +17,6 @@ export function SidebarActionBar() {
     const note = await createNote(targetFolderId)
     if (note) {
       navigate(`/app/notes/${note.id}`)
-      setMobileSidebarOpen(false)
     }
   }
 
@@ -26,7 +24,6 @@ export function SidebarActionBar() {
     const note = await createNoteFromTemplate(template, targetFolderId)
     if (note) {
       navigate(`/app/notes/${note.id}`)
-      setMobileSidebarOpen(false)
     }
   }
 

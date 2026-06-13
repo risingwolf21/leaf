@@ -43,7 +43,7 @@ function folderPath(folders: Folder[], folderId: string | null): string {
 /** Search mode: auto-focused input with a match-case toggle, debounced results below. */
 export function SearchPanel() {
   const navigate = useNavigate()
-  const { folders, setSidebarMode, setMobileSidebarOpen } = useNotesContext()
+  const { folders, setSidebarMode } = useNotesContext()
   const { query, setQuery, matchCase, setMatchCase, results, isSearching } = useSearch()
 
   const trimmedQuery = query.trim()
@@ -52,7 +52,6 @@ export function SearchPanel() {
     navigate(`/app/notes/${note.id}`)
     setQuery('')
     setSidebarMode('files')
-    setMobileSidebarOpen(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
