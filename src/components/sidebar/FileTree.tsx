@@ -1,4 +1,4 @@
-import { Eye, MoreHorizontal, Pencil, UserX, X } from 'lucide-react'
+import { Eye, Folder as FolderIcon, MoreHorizontal, Pencil, Share2, UserX, X } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   DropdownMenu,
@@ -7,7 +7,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item'
-import { FolderNode, NoteNode } from '@/components/sidebar/FileTreeNode'
+import { SidebarMenuItem } from '@/components/ui/sidebar'
+import {
+  ALL_NOTES_FOLDER_ID,
+  FolderNode,
+  NoteNode,
+  SHARED_WITH_ME_FOLDER_ID,
+  VirtualFolderNode,
+} from '@/components/sidebar/FileTreeNode'
 import { useFolders } from '@/hooks/useFolders'
 import { sortNotes, useNotes, type SortBy } from '@/hooks/useNotes'
 import { useRemoveSelfFromNote, useSharedNotes } from '@/hooks/useSharedNotes'
@@ -23,6 +30,7 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
   const { data: notes = [] } = useNotes()
   const { data: sharedNotes = [] } = useSharedNotes()
   const { tagFilter } = useTagFilter()
+  const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const removeSelfFromNote = useRemoveSelfFromNote()
 
   if (tagFilter.size > 0) return <TagFilteredView sortBy={sortBy} />
@@ -33,29 +41,37 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
 
   return (
     <div className="flex flex-col gap-0.5">
+      {unfiledNotes.length > 0 && (
+        <VirtualFolderNode
+          id={ALL_NOTES_FOLDER_ID}
+          label="All notes"
+          icon={<FolderIcon />}
+          forceOpen={unfiledNotes.some((note) => note.id === activeNoteId)}
+        >
+          {unfiledNotes.map((note) => (
+            <NoteNode key={note.id} note={note} />
+          ))}
+        </VirtualFolderNode>
+      )}
+
+      {sharedNotes.length > 0 && (
+        <VirtualFolderNode
+          id={SHARED_WITH_ME_FOLDER_ID}
+          label="Shared with me"
+          icon={<Share2 />}
+          forceOpen={sharedNotes.some((note) => note.id === activeNoteId)}
+        >
+          {sharedNotes.map((note) => (
+            <SidebarMenuItem key={note.id}>
+              <SharedNoteRow note={note} onRemove={(id) => removeSelfFromNote.mutate(id)} />
+            </SidebarMenuItem>
+          ))}
+        </VirtualFolderNode>
+      )}
+
       {rootFolders.map((folder) => (
         <FolderNode key={folder.id} folder={folder} sortBy={sortBy} />
       ))}
-
-      {unfiledNotes.length > 0 && rootFolders.length > 0 && (
-        <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Unfiled
-        </div>
-      )}
-      {unfiledNotes.map((note) => (
-        <NoteNode key={note.id} note={note} />
-      ))}
-
-      {sharedNotes.length > 0 && (
-        <>
-          <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Shared with me
-          </div>
-          {sharedNotes.map((note) => (
-            <SharedNoteRow key={note.id} note={note} onRemove={(id) => removeSelfFromNote.mutate(id)} />
-          ))}
-        </>
-      )}
 
       {isEmpty && (
         <p className="px-3 py-6 text-center text-sm text-muted-foreground">

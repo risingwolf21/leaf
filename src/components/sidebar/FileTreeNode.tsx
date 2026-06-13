@@ -48,6 +48,7 @@ import {
   type SortBy,
 } from '@/hooks/useNotes'
 import { useAddTagToNote, useTags } from '@/hooks/useTags'
+import { useCollapsedFolders } from '@/hooks/useCollapsedFolders'
 import { usePendingRename, useVersionHistorySheet } from '@/lib/sidebarStore'
 import { cn } from '@/lib/utils'
 import type { Folder, NoteWithTags } from '@/types'
@@ -57,6 +58,49 @@ export const INDENT_REM = 1
 
 const RENAME_INPUT_CLASS =
   'min-w-0 flex-1 rounded border border-input bg-background px-1 py-0.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+
+/** Synthetic id for the virtual "All notes" folder (unfiled notes), used for collapse-state persistence. */
+export const ALL_NOTES_FOLDER_ID = '__all-notes__'
+
+/** Synthetic id for the virtual "Shared with me" folder, used for collapse-state persistence. */
+export const SHARED_WITH_ME_FOLDER_ID = '__shared-with-me__'
+
+/** Renders a collapsible "virtual" folder row that isn't backed by a database folder, e.g. unfiled or shared notes. */
+export function VirtualFolderNode({
+  id,
+  label,
+  icon,
+  forceOpen,
+  children,
+}: {
+  id: string
+  label: string
+  icon: React.ReactNode
+  forceOpen?: boolean
+  children: React.ReactNode
+}) {
+  const { collapsedFolderIds, toggleFolderCollapsed } = useCollapsedFolders()
+  const isOpen = forceOpen || !collapsedFolderIds.has(id)
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible open={isOpen} onOpenChange={() => toggleFolderCollapsed(id)} className="group/collapsible">
+        <CollapsibleTrigger
+          render={(triggerProps, state) => (
+            <SidebarMenuButton {...triggerProps}>
+              <ChevronRight className={cn('transition-transform', state.open && 'rotate-90')} />
+              {icon}
+              <span className="truncate">{label}</span>
+            </SidebarMenuButton>
+          )}
+        />
+        <CollapsibleContent>
+          <SidebarMenuSub>{children}</SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  )
+}
 
 /** Flattens the folder tree into a depth-first list with depth, for "move to folder" menus. */
 export function flattenFolders(
