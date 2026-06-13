@@ -146,8 +146,6 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
           render={(triggerProps, state) => (
             <SidebarMenuButton
               {...triggerProps}
-              render={isRenaming ? <div /> : undefined}
-              onClick={isRenaming ? undefined : triggerProps.onClick}
             >
               {hasChildren ? (
                 <ChevronRight className={cn('transition-transform', state.open && 'rotate-90')} />
@@ -176,7 +174,7 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
           )}
         />
         <CollapsibleContent>
-          <SidebarMenuSub>
+          <SidebarMenuSub className={"pr-0 mr-0"}>
             {subfolders.map((sub) => (
               <FolderNode key={sub.id} folder={sub} sortBy={sortBy} />
             ))}
@@ -305,7 +303,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
   }
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem >
       <SidebarMenuButton
         isActive={isActive}
         className="data-[active=true]:bg-transparent"
