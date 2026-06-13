@@ -3,6 +3,7 @@ import {
   ChevronRight,
   FilePlus,
   FileText,
+  File,
   Folder as FolderIcon,
   FolderInput,
   FolderPlus,
@@ -32,6 +33,8 @@ import { useNotesContext } from '@/context/NotesContext'
 import { sortNotes } from '@/hooks/useNotes'
 import { cn, onActivateKey } from '@/lib/utils'
 import type { Folder, NoteWithTags } from '@/types'
+import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '../ui/sidebar'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
 
 export const INDENT_REM = 1
 
@@ -52,6 +55,44 @@ export function flattenFolders(
 type FileTreeNodeProps =
   | { type: 'folder'; folder: Folder; depth: number }
   | { type: 'note'; note: NoteWithTags; depth: number }
+
+type FileTreeNodeNote = { type: 'note'; note: NoteWithTags; };
+
+type TreeItem = FileTreeNodeNote | { type: 'folder'; folder: Folder; items: TreeItem[]; }
+
+export const FileTree = ({ item }: { item: TreeItem }) => {
+  const { noteId: activeNoteId } = useParams<{ noteId: string }>()
+
+
+  if (item.type === 'note') {
+    return (
+      <SidebarMenuButton
+        isActive={activeNoteId === item.note.id}
+        className="data-[active=true]:bg-transparent"
+      >
+        <File />
+        {item.note.title}
+      </SidebarMenuButton>
+    )
+  }
+
+  return <SidebarMenuItem>
+    <Collapsible className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90">
+      <CollapsibleTrigger render={<SidebarMenuButton>
+          <ChevronRight className="transition-transform" />
+          <FolderIcon />
+          {item.folder.name}
+        </SidebarMenuButton>}/>
+      <CollapsibleContent>
+        <SidebarMenuSub>
+          {item.items.map((subItem, index) => (
+            <FileTree key={index} item={subItem} />
+          ))}
+        </SidebarMenuSub>
+      </CollapsibleContent>
+    </Collapsible>
+  </SidebarMenuItem>
+}
 
 /** Renders a single folder (recursive, with its subfolders and notes) or note row in the sidebar file tree. */
 export function FileTreeNode(props: FileTreeNodeProps) {
@@ -116,13 +157,12 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
         <div ref={setDragRef} className={cn(isDragging && 'opacity-40')}>
           <Item
             variant={isSelected ? 'muted' : 'default'}
-            size="sm"
             role="button"
             tabIndex={0}
             aria-current={isSelected || undefined}
             onClick={() => !isRenaming && select()}
             onKeyDown={onActivateKey(() => !isRenaming && select())}
-            className="group cursor-pointer gap-2"
+            className="group cursor-pointer"
             style={{ paddingLeft: `${0.75 + depth * INDENT_REM}rem` }}
           >
             <button
@@ -328,7 +368,7 @@ function NoteNode({ note, depth }: { note: NoteWithTags; depth: number }) {
         onClick={() => !isRenaming && open()}
         onKeyDown={onActivateKey(() => !isRenaming && open())}
         className={cn(
-          'group cursor-pointer gap-2 border-l-2',
+          'group cursor-pointer  border-l-2',
           isActive ? 'border-l-primary' : 'border-l-transparent'
         )}
         style={{ paddingLeft: `${0.75 + depth * INDENT_REM}rem` }}
