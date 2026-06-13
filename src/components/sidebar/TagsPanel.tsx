@@ -8,15 +8,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemGroup, ItemSeparator, ItemTitle } from '@/components/ui/item'
-import { useNotesContext } from '@/context/NotesContext'
+import { useNotes } from '@/hooks/useNotes'
+import { useDeleteTag, useRenameTag, useTags, useUpdateTagColor } from '@/hooks/useTags'
+import { useTagFilter } from '@/lib/sidebarStore'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import { onActivateKey } from '@/lib/utils'
 import type { Tag } from '@/types'
 
 /** Tags mode: alphabetical tag list (colour, name, count) that filters the Files tree on click. */
 export function TagsPanel() {
-  const { tags, tagsLoading, notes, tagFilter, toggleTagFilter, updateTagColor, deleteTag, renameTag } =
-    useNotesContext()
+  const { data: tags = [], isLoading: tagsLoading } = useTags()
+  const { data: notes = [] } = useNotes()
+  const { tagFilter, toggleTagFilter } = useTagFilter()
+  const updateTagColor = useUpdateTagColor()
+  const deleteTag = useDeleteTag()
+  const renameTag = useRenameTag()
   const [renamingTagId, setRenamingTagId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
@@ -28,7 +34,7 @@ export function TagsPanel() {
   }
 
   const commitRename = (id: string) => {
-    if (renameValue.trim()) renameTag(id, renameValue)
+    if (renameValue.trim()) renameTag.mutate({ id, name: renameValue })
     setRenamingTagId(null)
   }
 
@@ -63,7 +69,7 @@ export function TagsPanel() {
               className="group cursor-pointer gap-2"
             >
               <span onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                <TagColorPicker color={tag.color} onChange={(color) => updateTagColor(tag.id, color)} />
+                <TagColorPicker color={tag.color} onChange={(color) => updateTagColor.mutate({ id: tag.id, color })} />
               </span>
               <ItemContent>
                 {isRenaming ? (
@@ -116,7 +122,7 @@ export function TagsPanel() {
                           className="text-destructive focus:bg-destructive/10 focus:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation()
-                            if (window.confirm('Remove this tag from all notes?')) deleteTag(tag.id)
+                            if (window.confirm('Remove this tag from all notes?')) deleteTag.mutate(tag.id)
                           }}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />

@@ -6,6 +6,7 @@ import {
   Folder as FolderIcon,
   FolderInput,
   FolderPlus,
+  History,
   MoreHorizontal,
   Pencil,
   Pin,
@@ -49,7 +50,7 @@ import {
   type SortBy,
 } from '@/hooks/useNotes'
 import { useAddTagToNote, useTags } from '@/hooks/useTags'
-import { usePendingRename } from '@/lib/sidebarStore'
+import { usePendingRename, useVersionHistorySheet } from '@/lib/sidebarStore'
 import { cn } from '@/lib/utils'
 import type { Folder, NoteWithTags } from '@/types'
 
@@ -252,6 +253,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
   const { data: folders = [] } = useFolders()
   const { data: tags = [] } = useTags()
   const { pendingRename, setPendingRename } = usePendingRename()
+  const { openVersionHistory } = useVersionHistorySheet()
   const { updateNote } = useUpdateNote()
   const moveNote = useMoveNote()
   const togglePin = useTogglePin()
@@ -424,6 +426,10 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+            <DropdownMenuItem onClick={() => openVersionHistory(note)}>
+              <History className="mr-2 h-4 w-4" />
+              Version history
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyShareLink}>
               <Share2 className="mr-2 h-4 w-4" />
               Copy share link

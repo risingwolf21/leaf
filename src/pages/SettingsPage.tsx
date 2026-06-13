@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useNotesContext } from '@/context/NotesContext'
 import { useAuth } from '@/hooks/useAuth'
+import { useFolders } from '@/hooks/useFolders'
+import { useNotes, useTrashedNotes } from '@/hooks/useNotes'
 import { useTheme, type ThemePreference } from '@/hooks/useTheme'
 import { exportAllNotes } from '@/lib/export'
 import { AppBar } from '@/components/AppBar'
@@ -42,7 +43,9 @@ function SettingsLink({ to, icon: Icon, label, badge }: { to: string; icon: type
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
   const { themePreference, setThemePreference } = useTheme()
-  const { notes, folders, trashedNotes } = useNotesContext()
+  const { data: notes = [] } = useNotes()
+  const { data: folders = [] } = useFolders()
+  const { data: trashedNotes = [] } = useTrashedNotes()
 
   const handleExport = () => {
     void exportAllNotes(notes, folders)

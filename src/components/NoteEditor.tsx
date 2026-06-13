@@ -16,14 +16,9 @@ interface NoteEditorProps {
   notes: Note[]
   noteTags: Tag[]
   allTags: Tag[]
-  isSaving: boolean
   mode: ViewMode
-  onModeChange: (mode: ViewMode) => void
   onChange: (id: string, fields: NoteFields) => void
   onNavigateToNote: (title: string) => void
-  onShare: (id: string) => Promise<string>
-  onUnshare: (id: string) => Promise<void>
-  onSaveAsTemplate: (name: string, content: string) => Promise<void>
   onAddTag: (noteId: string, tagName: string) => Promise<void>
   onRemoveTag: (noteId: string, tagId: string) => Promise<void>
   /** Set when viewing a note shared by another user; restricts editing and sharing controls. */
@@ -114,23 +109,6 @@ export function NoteEditor({
         mode === 'split' ? 'max-w-[1400px]' : 'max-w-[960px]'
       )}
     >
-      {/* <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
-        <input
-          value={note.title}
-          onChange={(e) => onChange(note.id, { title: e.target.value })}
-          placeholder="Untitled"
-          className="w-full bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground"
-        />
-        <div className="flex shrink-0 items-center gap-2">
-          <span className={cn('text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
-            {isSaving ? 'Saving…' : 'Saved'}
-          </span>
-          {!sharedContext && <SharePanel note={note} onShare={onShare} onUnshare={onUnshare} onChange={onChange} />}
-          <EditorModeToggle mode={mode} onModeChange={onModeChange} />
-          {!sharedContext && <SaveAsTemplatePopover note={note} onSaveAsTemplate={onSaveAsTemplate} />}
-        </div>
-      </div> */}
-
       {!sharedContext && (
         <TagBar
           noteId={note.id}

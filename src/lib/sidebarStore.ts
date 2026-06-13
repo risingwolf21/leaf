@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
+import type { Note } from '@/types'
 
 export type SidebarMode = 'files' | 'search' | 'tags'
 
@@ -66,21 +67,17 @@ export function usePendingRename() {
   return { pendingRename, setPendingRename: pendingRenameStore.setState }
 }
 
-const SIDEBAR_STORAGE_KEY = 'leaf-sidebar'
+const versionHistoryNoteStore = createStore<Note | null>(null)
 
-const sidebarOpenStore = createStore<boolean>(localStorage.getItem(SIDEBAR_STORAGE_KEY) !== 'closed')
+/** Cross-page "open version history sheet for a note" signal, shared without a context provider. */
+export function useVersionHistorySheet() {
+  const versionHistoryNote = useSyncExternalStore(
+    versionHistoryNoteStore.subscribe,
+    versionHistoryNoteStore.getSnapshot
+  )
 
-/** Desktop sidebar open/collapsed state, persisted to localStorage and shared without a context provider. */
-export function useSidebarOpen() {
-  const sidebarOpen = useSyncExternalStore(sidebarOpenStore.subscribe, sidebarOpenStore.getSnapshot)
+  const openVersionHistory = useCallback((note: Note) => versionHistoryNoteStore.setState(note), [])
+  const closeVersionHistory = useCallback(() => versionHistoryNoteStore.setState(null), [])
 
-  const toggleSidebar = useCallback(() => {
-    sidebarOpenStore.setState((prev) => {
-      const next = !prev
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? 'open' : 'closed')
-      return next
-    })
-  }, [])
-
-  return { sidebarOpen, toggleSidebar }
+  return { versionHistoryNote, openVersionHistory, closeVersionHistory }
 }
