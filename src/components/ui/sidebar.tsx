@@ -27,8 +27,8 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH = "24rem"
+const SIDEBAR_WIDTH_MOBILE = "80%"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -556,15 +556,13 @@ const SidebarMenuButton = React.forwardRef<
   )
 })
 
-function SidebarMenuAction({
-  className,
-  render,
-  showOnHover = false,
-  ...props
-}: useRender.ComponentProps<"button"> &
-  React.ComponentProps<"button"> & {
-    showOnHover?: boolean
-  }) {
+const SidebarMenuAction = React.forwardRef<
+  HTMLButtonElement,
+  useRender.ComponentProps<"button"> &
+    React.ComponentProps<"button"> & {
+      showOnHover?: boolean
+    }
+>(({ className, render, showOnHover = false, ...props }, ref) => {
   return useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
@@ -575,6 +573,7 @@ function SidebarMenuAction({
             "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-active/menu-button:text-sidebar-accent-foreground aria-expanded:opacity-100 md:opacity-0",
           className
         ),
+        ref,
       },
       props
     ),
@@ -584,7 +583,7 @@ function SidebarMenuAction({
       sidebar: "menu-action",
     },
   })
-}
+})
 
 function SidebarMenuBadge({
   className,

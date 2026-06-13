@@ -1,29 +1,50 @@
 import { useNavigate } from 'react-router-dom'
-import { AppShell } from '@/components/AppShell'
 import { TemplatesView } from '@/components/TemplatesView'
-import { useNotesContext } from '@/context/NotesContext'
+import { useActiveFolder } from '@/hooks/useActiveFolder'
+import {
+  useCreateNoteFromTemplate,
+  useDeleteTemplate,
+  useRenameTemplate,
+  useSaveAsTemplate,
+  useTemplates,
+} from '@/hooks/useTemplates'
 import type { AnyTemplate } from '@/types'
+import { AppBar } from '@/components/AppBar'
 
 export default function TemplatesPage() {
   const navigate = useNavigate()
-  const { templates, selectedFolderId, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
-    useNotesContext()
+  const { data: templates = [] } = useTemplates()
+  const { activeFolderId } = useActiveFolder()
+  const saveAsTemplate = useSaveAsTemplate()
+  const renameTemplate = useRenameTemplate()
+  const deleteTemplate = useDeleteTemplate()
+  const { createNoteFromTemplate } = useCreateNoteFromTemplate()
 
-  const handleUseTemplate = async (template: AnyTemplate) => {
-    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
-    const note = await createNoteFromTemplate(template, folderId)
-    if (note) navigate(`/app/notes/${note.id}`)
+  const handleUseTemplate = (template: AnyTemplate) => {
+    createNoteFromTemplate(template, activeFolderId, {
+      onSuccess: (note) => navigate(`/app/notes/${note.id}`),
+    })
+  }
+
+  const handleSaveTemplate = async (name: string, content: string) => {
+    await saveAsTemplate.mutateAsync({ name, content })
   }
 
   return (
-    <AppShell>
-      <TemplatesView
-        templates={templates}
-        onUseTemplate={handleUseTemplate}
-        onSaveTemplate={saveAsTemplate}
-        onRenameTemplate={renameTemplate}
-        onDeleteTemplate={deleteTemplate}
+    <div>
+      <AppBar
+        className='!border-b !shadow-sm'
+        title={""}
       />
-    </AppShell>
+      <main className='flex-1 size-full pb-safe-bottom'>
+        <TemplatesView
+          templates={templates}
+          onUseTemplate={handleUseTemplate}
+          onSaveTemplate={handleSaveTemplate}
+          onRenameTemplate={(id, name) => renameTemplate.mutate({ id, name })}
+          onDeleteTemplate={deleteTemplate.mutate}
+        />
+      </main>
+    </div>
   )
 }

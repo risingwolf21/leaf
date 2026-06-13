@@ -1,18 +1,27 @@
-import { AppShell } from '@/components/AppShell'
+import { AppBar } from '@/components/AppBar'
 import { TrashView } from '@/components/TrashView'
-import { useNotesContext } from '@/context/NotesContext'
+import { useEmptyTrash, usePermanentlyDeleteNote, useRestoreNote, useTrashedNotes } from '@/hooks/useNotes'
 
 export default function TrashPage() {
-  const { trashedNotes, restoreNote, permanentlyDeleteNote, emptyTrash } = useNotesContext()
+  const { data: trashedNotes = [] } = useTrashedNotes()
+  const restoreNote = useRestoreNote()
+  const permanentlyDeleteNote = usePermanentlyDeleteNote()
+  const emptyTrash = useEmptyTrash()
 
   return (
-    <AppShell>
-      <TrashView
-        notes={trashedNotes}
-        onRestore={restoreNote}
-        onPermanentlyDelete={permanentlyDeleteNote}
-        onEmptyTrash={emptyTrash}
+    <div>
+      <AppBar
+        className='!border-b !shadow-sm'
+        title={""}
       />
-    </AppShell>
+      <main className='flex-1 size-full pb-safe-bottom'>
+        <TrashView
+          notes={trashedNotes}
+          onRestore={restoreNote.mutate}
+          onPermanentlyDelete={permanentlyDeleteNote.mutate}
+          onEmptyTrash={emptyTrash.mutate}
+        />
+      </main>
+    </div>
   )
 }

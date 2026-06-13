@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
-import { useNotesContext } from '@/context/NotesContext'
+import { useFolders } from '@/hooks/useFolders'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
+import { useSidebarMode } from '@/lib/sidebarStore'
 import { onActivateKey } from '@/lib/utils'
 import type { Folder, Note } from '@/types'
 
@@ -43,7 +44,8 @@ function folderPath(folders: Folder[], folderId: string | null): string {
 /** Search mode: auto-focused input with a match-case toggle, debounced results below. */
 export function SearchPanel() {
   const navigate = useNavigate()
-  const { folders, setSidebarMode } = useNotesContext()
+  const { data: folders = [] } = useFolders()
+  const [, setSidebarMode] = useSidebarMode()
   const { query, setQuery, matchCase, setMatchCase, results, isSearching } = useSearch()
 
   const trimmedQuery = query.trim()

@@ -2,29 +2,45 @@ import { FolderPlus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { TemplatePicker } from '@/components/TemplatePicker'
 import { Button } from '@/components/ui/button'
-import { useNotesContext } from '@/context/NotesContext'
+import { useActiveFolder } from '@/hooks/useActiveFolder'
+import { useCreateFolder } from '@/hooks/useFolders'
+import { useCreateNote, type SortBy } from '@/hooks/useNotes'
+import { useCreateNoteFromTemplate, useTemplates } from '@/hooks/useTemplates'
+import { usePendingRename } from '@/lib/sidebarStore'
 import { SortPopover } from './SortPopover'
 import type { AnyTemplate } from '@/types'
 
 /** Files mode action bar: new note (with template picker), new folder, and sort. */
-export function SidebarActionBar() {
+export function SidebarActionBar({
+  sortBy,
+  setSortBy,
+}: {
+  sortBy: SortBy
+  setSortBy: (sortBy: SortBy) => void
+}) {
   const navigate = useNavigate()
-  const { selectedFolderId, createNote, createNoteFromTemplate, templates, handleCreateFolder } = useNotesContext()
+  const { activeFolderId } = useActiveFolder()
+  const { setPendingRename } = usePendingRename()
+  const { data: templates = [] } = useTemplates()
+  const createNote = useCreateNote()
+  const { createNoteFromTemplate } = useCreateNoteFromTemplate()
+  const createFolder = useCreateFolder()
 
-  const targetFolderId = selectedFolderId === 'all' ? null : selectedFolderId
-
-  const handleCreateBlank = async () => {
-    const note = await createNote(targetFolderId)
-    if (note) {
-      navigate(`/app/notes/${note.id}`)
-    }
+  const handleCreateBlank = () => {
+    createNote.mutate({ folderId: activeFolderId }, { onSuccess: (note) => navigate(`/app/notes/${note.id}`) })
   }
 
-  const handleSelectTemplate = async (template: AnyTemplate) => {
-    const note = await createNoteFromTemplate(template, targetFolderId)
-    if (note) {
-      navigate(`/app/notes/${note.id}`)
-    }
+  const handleSelectTemplate = (template: AnyTemplate) => {
+    createNoteFromTemplate(template, activeFolderId, {
+      onSuccess: (note) => navigate(`/app/notes/${note.id}`),
+    })
+  }
+
+  const handleCreateFolder = () => {
+    createFolder.mutate(
+      { name: 'New folder', parentId: activeFolderId },
+      { onSuccess: (created) => setPendingRename({ kind: 'folder', id: created.id }) }
+    )
   }
 
   return (
@@ -37,7 +53,7 @@ export function SidebarActionBar() {
       <Button onClick={handleCreateFolder} variant="outline" size="icon" aria-label="New folder" title="New folder">
         <FolderPlus className="h-4 w-4" />
       </Button>
-      <SortPopover />
+      <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
     </div>
   )
 }
