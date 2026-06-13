@@ -1,9 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { EditorToolbar } from '@/components/EditorToolbar'
-import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
-import { SharePanel } from '@/components/SharePanel'
 import { TagBar } from '@/components/TagBar'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
@@ -38,14 +35,9 @@ export function NoteEditor({
   notes,
   noteTags,
   allTags,
-  isSaving,
   mode,
-  onModeChange,
   onChange,
   onNavigateToNote,
-  onShare,
-  onUnshare,
-  onSaveAsTemplate,
   onAddTag,
   onRemoveTag,
   sharedContext,
@@ -87,6 +79,7 @@ export function NoteEditor({
     editor.view.dispatch(editor.state.tr)
   }, [editor, notes, onNavigateToNote])
 
+
   if (!editor) return null
 
   if (isReadOnly) {
@@ -121,7 +114,7 @@ export function NoteEditor({
         mode === 'split' ? 'max-w-[1400px]' : 'max-w-[960px]'
       )}
     >
-      <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
+      {/* <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
         <input
           value={note.title}
           onChange={(e) => onChange(note.id, { title: e.target.value })}
@@ -136,7 +129,7 @@ export function NoteEditor({
           <EditorModeToggle mode={mode} onModeChange={onModeChange} />
           {!sharedContext && <SaveAsTemplatePopover note={note} onSaveAsTemplate={onSaveAsTemplate} />}
         </div>
-      </div>
+      </div> */}
 
       {!sharedContext && (
         <TagBar
