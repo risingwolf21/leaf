@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { notesKeys } from '@/lib/queryKeys'
 import { mergeTags, syncContentTags } from '@/lib/tags'
 import type { Note, NoteWithTags, Tag } from '@/types'
 
@@ -16,8 +18,7 @@ function byUpdatedAtDesc<T extends Note>(a: T, b: T) {
 
 function sortByDeletedAtDesc(notes: Note[]) {
   return [...notes].sort(
-    (a, b) =>
-      new Date(b.deleted_at ?? 0).getTime() - new Date(a.deleted_at ?? 0).getTime()
+    (a, b) => new Date(b.deleted_at ?? 0).getTime() - new Date(a.deleted_at ?? 0).getTime()
   )
 }
 
@@ -44,86 +45,50 @@ export function sortNotes<T extends Note>(notes: T[], sortBy: SortBy): T[] {
   return [...pinned, ...rest]
 }
 
-/**
- * @param onTagsSynced Called (fire-and-forget) whenever a debounced content
- * save syncs new `#hashtag`s to the `tags` table, so the global tag list
- * (e.g. note counts) can be refreshed.
- */
-export function useNotes(sortBy: SortBy = 'updated_at', onTagsSynced?: () => void) {
+export function useNotes() {
   const { user } = useAuth()
-  const [notes, setNotes] = useState<NoteWithTags[]>([])
-  const [trashedNotes, setTrashedNotes] = useState<Note[]>([])
-  const [loading, setLoading] = useState(true)
-  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
-  const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
-  const sortByRef = useRef(sortBy)
 
-  // Re-sort the already-loaded notes whenever the sort preference changes,
-  // without refetching from Supabase.
-  useEffect(() => {
-    sortByRef.current = sortBy
-    setNotes((prev) => sortNotes(prev, sortBy))
-  }, [sortBy])
+  return useQuery({
+    queryKey: notesKeys.all(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_notes_with_tags')
+      if (error) throw error
+      return sortNotes((data ?? []) as NoteWithTags[], 'updated_at')
+    },
+    enabled: !!user,
+  })
+}
 
-  const fetchNotes = useCallback(async () => {
-    if (!user) {
-      setNotes([])
-      return
-    }
+export function useTrashedNotes() {
+  const { user } = useAuth()
 
-    const { data, error } = await supabase.rpc('get_notes_with_tags')
+  return useQuery({
+    queryKey: notesKeys.trash(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user!.id)
+        .not('deleted_at', 'is', null)
+        .order('updated_at', { ascending: false })
 
-    if (!error && data) setNotes(sortNotes(data as NoteWithTags[], sortByRef.current))
-  }, [user])
+      if (error) throw error
+      return sortByDeletedAtDesc((data ?? []) as Note[])
+    },
+    enabled: !!user,
+  })
+}
 
-  const fetchTrashedNotes = useCallback(async () => {
-    if (!user) {
-      setTrashedNotes([])
-      return
-    }
+export function useCreateNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('user_id', user.id)
-      .not('deleted_at', 'is', null)
-      .order('updated_at', { ascending: false })
-
-    if (!error && data) setTrashedNotes(sortByDeletedAtDesc(data as Note[]))
-  }, [user])
-
-  useEffect(() => {
-    if (!user) {
-      setNotes([])
-      setTrashedNotes([])
-      setLoading(false)
-      return
-    }
-
-    let cancelled = false
-    setLoading(true)
-
-    Promise.all([fetchNotes(), fetchTrashedNotes()]).then(() => {
-      if (!cancelled) setLoading(false)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [user, fetchNotes, fetchTrashedNotes])
-
-  // Clear any pending debounce timers on unmount.
-  useEffect(() => {
-    const activeTimers = timers.current
-    return () => {
-      activeTimers.forEach((timer) => clearTimeout(timer))
-      activeTimers.clear()
-    }
-  }, [])
-
-  const createNote = useCallback(
-    async (folderId: string | null = null, fields: NoteFields = {}): Promise<NoteWithTags | null> => {
-      if (!user) return null
+  return useMutation({
+    mutationFn: async ({
+      folderId = null,
+      fields = {},
+    }: { folderId?: string | null; fields?: NoteFields }): Promise<NoteWithTags> => {
+      if (!user) throw new Error('Not authenticated')
 
       const { data, error } = await supabase
         .from('notes')
@@ -136,181 +101,246 @@ export function useNotes(sortBy: SortBy = 'updated_at', onTagsSynced?: () => voi
         .select()
         .single()
 
-      if (error || !data) return null
+      if (error || !data) throw error ?? new Error('Failed to create note')
 
-      const note: NoteWithTags = { ...(data as Note), tags: [] }
-      setNotes((prev) => sortNotes([note, ...prev], sortByRef.current))
-      return note
+      return { ...(data as Note), tags: [] }
     },
-    [user]
-  )
+    onSuccess: (note) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) => [note, ...prev])
+    },
+  })
+}
 
-  const updateNote = useCallback((id: string, fields: NoteFields) => {
-    // Optimistic local update so the UI feels instant.
-    setNotes((prev) =>
-      prev.map((note) => (note.id === id ? { ...note, ...fields } : note))
-    )
+/**
+ * Debounced autosave for note edits. `updateNote(id, fields)` applies an
+ * optimistic update to the cache immediately, then debounces (1s) the
+ * Supabase write, version snapshot, and `#hashtag` sync per note id.
+ *
+ * @param onTagsSynced Called (fire-and-forget) whenever a debounced content
+ * save syncs new `#hashtag`s to the `tags` table, so the global tag list
+ * (e.g. note counts) can be refreshed.
+ */
+export function useUpdateNote(onTagsSynced?: () => void) {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
+  const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-    setSavingIds((prev) => new Set(prev).add(id))
+  // Clear any pending debounce timers on unmount.
+  useEffect(() => {
+    const activeTimers = timers.current
+    return () => {
+      activeTimers.forEach((timer) => clearTimeout(timer))
+      activeTimers.clear()
+    }
+  }, [])
 
-    const existing = timers.current.get(id)
-    if (existing) clearTimeout(existing)
+  const mutation = useMutation({
+    mutationFn: async ({ id, fields }: { id: string; fields: NoteFields }) => {
+      const { data, error } = await supabase.from('notes').update(fields).eq('id', id).select().single()
+      if (error || !data) throw error ?? new Error('Failed to update note')
 
-    const timer = setTimeout(async () => {
-      timers.current.delete(id)
+      const updated = data as Note
 
-      const { data, error } = await supabase
-        .from('notes')
-        .update(fields)
-        .eq('id', id)
-        .select()
-        .single()
+      await supabase.rpc('save_note_version', {
+        p_note_id: id,
+        p_title: updated.title,
+        p_content: updated.content,
+      })
 
-      if (!error && data) {
-        const updated = data as Note
-        setNotes((prev) =>
-          sortNotes(
-            prev.map((note) => (note.id === id ? { ...updated, tags: note.tags } : note)),
-            sortByRef.current
-          )
-        )
-
-        await supabase.rpc('save_note_version', {
-          p_note_id: id,
-          p_title: updated.title,
-          p_content: updated.content,
-        })
-
-        if ('content' in fields && user) {
-          syncContentTags(user.id, id, updated.content).then((syncedTags) => {
-            if (syncedTags.length === 0) return
-
-            setNotes((prev) =>
-              prev.map((note) =>
-                note.id === id ? { ...note, tags: mergeTags(note.tags, syncedTags) } : note
-              )
-            )
-            onTagsSynced?.()
-          })
-        }
+      let syncedTags: Tag[] = []
+      if ('content' in fields && user) {
+        syncedTags = await syncContentTags(user.id, id, updated.content)
       }
 
+      return { updated, syncedTags }
+    },
+    onSuccess: ({ updated, syncedTags }) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) =>
+          note.id === updated.id
+            ? { ...updated, tags: syncedTags.length > 0 ? mergeTags(note.tags, syncedTags) : note.tags }
+            : note
+        )
+      )
+      if (syncedTags.length > 0) onTagsSynced?.()
+    },
+    onSettled: (_data, _error, variables) => {
       setSavingIds((prev) => {
         const next = new Set(prev)
-        next.delete(id)
+        next.delete(variables.id)
         return next
       })
-    }, AUTOSAVE_DELAY)
+    },
+  })
 
-    timers.current.set(id, timer)
-  }, [user, onTagsSynced])
+  const updateNote = useCallback(
+    (id: string, fields: NoteFields) => {
+      // Optimistic local update so the UI feels instant.
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === id ? { ...note, ...fields } : note))
+      )
 
-  const deleteNote = useCallback(async (id: string) => {
-    const existing = timers.current.get(id)
-    if (existing) {
-      clearTimeout(existing)
-      timers.current.delete(id)
-    }
+      setSavingIds((prev) => new Set(prev).add(id))
 
-    setSavingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(id)
-      return next
-    })
+      const existing = timers.current.get(id)
+      if (existing) clearTimeout(existing)
 
-    const deletedAt = new Date().toISOString()
+      const timer = setTimeout(() => {
+        timers.current.delete(id)
+        mutation.mutate({ id, fields })
+      }, AUTOSAVE_DELAY)
 
-    setNotes((prev) => {
-      const note = prev.find((n) => n.id === id)
+      timers.current.set(id, timer)
+    },
+    [queryClient, user, mutation]
+  )
+
+  return { updateNote, savingIds }
+}
+
+export function useDeleteNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+    },
+    onMutate: (id) => {
+      const deletedAt = new Date().toISOString()
+      const notes = queryClient.getQueryData<NoteWithTags[]>(notesKeys.all(user?.id)) ?? []
+      const note = notes.find((n) => n.id === id)
+
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.filter((n) => n.id !== id)
+      )
+
       if (note) {
-        const trashed = { ...note, deleted_at: deletedAt, updated_at: deletedAt }
-        setTrashedNotes((prevTrashed) => sortByDeletedAtDesc([trashed, ...prevTrashed]))
+        const trashed: Note = { ...note, deleted_at: deletedAt, updated_at: deletedAt }
+        queryClient.setQueryData<Note[]>(notesKeys.trash(user?.id), (prev = []) =>
+          sortByDeletedAtDesc([trashed, ...prev])
+        )
       }
-      return prev.filter((n) => n.id !== id)
-    })
+    },
+  })
+}
 
-    await supabase.from('notes').update({ deleted_at: deletedAt }).eq('id', id)
-  }, [])
+export function useRestoreNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const restoreNote = useCallback(async (id: string) => {
-    setTrashedNotes((prev) => {
-      const note = prev.find((n) => n.id === id)
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('notes').update({ deleted_at: null }).eq('id', id)
+    },
+    onMutate: (id) => {
+      const trashed = queryClient.getQueryData<Note[]>(notesKeys.trash(user?.id)) ?? []
+      const note = trashed.find((n) => n.id === id)
+
+      queryClient.setQueryData<Note[]>(notesKeys.trash(user?.id), (prev = []) => prev.filter((n) => n.id !== id))
+
       if (note) {
         const restored: NoteWithTags = { ...note, deleted_at: null, tags: [] }
-        setNotes((prevNotes) => sortNotes([restored, ...prevNotes], sortByRef.current))
+        queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) => [restored, ...prev])
       }
-      return prev.filter((n) => n.id !== id)
-    })
+    },
+  })
+}
 
-    await supabase.from('notes').update({ deleted_at: null }).eq('id', id)
-  }, [])
+export function usePermanentlyDeleteNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const permanentlyDeleteNote = useCallback(async (id: string) => {
-    setTrashedNotes((prev) => prev.filter((note) => note.id !== id))
-    await supabase.from('notes').delete().eq('id', id)
-  }, [])
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('notes').delete().eq('id', id)
+    },
+    onMutate: (id) => {
+      queryClient.setQueryData<Note[]>(notesKeys.trash(user?.id), (prev = []) => prev.filter((n) => n.id !== id))
+    },
+  })
+}
 
-  const emptyTrash = useCallback(async () => {
-    if (!user) return
-    setTrashedNotes([])
-    await supabase.from('notes').delete().eq('user_id', user.id).not('deleted_at', 'is', null)
-  }, [user])
+export function useEmptyTrash() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const togglePin = useCallback(async (id: string, pinned: boolean) => {
-    setNotes((prev) =>
-      sortNotes(
-        prev.map((note) => (note.id === id ? { ...note, pinned } : note)),
-        sortByRef.current
+  return useMutation({
+    mutationFn: async () => {
+      if (!user) return
+      await supabase.from('notes').delete().eq('user_id', user.id).not('deleted_at', 'is', null)
+    },
+    onMutate: () => {
+      queryClient.setQueryData<Note[]>(notesKeys.trash(user?.id), [])
+    },
+  })
+}
+
+export function useTogglePin() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, pinned }: { id: string; pinned: boolean }) => {
+      await supabase.from('notes').update({ pinned }).eq('id', id)
+    },
+    onMutate: ({ id, pinned }) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === id ? { ...note, pinned } : note))
       )
-    )
+    },
+  })
+}
 
-    await supabase.from('notes').update({ pinned }).eq('id', id)
-  }, [])
+export function useShareNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const shareNote = useCallback(async (id: string): Promise<string> => {
-    const token = crypto.randomUUID().replace(/-/g, '')
-    const sharedAt = new Date().toISOString()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = crypto.randomUUID().replace(/-/g, '')
+      const sharedAt = new Date().toISOString()
 
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id ? { ...note, share_token: token, shared_at: sharedAt } : note
+      await supabase.from('notes').update({ share_token: token, shared_at: sharedAt }).eq('id', id)
+
+      return { id, token, sharedAt, url: `${window.location.origin}${import.meta.env.BASE_URL}shared/${token}` }
+    },
+    onSuccess: ({ id, token, sharedAt }) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === id ? { ...note, share_token: token, shared_at: sharedAt } : note))
       )
-    )
+    },
+  })
+}
 
-    await supabase.from('notes').update({ share_token: token, shared_at: sharedAt }).eq('id', id)
+export function useUnshareNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-    return `${window.location.origin}${import.meta.env.BASE_URL}shared/${token}`
-  }, [])
-
-  const unshareNote = useCallback(async (id: string) => {
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === id ? { ...note, share_token: null, shared_at: null } : note
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('notes').update({ share_token: null, shared_at: null }).eq('id', id)
+    },
+    onMutate: (id) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === id ? { ...note, share_token: null, shared_at: null } : note))
       )
-    )
+    },
+  })
+}
 
-    await supabase.from('notes').update({ share_token: null, shared_at: null }).eq('id', id)
-  }, [])
+/** Updates a note's `tags` array in the React Query cache; used by `useTags` mutations. */
+export function useSetNoteTags() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const setNoteTags = useCallback((id: string, tags: Tag[]) => {
-    setNotes((prev) => prev.map((note) => (note.id === id ? { ...note, tags } : note)))
-  }, [])
-
-  return {
-    notes,
-    trashedNotes,
-    loading,
-    createNote,
-    updateNote,
-    deleteNote,
-    restoreNote,
-    permanentlyDeleteNote,
-    emptyTrash,
-    togglePin,
-    shareNote,
-    unshareNote,
-    setNoteTags,
-    savingIds,
-    refetch: fetchNotes,
-  }
+  return useCallback(
+    (id: string, tags: Tag[]) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === id ? { ...note, tags } : note))
+      )
+    },
+    [queryClient, user]
+  )
 }

@@ -8,13 +8,10 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useNotesContext } from '@/context/NotesContext'
 import type { SortBy } from '@/hooks/useNotes'
 
 /** Popover for choosing the Files mode sort order, persisted via `useSortPreference`. */
-export function SortPopover() {
-  const { sortBy, setSortBy } = useNotesContext()
-
+export function SortPopover({ sortBy, setSortBy }: { sortBy: SortBy; setSortBy: (sortBy: SortBy) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

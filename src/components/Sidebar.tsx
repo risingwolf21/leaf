@@ -6,7 +6,8 @@ import { FileTreeRoot } from '@/components/sidebar/FileTree'
 import { SearchPanel } from '@/components/sidebar/SearchPanel'
 import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
 import { TagsPanel } from '@/components/sidebar/TagsPanel'
-import { useNotesContext, type SidebarMode } from '@/context/NotesContext'
+import { useSidebarMode, useSidebarOpen, type SidebarMode } from '@/lib/sidebarStore'
+import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
 import { SidebarProvider } from './ui/sidebar'
 
@@ -19,7 +20,8 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
 /** Sidebar contents shared by the desktop sidebar, the mobile inline panel, and the mobile drawer. */
 export function SidebarContent() {
   const navigate = useNavigate()
-  const { sidebarMode, setSidebarMode } = useNotesContext()
+  const [sidebarMode, setSidebarMode] = useSidebarMode()
+  const [sortBy, setSortBy] = useSortPreference()
 
   return (
     <div className="flex h-full flex-col">
@@ -44,12 +46,12 @@ export function SidebarContent() {
         ))}
       </div>
 
-      {sidebarMode === 'files' && <SidebarActionBar />}
+      {sidebarMode === 'files' && <SidebarActionBar sortBy={sortBy} setSortBy={setSortBy} />}
 
       <div className="flex-1 overflow-hidden">
         {sidebarMode === 'files' && (
           <ScrollArea className="h-full p-2">
-            <FileTreeRoot />
+            <FileTreeRoot sortBy={sortBy} />
           </ScrollArea>
         )}
         {sidebarMode === 'search' && <SearchPanel />}
@@ -72,7 +74,7 @@ export function SidebarContent() {
 
 /** Desktop: fixed 260px collapsible sidebar with a small re-expand tab when collapsed. */
 export default function Sidebar() {
-  const { sidebarOpen, toggleSidebar } = useNotesContext()
+  const { sidebarOpen, toggleSidebar } = useSidebarOpen()
 
   return (
     <SidebarProvider>
