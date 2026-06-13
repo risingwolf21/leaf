@@ -1,8 +1,6 @@
 import { EditorContent, useEditor } from '@tiptap/react'
-import { ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 import { createEditorExtensions } from '@/lib/editor-extensions'
+import { AppBar } from '@/components/AppBar'
 
 interface Section {
   heading: string
@@ -86,20 +84,14 @@ function MarkdownExample({ heading, markdown }: Section) {
 }
 
 export default function HelpPage() {
-  const navigate = useNavigate()
 
   return (
-    <div className="h-dvh overflow-y-auto bg-background">
-      <div className="mx-auto max-w-[680px] px-4 py-6 sm:px-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-6 -ml-2 gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-
-        <h1 className="mb-2 text-2xl font-bold text-foreground">Markdown guide</h1>
-        <p className="mb-8 text-sm text-muted-foreground">
-          Leaf notes are stored as Markdown. Here's how the most common syntax renders.
-        </p>
+    <div>
+      <AppBar
+        className='!border-b !shadow-sm'
+        title={""}
+      />
+      <main className='flex-1 size-full pb-safe-bottom'>
 
         <div className="flex flex-col gap-8">
           {SECTIONS.map((section, index) => (
@@ -109,7 +101,7 @@ export default function HelpPage() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

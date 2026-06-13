@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
 import { useNotes } from '@/hooks/useNotes'
 import type { NoteFields, SortBy } from '@/hooks/useNotes'
 import { useCollapsedFolders } from '@/hooks/useCollapsedFolders'
@@ -110,7 +109,7 @@ export function useNotesContext() {
  * that must survive navigation between the note list, editor, trash and
  * templates routes.
  */
-export function NotesProvider() {
+export function NotesProvider({ children }: { children: React.ReactNode }) {
   const [sortBy, setSortBy] = useSortPreference()
   const {
     tags,
@@ -382,7 +381,7 @@ export function NotesProvider() {
 
   return (
     <NotesContext.Provider value={value}>
-      <Outlet />
+      {children}
       <VersionHistorySheet
         note={versionHistoryNote}
         onOpenChange={(open) => !open && setVersionHistoryNote(null)}

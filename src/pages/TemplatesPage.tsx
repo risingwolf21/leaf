@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import { AppShell } from '@/components/AppShell'
 import { TemplatesView } from '@/components/TemplatesView'
 import { useNotesContext } from '@/context/NotesContext'
 import type { AnyTemplate } from '@/types'
+import { AppBar } from '@/components/AppBar'
 
 export default function TemplatesPage() {
   const navigate = useNavigate()
@@ -16,14 +16,20 @@ export default function TemplatesPage() {
   }
 
   return (
-    <AppShell>
-      <TemplatesView
-        templates={templates}
-        onUseTemplate={handleUseTemplate}
-        onSaveTemplate={saveAsTemplate}
-        onRenameTemplate={renameTemplate}
-        onDeleteTemplate={deleteTemplate}
+    <div>
+      <AppBar
+        className='!border-b !shadow-sm'
+        title={""}
       />
-    </AppShell>
+      <main className='flex-1 size-full pb-safe-bottom'>
+        <TemplatesView
+          templates={templates}
+          onUseTemplate={handleUseTemplate}
+          onSaveTemplate={saveAsTemplate}
+          onRenameTemplate={renameTemplate}
+          onDeleteTemplate={deleteTemplate}
+        />
+      </main>
+    </div>
   )
 }

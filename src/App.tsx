@@ -1,10 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { NotesProvider } from '@/context/NotesContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import AuthPage from '@/pages/AuthPage'
-import NoteListPage from '@/pages/NoteListPage'
 import NoteEditorPage from '@/pages/NoteEditorPage'
 import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
@@ -12,6 +11,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
+import { MainLayout } from './components/MainLayout'
 
 function App() {
   return (
@@ -25,11 +25,14 @@ function App() {
               path="/app"
               element={
                 <ProtectedRoute>
-                  <NotesProvider />
+                  <NotesProvider>
+                    <MainLayout>
+                      <Outlet />
+                    </MainLayout>
+                  </NotesProvider>
                 </ProtectedRoute>
               }
             >
-              <Route index element={<NoteListPage />} />
               <Route path="notes/:noteId" element={<NoteEditorPage />} />
               <Route path="trash" element={<TrashPage />} />
               <Route path="templates" element={<TemplatesPage />} />

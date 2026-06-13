@@ -103,11 +103,12 @@ export const FileTreeRoot = () => {
     useNotesContext()
 
   const fileTree = buildFileTree(folders, notes);
-  return <FileTree2 item={fileTree} />
+  
+  return <FileTree item={fileTree} />
 
 }
 
-export const FileTree2 = ({ item }: { item: TreeItem[] }) => {
+export const FileTree = ({ item }: { item: TreeItem[] }) => {
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const navigate = useNavigate()
 
@@ -139,7 +140,7 @@ export const FileTree2 = ({ item }: { item: TreeItem[] }) => {
         />
         <CollapsibleContent>
           <SidebarMenuSub>
-            <FileTree2 item={node.items} />
+            <FileTree item={node.items} />
           </SidebarMenuSub>
         </CollapsibleContent>
       </Collapsible>
@@ -148,7 +149,7 @@ export const FileTree2 = ({ item }: { item: TreeItem[] }) => {
 }
 
 /** Top-level sidebar tree: folders, unfiled notes, shared notes, and (when a tag filter is active) a flat filtered list. */
-export function FileTree() {
+export function FileTree2() {
   const { notes, folders, sortBy, tagFilter, sharedNotes, removeSelfFromNote } =
     useNotesContext()
 
