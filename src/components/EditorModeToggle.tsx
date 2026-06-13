@@ -1,4 +1,4 @@
-import { Code2, Pencil } from 'lucide-react'
+import { Code2, Columns2, Pencil } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import type { ViewMode } from '@/types'
 
@@ -10,23 +10,35 @@ interface EditorModeToggleProps {
 export function EditorModeToggle({ mode, onModeChange }: EditorModeToggleProps) {
   return (
     <>
-      {mode !== 'preview' && (
-        <Toggle
-          size="sm"
-          pressed={mode === 'source'}
-          onPressedChange={(pressed) => onModeChange(pressed ? 'source' : 'edit')}
-          aria-label="Toggle source view"
-        >
-          <Code2 className="h-4 w-4" />
-        </Toggle>
+      {mode !== 'split' && (
+        <>
+          {mode !== 'preview' && (
+            <Toggle
+              size="sm"
+              pressed={mode === 'source'}
+              onPressedChange={(pressed) => onModeChange(pressed ? 'source' : 'edit')}
+              aria-label="Toggle source view"
+            >
+              <Code2 className="h-4 w-4" />
+            </Toggle>
+          )}
+          <Toggle
+            size="sm"
+            pressed={mode !== 'preview'}
+            onPressedChange={(pressed) => onModeChange(pressed ? 'edit' : 'preview')}
+            aria-label="Toggle edit mode"
+          >
+            <Pencil className="h-4 w-4" />
+          </Toggle>
+        </>
       )}
       <Toggle
         size="sm"
-        pressed={mode !== 'preview'}
-        onPressedChange={(pressed) => onModeChange(pressed ? 'edit' : 'preview')}
-        aria-label="Toggle edit mode"
+        pressed={mode === 'split'}
+        onPressedChange={(pressed) => onModeChange(pressed ? 'split' : 'preview')}
+        aria-label="Toggle split view"
       >
-        <Pencil className="h-4 w-4" />
+        <Columns2 className="h-4 w-4" />
       </Toggle>
     </>
   )

@@ -107,28 +107,20 @@ export function NoteEditor({
     )
   }
 
-  const editorContent =
-    mode === 'source' ? (
-      <textarea
-        value={note.content}
-        onChange={(e) => onChange(note.id, { content: e.target.value })}
-        placeholder="Start writing…"
-        spellCheck
-        className="min-h-[300px] w-full resize-none bg-transparent font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground"
-      />
-    ) : (
-      <>
-        {mode === 'edit' && (
-          <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
-            <EditorToolbar editor={editor} />
-          </div>
-        )}
-        <EditorContent editor={editor} />
-      </>
-    )
+  const handleSourceChange = (content: string) => {
+    onChange(note.id, { content })
+    if (mode === 'split') {
+      editor.commands.setContent(content, false)
+    }
+  }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
+    <div
+      className={cn(
+        'mx-auto flex h-full w-full flex-col px-4 py-3 sm:px-6 md:py-6',
+        mode === 'split' ? 'max-w-[1400px]' : 'max-w-[960px]'
+      )}
+    >
       <div className="mb-4 hidden shrink-0 items-center justify-between gap-4 md:flex">
         <input
           value={note.title}
@@ -156,7 +148,41 @@ export function NoteEditor({
         />
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">{editorContent}</div>
+      {mode === 'split' ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+          <textarea
+            value={note.content}
+            onChange={(e) => handleSourceChange(e.target.value)}
+            placeholder="Start writing…"
+            spellCheck
+            className="min-h-0 flex-1 resize-none overflow-y-auto bg-transparent pb-4 font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground md:basis-1/2 md:pb-0 md:pr-4"
+          />
+          <div className="min-h-0 flex-1 overflow-y-auto border-t border-border pt-4 md:basis-1/2 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+            <EditorContent editor={editor} />
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {mode === 'source' ? (
+            <textarea
+              value={note.content}
+              onChange={(e) => handleSourceChange(e.target.value)}
+              placeholder="Start writing…"
+              spellCheck
+              className="min-h-[300px] w-full resize-none bg-transparent font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          ) : (
+            <>
+              {mode === 'edit' && (
+                <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
+                  <EditorToolbar editor={editor} />
+                </div>
+              )}
+              <EditorContent editor={editor} />
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -75,7 +75,7 @@ export interface AuthFormData {
   password: string
 }
 
-export type ViewMode = 'preview' | 'edit' | 'source'
+export type ViewMode = 'preview' | 'edit' | 'source' | 'split'
 
 export interface Template {
   id: string
