@@ -6,12 +6,11 @@ import type { AnyTemplate } from '@/types'
 
 export default function TemplatesPage() {
   const navigate = useNavigate()
-  const { templates, selectedFolderId, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
+  const { templates, activeFolderId, saveAsTemplate, renameTemplate, deleteTemplate, createNoteFromTemplate } =
     useNotesContext()
 
   const handleUseTemplate = async (template: AnyTemplate) => {
-    const folderId = selectedFolderId === 'all' ? null : selectedFolderId
-    const note = await createNoteFromTemplate(template, folderId)
+    const note = await createNoteFromTemplate(template, activeFolderId)
     if (note) navigate(`/app/notes/${note.id}`)
   }
 

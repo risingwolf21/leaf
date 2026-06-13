@@ -65,8 +65,6 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
     folders,
     notes,
     sortBy,
-    selectedFolderId,
-    setSelectedFolderId,
     collapsedFolderIds,
     toggleFolderCollapsed,
     renamingFolderId,
@@ -86,7 +84,6 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
   const hasChildren = subfolders.length > 0 || childNotes.length > 0
   const isCollapsed = collapsedFolderIds.has(folder.id)
   const isRenaming = renamingFolderId === folder.id
-  const isSelected = selectedFolderId === folder.id
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: `folder-${folder.id}`,
@@ -100,7 +97,7 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
   const isSelfDrag = active?.data.current?.kind === 'folder' && active.data.current?.id === folder.id
   const showDropHighlight = isOver && !isSelfDrag
 
-  const select = () => setSelectedFolderId(folder.id)
+  const toggleOpen = () => hasChildren && toggleFolderCollapsed(folder.id)
   const moveTargets = flattenFolders(folders).filter(({ folder: target }) => target.id !== folder.id)
 
   const handleNewNoteInside = async () => {
@@ -115,13 +112,12 @@ function FolderNode({ folder, depth }: { folder: Folder; depth: number }) {
       <div ref={setDropRef} className={cn('rounded-md', showDropHighlight && 'bg-accent ring-1 ring-primary')}>
         <div ref={setDragRef} className={cn(isDragging && 'opacity-40')}>
           <Item
-            variant={isSelected ? 'muted' : 'default'}
+            variant="default"
             size="sm"
             role="button"
             tabIndex={0}
-            aria-current={isSelected || undefined}
-            onClick={() => !isRenaming && select()}
-            onKeyDown={onActivateKey(() => !isRenaming && select())}
+            onClick={() => !isRenaming && toggleOpen()}
+            onKeyDown={onActivateKey(() => !isRenaming && toggleOpen())}
             className="group cursor-pointer gap-2"
             style={{ paddingLeft: `${0.75 + depth * INDENT_REM}rem` }}
           >

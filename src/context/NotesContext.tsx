@@ -1,9 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { Outlet, useParams } from 'react-router-dom'
 import { useNotes } from '@/hooks/useNotes'
 import type { NoteFields, SortBy } from '@/hooks/useNotes'
 import { useCollapsedFolders } from '@/hooks/useCollapsedFolders'
-import { useFolders } from '@/hooks/useFolders'
+import { getFolderAncestorChain, useFolders } from '@/hooks/useFolders'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { useTags } from '@/hooks/useTags'
 import { useTemplates } from '@/hooks/useTemplates'
@@ -12,7 +12,6 @@ import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import type { AnyTemplate, Folder, Note, NoteWithTags, SharedNote, Tag, Template } from '@/types'
 
-export type FolderSelection = string | 'all'
 export type SidebarMode = 'files' | 'search' | 'tags'
 
 const SIDEBAR_STORAGE_KEY = 'leaf-sidebar'
@@ -43,8 +42,10 @@ interface NotesContextValue {
   removeTagFromNote: (noteId: string, tagId: string) => Promise<void>
 
   folders: Folder[]
-  selectedFolderId: FolderSelection
-  setSelectedFolderId: (id: FolderSelection) => void
+  /** The active note's `folder_id`, or `null` if no note is open / it's unfiled. Used as the target folder for "new note", "new folder", etc. */
+  activeFolderId: string | null
+  /** `activeFolderId` plus all of its ancestors, for auto-expanding the sidebar tree to reveal the active note. */
+  autoExpandedFolderIds: Set<string>
   renamingFolderId: string | null
   renameValue: string
   setRenameValue: (value: string) => void
@@ -151,8 +152,14 @@ export function NotesProvider() {
     removeSelfFromNote,
   } = useSharedNotes()
   const { collapsedFolderIds, toggleFolderCollapsed } = useCollapsedFolders()
+  const { noteId } = useParams<{ noteId?: string }>()
 
-  const [selectedFolderId, setSelectedFolderId] = useState<FolderSelection>('all')
+  const activeFolderId = notes.find((note) => note.id === noteId)?.folder_id ?? null
+  const autoExpandedFolderIds = useMemo(
+    () => new Set(getFolderAncestorChain(activeFolderId, folders)),
+    [activeFolderId, folders]
+  )
+
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null)
@@ -216,10 +223,9 @@ export function NotesProvider() {
   const handleCancelRename = useCallback(() => setRenamingFolderId(null), [])
 
   const handleCreateFolder = useCallback(async () => {
-    const parentId = selectedFolderId === 'all' ? null : selectedFolderId
-    const folder = await createFolder('New folder', parentId)
+    const folder = await createFolder('New folder', activeFolderId)
     if (folder) handleStartRename(folder)
-  }, [selectedFolderId, createFolder, handleStartRename])
+  }, [activeFolderId, createFolder, handleStartRename])
 
   const handleCreateSubfolder = useCallback(
     async (parentId: string) => {
@@ -231,27 +237,10 @@ export function NotesProvider() {
 
   const handleDeleteFolder = useCallback(
     async (id: string) => {
-      // Deletion cascades to subfolders; if the active selection points at the
-      // deleted folder or one of its descendants, fall back to its parent (or
-      // "All Notes" if it was a root folder) so the UI doesn't get stranded.
-      const idsToRemove = new Set<string>()
-      const collect = (folderId: string) => {
-        idsToRemove.add(folderId)
-        for (const folder of folders) {
-          if (folder.parent_id === folderId) collect(folder.id)
-        }
-      }
-      collect(id)
-
-      if (selectedFolderId !== 'all' && idsToRemove.has(selectedFolderId)) {
-        const deletedFolder = folders.find((folder) => folder.id === id)
-        setSelectedFolderId(deletedFolder?.parent_id ?? 'all')
-      }
-
       await deleteFolder(id)
       await refetch()
     },
-    [folders, selectedFolderId, deleteFolder, refetch]
+    [deleteFolder, refetch]
   )
 
   const handleMoveNote = useCallback(
@@ -328,8 +317,8 @@ export function NotesProvider() {
     removeTagFromNote,
 
     folders,
-    selectedFolderId,
-    setSelectedFolderId,
+    activeFolderId,
+    autoExpandedFolderIds,
     renamingFolderId,
     renameValue,
     setRenameValue,
