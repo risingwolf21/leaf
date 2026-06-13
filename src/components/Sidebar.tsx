@@ -2,12 +2,13 @@ import { ChevronRight, Folder, Search, Settings, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileTree } from '@/components/sidebar/FileTree'
+import { FileTreeRoot } from '@/components/sidebar/FileTree'
 import { SearchPanel } from '@/components/sidebar/SearchPanel'
 import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
 import { TagsPanel } from '@/components/sidebar/TagsPanel'
 import { useNotesContext, type SidebarMode } from '@/context/NotesContext'
 import { cn } from '@/lib/utils'
+import { SidebarProvider } from './ui/sidebar'
 
 const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
   { id: 'files', label: 'Files', icon: Folder },
@@ -47,8 +48,8 @@ export function SidebarContent() {
 
       <div className="flex-1 overflow-hidden">
         {sidebarMode === 'files' && (
-          <ScrollArea className="h-full">
-            <FileTree />
+          <ScrollArea className="h-full p-2">
+            <FileTreeRoot />
           </ScrollArea>
         )}
         {sidebarMode === 'search' && <SearchPanel />}
@@ -74,14 +75,14 @@ export default function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useNotesContext()
 
   return (
-    <>
+    <SidebarProvider>
       <aside
         className={cn(
           'hidden h-full shrink-0 overflow-hidden border-r border-border transition-[width] duration-200 ease-in-out md:block',
-          sidebarOpen ? 'w-[260px]' : 'w-0'
+          sidebarOpen ? 'w-[260px] md:w-[400px]' : 'w-0'
         )}
       >
-        <div className="h-full w-[260px]">
+        <div className="h-full w-[260px] md:w-[400px]">
           <SidebarContent />
         </div>
       </aside>
@@ -96,6 +97,6 @@ export default function Sidebar() {
           <ChevronRight className="h-4 w-4" />
         </button>
       )}
-    </>
+    </SidebarProvider>
   )
 }

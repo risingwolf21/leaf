@@ -1,15 +1,7 @@
-import { useState } from 'react'
 import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
   useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core'
-import { Eye, FileText, Folder as FolderIcon, MoreHorizontal, Pencil, UserX, X } from 'lucide-react'
+import { ChevronRight, Eye, MoreHorizontal, Pencil, UserX, X, Folder as FolderIcon, FileText } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   DropdownMenu,
@@ -23,49 +15,142 @@ import { sortNotes } from '@/hooks/useNotes'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import { cn, onActivateKey } from '@/lib/utils'
 import { FileTreeNode } from './FileTreeNode'
-import type { NoteWithTags, SharedNote, Tag } from '@/types'
+import type { Folder, NoteWithTags, SharedNote, Tag } from '@/types'
+import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '../ui/sidebar'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
 
 const UNFILED_DROPPABLE_ID = 'folder-drop-unfiled'
 
-type ActiveDrag = { kind: 'note' | 'folder'; label: string }
+type FileTreeNodeNote = { type: 'note'; note: NoteWithTags; };
+
+type TreeItem = FileTreeNodeNote | { type: 'folder'; folder: Folder; items: TreeItem[]; };
+
+export function buildFileTree(folders: Folder[], notes: NoteWithTags[]): TreeItem[] {
+  // 1. Map erstellen, um Ordner-Knoten schnell per ID zu finden
+  const folderMap = new Map<string, { type: 'folder'; folder: Folder; items: TreeItem[] }>();
+
+  // Das Array, das am Ende die Root-Elemente (ganz oben ohne Parent) enthält
+  const rootItems: TreeItem[] = [];
+
+  // 2. Alle Ordner in die Map eintragen und initialisieren
+  folders.forEach(folder => {
+    folderMap.set(folder.id, {
+      type: 'folder',
+      folder: folder,
+      items: []
+    });
+  });
+
+  // 3. Ordner in die Hierarchie einfügen
+  folders.forEach(folder => {
+    const currentFolderNode = folderMap.get(folder.id)!;
+
+    if (folder.parent_id === null) {
+      // Wenn der Ordner kein Parent hat, liegt er auf der Root-Ebene
+      rootItems.push(currentFolderNode);
+    } else {
+      // Wenn er ein Parent hat, weise ihn dem Parent-Ordner als Child zu
+      const parentNode = folderMap.get(folder.parent_id);
+      if (parentNode) {
+        parentNode.items.push(currentFolderNode);
+      } else {
+        // Fallback: Falls die parent_id ins Leere läuft, auf Root-Ebene platzieren
+        rootItems.push(currentFolderNode);
+      }
+    }
+  });
+
+  // 4. Notizen an die richtige Stelle im Baum einfügen
+  notes.forEach(note => {
+    const noteNode: FileTreeNodeNote = {
+      type: 'note',
+      note: note
+    };
+
+    if (note.folder_id === null) {
+      // Notiz liegt lose im Hauptverzeichnis
+      rootItems.push(noteNode);
+    } else {
+      // Notiz gehört in einen Ordner
+      const parentFolderNode = folderMap.get(note.folder_id);
+      if (parentFolderNode) {
+        parentFolderNode.items.push(noteNode);
+      } else {
+        // Fallback: Falls der Ordner nicht existiert, ab auf die Root-Ebene
+        rootItems.push(noteNode);
+      }
+    }
+  });
+
+  return rootItems;
+}
+
+export function getFolderAncestorChain(folderId: string | null, folders: Folder[]): string[] {
+  const byId = new Map(folders.map((folder) => [folder.id, folder]))
+  const chain: string[] = []
+
+  let current = folderId
+  while (current) {
+    chain.push(current)
+    current = byId.get(current)?.parent_id ?? null
+  }
+
+  return chain
+}
+
+export const FileTreeRoot = () => {
+  const { notes, folders } =
+    useNotesContext()
+
+  const fileTree = buildFileTree(folders, notes);
+  return <FileTree2 item={fileTree} />
+
+}
+
+export const FileTree2 = ({ item }: { item: TreeItem[] }) => {
+  const { noteId: activeNoteId } = useParams<{ noteId: string }>()
+  const navigate = useNavigate()
+
+  return item.map((node) => {
+    if (node.type === 'note') {
+      return (
+        <SidebarMenuButton
+          key={node.note.id}
+          isActive={activeNoteId === node.note.id}
+          className="data-[active=true]:bg-transparent"
+          onClick={() => navigate(`/app/notes/${node.note.id}`)}
+        >
+          <FileText />
+          {node.note.title}
+        </SidebarMenuButton>
+      )
+    }
+
+    return <SidebarMenuItem key={node.folder.id}>
+      <Collapsible className="group/collapsible">
+        <CollapsibleTrigger
+          render={(props, state) => (
+            <SidebarMenuButton {...props}>
+              <ChevronRight className={cn('transition-transform', state.open && 'rotate-90')} />
+              <FolderIcon />
+              {node.folder.name}
+            </SidebarMenuButton>
+          )}
+        />
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            <FileTree2 item={node.items} />
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  })
+}
 
 /** Top-level sidebar tree: folders, unfiled notes, shared notes, and (when a tag filter is active) a flat filtered list. */
 export function FileTree() {
-  const { notes, folders, sortBy, tagFilter, sharedNotes, handleMoveNote, moveFolder, removeSelfFromNote } =
+  const { notes, folders, sortBy, tagFilter, sharedNotes, removeSelfFromNote } =
     useNotesContext()
-  const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null)
-
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const data = event.active.data.current as { kind: 'note' | 'folder'; id: string } | undefined
-    if (!data) return
-
-    if (data.kind === 'folder') {
-      const folder = folders.find((f) => f.id === data.id)
-      if (folder) setActiveDrag({ kind: 'folder', label: folder.name })
-    } else {
-      const note = notes.find((n) => n.id === data.id)
-      if (note) setActiveDrag({ kind: 'note', label: note.title || 'Untitled' })
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveDrag(null)
-    const { active, over } = event
-    if (!over) return
-
-    const activeData = active.data.current as { kind: 'note' | 'folder'; id: string } | undefined
-    const overData = over.data.current as { kind: 'folder'; id: string | null } | undefined
-    if (!activeData || !overData) return
-
-    if (activeData.kind === 'folder') {
-      if (activeData.id === overData.id) return
-      moveFolder(activeData.id, overData.id)
-    } else {
-      handleMoveNote(activeData.id, overData.id)
-    }
-  }
 
   if (tagFilter.size > 0) return <TagFilteredView />
 
@@ -74,45 +159,30 @@ export function FileTree() {
   const isEmpty = rootFolders.length === 0 && unfiledNotes.length === 0 && sharedNotes.length === 0
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDrag(null)}>
-      <ItemGroup className="gap-1 p-2">
-        {rootFolders.map((folder) => (
-          <FileTreeNode key={folder.id} type="folder" folder={folder} depth={0} />
-        ))}
+    <ItemGroup className="gap-1 p-2">
+      {rootFolders.map((folder) => (
+        <FileTreeNode key={folder.id} type="folder" folder={folder} depth={0} />
+      ))}
 
-        <UnfiledSection notes={unfiledNotes} showHeading={rootFolders.length > 0} />
+      <UnfiledSection notes={unfiledNotes} showHeading={rootFolders.length > 0} />
 
-        {sharedNotes.length > 0 && (
-          <>
-            <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Shared with me
-            </div>
-            {sharedNotes.map((note) => (
-              <SharedNoteRow key={note.id} note={note} onRemove={removeSelfFromNote} />
-            ))}
-          </>
-        )}
-
-        {isEmpty && (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-            No notes yet. Create your first note to get started.
-          </p>
-        )}
-      </ItemGroup>
-
-      <DragOverlay>
-        {activeDrag && (
-          <div className="flex items-center gap-2 rounded-md border bg-popover px-3 py-1.5 text-sm shadow-md">
-            {activeDrag.kind === 'folder' ? (
-              <FolderIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            ) : (
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )}
-            <span className="truncate">{activeDrag.label}</span>
+      {sharedNotes.length > 0 && (
+        <>
+          <div className="px-2 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Shared with me
           </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+          {sharedNotes.map((note) => (
+            <SharedNoteRow key={note.id} note={note} onRemove={removeSelfFromNote} />
+          ))}
+        </>
+      )}
+
+      {isEmpty && (
+        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+          No notes yet. Create your first note to get started.
+        </p>
+      )}
+    </ItemGroup>
   )
 }
 
