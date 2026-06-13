@@ -29,8 +29,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '@/components/ui/sidebar'
-import { useActiveFolder } from '@/hooks/useActiveFolder'
-import { useCollapsedFolders } from '@/hooks/useCollapsedFolders'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -79,8 +77,6 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
   const navigate = useNavigate()
   const { data: folders = [] } = useFolders()
   const { data: notes = [] } = useNotes()
-  const { autoExpandedFolderIds } = useActiveFolder()
-  const { collapsedFolderIds, toggleFolderCollapsed } = useCollapsedFolders()
   const { pendingRename, setPendingRename } = usePendingRename()
   const renameFolder = useRenameFolder()
   const deleteFolder = useDeleteFolder()
@@ -102,7 +98,6 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
   const subfolders = folders.filter((item) => item.parent_id === folder.id)
   const childNotes = sortNotes(notes.filter((note) => note.folder_id === folder.id), sortBy)
   const hasChildren = subfolders.length > 0 || childNotes.length > 0
-  const isOpen = autoExpandedFolderIds.has(folder.id) || !collapsedFolderIds.has(folder.id)
   const moveTargets = flattenFolders(folders).filter(({ folder: target }) => target.id !== folder.id)
 
   const startRename = () => {
@@ -138,10 +133,9 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
       deleteFolder.mutate(folder.id)
     }
   }
-
   return (
     <SidebarMenuItem>
-      <Collapsible open={isOpen} onOpenChange={() => toggleFolderCollapsed(folder.id)} className="group/collapsible">
+      <Collapsible className="group/collapsible">
         <CollapsibleTrigger
           render={(triggerProps, state) => (
             <SidebarMenuButton
