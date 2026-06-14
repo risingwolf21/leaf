@@ -95,7 +95,7 @@ export function VirtualFolderNode({
           )}
         />
         <CollapsibleContent>
-          <SidebarMenuSub>{children}</SidebarMenuSub>
+          <SidebarMenuSub className={"pr-0 mr-0"}>{children}</SidebarMenuSub>
         </CollapsibleContent>
       </Collapsible>
     </SidebarMenuItem>
