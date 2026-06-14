@@ -33,7 +33,7 @@ function formatTrashedDate(dateString: string | null) {
 
 export function TrashView({ notes, onRestore, onPermanentlyDelete, onEmptyTrash }: TrashViewProps) {
   return (
-    <div className="mx-auto flex h-full w-full max-w-[680px] flex-col px-4 py-6 sm:px-6">
+    <div className="mx-auto flex h-full w-full max-w-content flex-col px-4 py-6 sm:px-6">
       <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-foreground">Trash</h1>
         <AlertDialog>

@@ -496,6 +496,11 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+// Exception to the "never edit src/components/ui/" rule: SidebarMenuButton
+// and SidebarMenuAction forward `ref` to the underlying element via
+// useRender/mergeProps. Base UI's dropdown and tooltip primitives anchor
+// themselves to this ref, so without it their menus render detached from
+// the trigger button.
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
   useRender.ComponentProps<"button"> &
@@ -511,16 +516,15 @@ const SidebarMenuButton = React.forwardRef<
   tooltip,
   className,
   ...props
-}, ref) => { // <--- Hier fangen wir die 'ref' ab!
-  
+}, ref) => {
   const { isMobile, state } = useSidebar()
-  
+
   const comp = useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
         className: cn(sidebarMenuButtonVariants({ variant, size }), className),
-        ref, // <--- HIER übergeben wir die ref an dein useRender / mergeProps System
+        ref,
       },
       props
     ),

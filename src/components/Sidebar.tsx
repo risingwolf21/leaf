@@ -3,7 +3,7 @@ import { Folder, Leaf, Search, Settings, Tag } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileTreeRoot } from '@/components/sidebar/FileTree'
+import { FileTreeRoot } from '@/components/sidebar/FileTreeRoot'
 import { SearchPanel } from '@/components/sidebar/SearchPanel'
 import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
 import { TagsPanel } from '@/components/sidebar/TagsPanel'
@@ -19,7 +19,7 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
 ]
 
 /** App sidebar: branding header, mode switcher, action bar, file tree / search / tags, and a settings link. */
-export default function Sidebar() {
+export function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarMode, setSidebarMode] = useSidebarMode()

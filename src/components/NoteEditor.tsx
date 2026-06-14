@@ -49,7 +49,7 @@ export function NoteEditor({
       editable: false,
       editorProps: {
         attributes: {
-          class: 'markdown-preview min-h-[300px] focus:outline-none pb-8',
+          class: 'markdown-preview min-h-editor focus:outline-none pb-8',
         },
       },
       onUpdate: ({ editor }) => {
@@ -79,7 +79,7 @@ export function NoteEditor({
 
   if (isReadOnly) {
     return (
-      <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
+      <div className="mx-auto flex h-full w-full max-w-note flex-col px-4 py-3 sm:px-6 md:py-6">
         <div className="mb-4 shrink-0">
           <h1 className="truncate text-2xl font-semibold text-foreground">
             {note.title || 'Untitled'}
@@ -106,7 +106,7 @@ export function NoteEditor({
     <div
       className={cn(
         'mx-auto flex h-full w-full flex-col px-4 py-3 sm:px-6 md:py-6',
-        mode === 'split' ? 'max-w-[1400px]' : 'max-w-[960px]'
+        mode === 'split' ? 'max-w-note-wide' : 'max-w-note'
       )}
     >
       <input
@@ -133,7 +133,7 @@ export function NoteEditor({
             onChange={(e) => handleSourceChange(e.target.value)}
             placeholder="Start writing…"
             spellCheck
-            className="min-h-0 flex-1 resize-none overflow-y-auto bg-transparent pb-4 font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground md:basis-1/2 md:pb-0 md:pr-4"
+            className="min-h-0 flex-1 resize-none overflow-y-auto bg-transparent pb-4 font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground md:basis-1/2 md:pb-0 md:pr-4"
           />
           <div className="min-h-0 flex-1 overflow-y-auto border-t border-border pt-4 md:basis-1/2 md:border-l md:border-t-0 md:pl-4 md:pt-0">
             <EditorContent editor={editor} />
@@ -147,7 +147,7 @@ export function NoteEditor({
               onChange={(e) => handleSourceChange(e.target.value)}
               placeholder="Start writing…"
               spellCheck
-              className="min-h-[300px] w-full resize-none bg-transparent font-mono text-sm leading-[1.75] text-foreground outline-none placeholder:text-muted-foreground"
+              className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
             />
           ) : (
             <>
