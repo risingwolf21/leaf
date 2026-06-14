@@ -54,7 +54,7 @@ export function useTagFilter() {
   return { tagFilter, toggleTagFilter, clearTagFilter }
 }
 
-type PendingRename = { kind: 'folder' | 'note'; id: string } | null
+export type PendingRename = { kind: 'folder' | 'note'; id: string } | null
 
 const pendingRenameStore = createStore<PendingRename>(null)
 
