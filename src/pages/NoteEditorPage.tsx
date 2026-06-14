@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { NoteEditor } from '@/components/NoteEditor'
@@ -8,6 +8,7 @@ import { SharePanel } from '@/components/SharePanel'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
 import { useAuth } from '@/hooks/useAuth'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotes, useShareNote, useUnshareNote, useUpdateNote } from '@/hooks/useNotes'
 import { useSharedNotes, useUpdateSharedNote } from '@/hooks/useSharedNotes'
 import { useAddTagToNote, useRemoveTagFromNote, useTags } from '@/hooks/useTags'
@@ -21,7 +22,13 @@ export default function NoteEditorPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user } = useAuth()
+  const isMobile = useIsMobile()
   const [mode, setMode] = useState<ViewMode>('preview')
+
+  // Split view doesn't fit on mobile; fall back if the viewport shrinks while active.
+  useEffect(() => {
+    if (isMobile && mode === 'split') setMode('preview')
+  }, [isMobile, mode])
 
   const { data: notes = [], isLoading: loading } = useNotes()
   const { data: sharedNotes = [], isLoading: sharedLoading } = useSharedNotes()
@@ -86,9 +93,6 @@ export default function NoteEditorPage() {
     <div>
       <AppBar
         className='!border-b !shadow-sm'
-        title={activeNote.title}
-        editTitle={mode === "edit"}
-        onTitleChange={(newTitle) => handleChange(activeNote.id, { title: newTitle })}
         actions={<>
           {!isReadOnly && (
             <span className={cn('shrink-0 text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>

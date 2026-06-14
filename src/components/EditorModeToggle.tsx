@@ -1,5 +1,6 @@
 import { Code2, Columns2, Pencil } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type { ViewMode } from '@/types'
 
 interface EditorModeToggleProps {
@@ -8,6 +9,8 @@ interface EditorModeToggleProps {
 }
 
 export function EditorModeToggle({ mode, onModeChange }: EditorModeToggleProps) {
+  const isMobile = useIsMobile()
+
   return (
     <>
       {mode !== 'split' && (
@@ -32,14 +35,16 @@ export function EditorModeToggle({ mode, onModeChange }: EditorModeToggleProps) 
           </Toggle>
         </>
       )}
-      <Toggle
-        size="sm"
-        pressed={mode === 'split'}
-        onPressedChange={(pressed) => onModeChange(pressed ? 'split' : 'preview')}
-        aria-label="Toggle split view"
-      >
-        <Columns2 className="h-4 w-4" />
-      </Toggle>
+      {!isMobile && (
+        <Toggle
+          size="sm"
+          pressed={mode === 'split'}
+          onPressedChange={(pressed) => onModeChange(pressed ? 'split' : 'preview')}
+          aria-label="Toggle split view"
+        >
+          <Columns2 className="h-4 w-4" />
+        </Toggle>
+      )}
     </>
   )
 }

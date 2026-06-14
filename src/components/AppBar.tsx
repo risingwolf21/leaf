@@ -4,12 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { SidebarTrigger } from "./ui/sidebar";
-import { Input } from "./ui/input";
 
 interface AppBarProps extends React.HTMLAttributes<HTMLElement> {
-    title?: string;
-    editTitle?: boolean;
-    onTitleChange?: (newTitle: string) => void;
     actions?: React.ReactNode;
     primaryAction?: React.ReactNode | "back" | "default";
     navigateBackPath?: string;
@@ -17,9 +13,6 @@ interface AppBarProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function AppBar({
-    title,
-    editTitle = false,
-    onTitleChange,
     primaryAction = "default",
     navigateBackPath,
     actions,
@@ -65,23 +58,6 @@ export function AppBar({
                         </Button>
                     )}
                     {React.isValidElement(primaryAction) && primaryAction}
-                    {
-                        title && !editTitle && (
-                            <div className="font-semibold tracking-tight sm:block text-lg">
-                                {title}
-                            </div>
-                        )
-                    }
-                    {
-                        title && editTitle && onTitleChange && (
-                            <Input
-                                value={title}
-                                onChange={(e) => onTitleChange(e.target.value)}
-                                placeholder="Untitled"
-                                className="w-full font-semibold text-lg text-foreground"
-                            />
-                        )
-                    }
                 </div>
 
 
