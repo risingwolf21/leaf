@@ -1,4 +1,4 @@
-import Sidebar from '@/components/Sidebar'
+import { Sidebar } from '@/components/Sidebar'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import { useUpdateNote } from '@/hooks/useNotes'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'

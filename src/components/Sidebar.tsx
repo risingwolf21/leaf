@@ -19,7 +19,7 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
 ]
 
 /** App sidebar: branding header, mode switcher, action bar, file tree / search / tags, and a settings link. */
-export default function Sidebar() {
+export function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarMode, setSidebarMode] = useSidebarMode()
