@@ -5,41 +5,11 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { useFolders } from '@/hooks/useFolders'
 import { MIN_QUERY_LENGTH, useSearch } from '@/hooks/useSearch'
+import { folderPath } from '@/lib/folderTree'
+import { getSnippet } from '@/lib/searchSnippet'
 import { useSidebarMode } from '@/lib/sidebarStore'
 import { onActivateKey } from '@/lib/utils'
-import type { Folder, Note } from '@/types'
-
-/** Returns up to `maxLength` characters of `content`, centred on the first match of `query`. */
-function getSnippet(content: string, query: string, maxLength = 120) {
-  const normalized = content.replace(/\s+/g, ' ').trim()
-  if (!normalized) return ''
-
-  const matchIndex = normalized.toLowerCase().indexOf(query.toLowerCase())
-  if (matchIndex === -1) {
-    return normalized.length > maxLength ? `${normalized.slice(0, maxLength).trimEnd()}…` : normalized
-  }
-
-  const matchCenter = matchIndex + query.length / 2
-  let start = Math.max(0, Math.round(matchCenter - maxLength / 2))
-  const end = Math.min(normalized.length, start + maxLength)
-  start = Math.max(0, end - maxLength)
-
-  let snippet = normalized.slice(start, end)
-  if (start > 0) snippet = `…${snippet.trimStart()}`
-  if (end < normalized.length) snippet = `${snippet.trimEnd()}…`
-  return snippet
-}
-
-/** Joins a folder and its ancestors' names with " / ", or "Unfiled" if the note has no folder. */
-function folderPath(folders: Folder[], folderId: string | null): string {
-  const segments: string[] = []
-  let current = folders.find((folder) => folder.id === folderId)
-  while (current) {
-    segments.unshift(current.name)
-    current = folders.find((folder) => folder.id === current!.parent_id)
-  }
-  return segments.length > 0 ? segments.join(' / ') : 'Unfiled'
-}
+import type { Note } from '@/types'
 
 /** Search mode: auto-focused input with a match-case toggle, debounced results below. */
 export function SearchPanel() {
