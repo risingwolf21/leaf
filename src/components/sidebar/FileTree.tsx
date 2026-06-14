@@ -173,9 +173,9 @@ function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: st
         <ItemTitle className="truncate">{note.title || 'Untitled'}</ItemTitle>
         <ItemDescription className="flex items-center gap-1">
           <span title={roleLabel} className="shrink-0">
-            <RoleIcon className="h-3 w-3" aria-hidden="true" />
+            <RoleIcon className={cn("size-3", isActive && 'bg-primary text-primary-foreground')} aria-hidden="true" />
           </span>
-          <span className="truncate">{note.owner_email}</span>
+          <span className={cn("truncate", isActive && 'bg-primary text-primary-foreground')}>{note.owner_email}</span>
         </ItemDescription>
       </ItemContent>
       <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
@@ -207,6 +207,6 @@ function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: st
           </DropdownMenuContent>
         </DropdownMenu>
       </ItemActions>
-    </Item>
+    </Item >
   )
 }
