@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '@/components/ui/sidebar'
+import { SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, useSidebar } from '@/components/ui/sidebar'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -285,6 +285,7 @@ export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy 
 /** Renders a single note row with rename, pin, move, tag, share, and delete actions. */
 export function NoteNode({ note }: { note: NoteWithTags }) {
   const navigate = useNavigate()
+  const { setOpenMobile } = useSidebar()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const { data: folders = [] } = useFolders()
   const { data: tags = [] } = useTags()
@@ -312,7 +313,10 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
   const moveTargets = flattenFolders(folders)
   const availableTags = tags.filter((tag) => !note.tags.some((t) => t.id === tag.id))
 
-  const open = () => navigate(`/app/notes/${note.id}`)
+  const open = () => {
+    navigate(`/app/notes/${note.id}`)
+    setOpenMobile(false)
+  }
 
   const startRename = () => {
     setRenameValue(note.title)
@@ -344,7 +348,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
     <SidebarMenuItem >
       <SidebarMenuButton
         isActive={isActive}
-        className="data-[active=true]:bg-transparent"
+        className="data-active:bg-primary data-active:text-primary-foreground"
         render={isRenaming ? <div /> : undefined}
         onClick={isRenaming ? undefined : open}
       >

@@ -1,5 +1,6 @@
+import { useEffect } from 'react'
 import { Folder, Leaf, Search, Settings, Tag } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTreeRoot } from '@/components/sidebar/FileTree'
@@ -9,7 +10,7 @@ import { TagsPanel } from '@/components/sidebar/TagsPanel'
 import { useSidebarMode, type SidebarMode } from '@/lib/sidebarStore'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
-import { Sidebar as SidebarPrimitive } from './ui/sidebar'
+import { Sidebar as SidebarPrimitive, SidebarTrigger, useSidebar } from './ui/sidebar'
 
 const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
   { id: 'files', label: 'Files', icon: Folder },
@@ -20,8 +21,16 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
 /** App sidebar: branding header, mode switcher, action bar, file tree / search / tags, and a settings link. */
 export default function Sidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarMode, setSidebarMode] = useSidebarMode()
   const [sortBy, setSortBy] = useSortPreference()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  // On mobile the sidebar takes the full screen, so hide it whenever navigation
+  // reveals a page (e.g. opening a note) to act like the previous "page".
+  useEffect(() => {
+    if (isMobile) setOpenMobile(false)
+  }, [location.pathname, isMobile, setOpenMobile])
 
   return (
     <SidebarPrimitive>
@@ -29,6 +38,7 @@ export default function Sidebar() {
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
           <Leaf className="h-5 w-5 text-primary" />
           <span className="text-lg font-semibold text-foreground">Leaf</span>
+          <SidebarTrigger className="ml-auto md:hidden" />
         </div>
 
         <div className="flex shrink-0 gap-1 border-b border-border p-1.5">

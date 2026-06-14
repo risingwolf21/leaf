@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item'
-import { SidebarMenuItem } from '@/components/ui/sidebar'
+import { SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import {
   ALL_NOTES_FOLDER_ID,
   FolderNode,
@@ -21,7 +21,7 @@ import { useRemoveSelfFromNote, useSharedNotes } from '@/hooks/useSharedNotes'
 import { useTags } from '@/hooks/useTags'
 import { useTagFilter } from '@/lib/sidebarStore'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
-import { onActivateKey } from '@/lib/utils'
+import { cn, onActivateKey } from '@/lib/utils'
 import type { SharedNote, Tag } from '@/types'
 
 /** Top-level sidebar tree: folders, unfiled notes, shared notes, and (when a tag filter is active) a flat filtered list. */
@@ -140,12 +140,16 @@ function FilterChip({ label, tag, onRemove }: { label?: string; tag?: Tag; onRem
 /** A note shared with the current user by another owner, shown below the file tree. */
 function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: string) => void }) {
   const navigate = useNavigate()
+  const { setOpenMobile } = useSidebar()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const isActive = activeNoteId === note.id
   const RoleIcon = note.my_role === 'editor' ? Pencil : Eye
   const roleLabel = note.my_role === 'editor' ? 'Can edit' : 'Can view'
 
-  const open = () => navigate(`/app/notes/${note.id}`)
+  const open = () => {
+    navigate(`/app/notes/${note.id}`)
+    setOpenMobile(false)
+  }
 
   const handleRemove = () => {
     if (window.confirm('Remove this note from your shared notes?')) {
@@ -156,14 +160,13 @@ function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: st
 
   return (
     <Item
-      variant={isActive ? 'muted' : 'default'}
       size="sm"
       role="button"
       tabIndex={0}
       aria-current={isActive || undefined}
       onClick={open}
       onKeyDown={onActivateKey(open)}
-      className="group cursor-pointer gap-2"
+      className={cn('group cursor-pointer gap-2', isActive && 'bg-primary text-primary-foreground')}
     >
       <span className="size-5 shrink-0" />
       <ItemContent>

@@ -81,7 +81,7 @@ export function NoteEditor({
     return (
       <div className="mx-auto flex h-full w-full max-w-[960px] flex-col px-4 py-3 sm:px-6 md:py-6">
         <div className="mb-4 shrink-0">
-          <h1 className="hidden truncate text-2xl font-semibold text-foreground md:block">
+          <h1 className="truncate text-2xl font-semibold text-foreground">
             {note.title || 'Untitled'}
           </h1>
           <div className="mt-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm text-secondary-foreground">
@@ -109,6 +109,13 @@ export function NoteEditor({
         mode === 'split' ? 'max-w-[1400px]' : 'max-w-[960px]'
       )}
     >
+      <input
+        value={note.title}
+        onChange={(e) => onChange(note.id, { title: e.target.value })}
+        placeholder="Untitled"
+        className="mb-2 w-full shrink-0 bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
+      />
+
       {!sharedContext && (
         <TagBar
           noteId={note.id}
