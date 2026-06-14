@@ -23,7 +23,7 @@ import { formatDate } from '@/lib/utils'
 import type { Note, NoteFields, ShareRole } from '@/types'
 import { Toggle } from './ui/toggle'
 
-interface SharePanelProps {
+type SharePanelProps = {
   note: Note
   onShare: (id: string) => Promise<string>
   onUnshare: (id: string) => Promise<void>

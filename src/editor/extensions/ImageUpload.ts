@@ -5,7 +5,7 @@ import type { EditorView } from '@tiptap/pm/view'
 import { uploadNoteImage, validateImageFile } from '@/lib/image-upload'
 import { toast } from 'sonner'
 
-interface UploadMeta {
+type UploadMeta = {
   add?: { id: object; pos: number }
   remove?: { id: object }
 }

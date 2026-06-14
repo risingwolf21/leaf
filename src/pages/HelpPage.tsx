@@ -2,7 +2,7 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { AppBar } from '@/components/AppBar'
 
-interface Section {
+type Section = {
   heading: string
   markdown: string
 }

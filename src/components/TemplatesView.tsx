@@ -30,7 +30,7 @@ const BUILTIN_ICONS: Record<string, typeof FileText> = {
   'builtin-project': FileText,
 }
 
-interface TemplatesViewProps {
+type TemplatesViewProps = {
   templates: Template[]
   onUseTemplate: (template: AnyTemplate) => void
   onSaveTemplate: (name: string, content: string) => Promise<void>

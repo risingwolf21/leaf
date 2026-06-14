@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { Note } from '@/types'
 import { toast } from 'sonner'
 
-interface SaveAsTemplatePopoverProps {
+type SaveAsTemplatePopoverProps = {
   note: Note
   onSaveAsTemplate: (name: string, content: string) => Promise<void>
 }

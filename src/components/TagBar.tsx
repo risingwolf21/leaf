@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { TagPicker } from '@/components/TagPicker'
 import type { Tag } from '@/types'
 
-interface TagBarProps {
+type TagBarProps = {
   noteId: string
   tags: Tag[]
   allTags: Tag[]

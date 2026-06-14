@@ -33,7 +33,7 @@ import { Toggle } from '@/components/ui/toggle'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
 import { uploadImageAt } from '@/editor/extensions/ImageUpload'
 
-interface EditorToolbarProps {
+type EditorToolbarProps = {
   editor: Editor
 }
 

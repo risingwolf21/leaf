@@ -3,7 +3,7 @@ import { Toggle } from '@/components/ui/toggle'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { ViewMode } from '@/types'
 
-interface EditorModeToggleProps {
+type EditorModeToggleProps = {
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
 }

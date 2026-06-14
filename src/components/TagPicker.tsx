@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { Tag } from '@/types'
 
-interface TagPickerProps {
+type TagPickerProps = {
   noteId: string
   noteTags: Tag[]
   allTags: Tag[]

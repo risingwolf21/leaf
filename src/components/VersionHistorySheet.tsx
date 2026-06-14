@@ -8,7 +8,7 @@ import { formatRelativeTime } from '@/lib/utils'
 import { useVersionHistory } from '@/hooks/useVersionHistory'
 import type { Note, NoteFields, NoteVersion } from '@/types'
 
-interface VersionHistorySheetProps {
+type VersionHistorySheetProps = {
   note: Note | null
   onOpenChange: (open: boolean) => void
   updateNote: (id: string, fields: NoteFields) => void

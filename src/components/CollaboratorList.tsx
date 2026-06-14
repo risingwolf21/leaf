@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { NoteCollaborator, ShareRole } from '@/types'
 
-interface CollaboratorListProps {
+type CollaboratorListProps = {
   ownerEmail: string
   collaborators: NoteCollaborator[]
   onUpdateRole: (collaboratorId: string, role: ShareRole) => void

@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Note } from '@/types'
 
-interface TrashViewProps {
+type TrashViewProps = {
   notes: Note[]
   onRestore: (id: string) => void
   onPermanentlyDelete: (id: string) => void

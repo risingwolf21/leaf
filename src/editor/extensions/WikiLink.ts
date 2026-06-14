@@ -6,14 +6,14 @@ import type MarkdownIt from 'markdown-it'
 import { cn } from '@/lib/utils'
 
 /** Minimal shape of markdown-it's inline parser state used by {@link wikiLinkInlineRule}. */
-interface MarkdownItInlineState {
+type MarkdownItInlineState = {
   src: string
   pos: number
   posMax: number
   push: (type: string, tag: string, nesting: 1 | 0 | -1) => { content: string }
 }
 
-interface WikiLinkMarkdownSpec {
+type WikiLinkMarkdownSpec = {
   serialize: {
     open: string
     close: string
@@ -24,11 +24,11 @@ interface WikiLinkMarkdownSpec {
   }
 }
 
-export interface WikiLinkOptions {
+export type WikiLinkOptions = {
   HTMLAttributes: Record<string, unknown>
 }
 
-export interface WikiLinkStorage {
+export type WikiLinkStorage = {
   /** Titles of the current user's notes, used to resolve links and drive autocomplete. */
   noteTitles: Set<string>
   /** Called with a note title when a wiki-link is clicked. */
