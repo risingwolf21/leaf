@@ -26,6 +26,7 @@ export function useAddTagToNote() {
 
         if (error || !data) return null
 
+        // Supabase client has no generated Database types, so query/RPC results are `any`.
         tag = { ...(data as Tag), note_count: 0 }
         const created = tag
         queryClient.setQueryData<Tag[]>(tagsKeys.all(user.id), (prev = []) =>

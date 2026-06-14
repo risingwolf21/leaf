@@ -19,6 +19,7 @@ export function useCreateFolder() {
         .single()
 
       if (error || !data) throw error ?? new Error('Failed to create folder')
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return data as Folder
     },
     onSuccess: (folder) => {

@@ -29,6 +29,7 @@ export function useSearch() {
       const rpcName = matchCase ? 'search_notes_case_sensitive' : 'search_notes'
       const { data, error } = await supabase.rpc(rpcName, { search_term: trimmed })
       if (cancelled) return
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       setResults(!error && data ? (data as Note[]) : [])
       setIsSearching(false)
     }, SEARCH_DEBOUNCE)

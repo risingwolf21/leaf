@@ -64,6 +64,7 @@ export async function syncContentTags(userId: string, noteId: string, content: s
       { onConflict: 'note_id,tag_id', ignoreDuplicates: true }
     )
 
+  // Supabase client has no generated Database types, so query/RPC results are `any`.
   return tags as Tag[]
 }
 

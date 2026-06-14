@@ -13,6 +13,7 @@ export function useNotes() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_notes_with_tags')
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return sortNotes((data ?? []) as NoteWithTags[], 'updated_at')
     },
     enabled: !!user,

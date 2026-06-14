@@ -9,6 +9,11 @@ function storageKey(userId: string) {
   return `leaf-sort-${userId}`
 }
 
+/** Type guard for a sort preference read back from localStorage, which may predate a schema change. */
+function isSortBy(value: string): value is SortBy {
+  return VALID_SORTS.some((sort) => sort === value)
+}
+
 /** Persists the note list sort preference to localStorage, scoped per user. */
 export function useSortPreference() {
   const { user } = useAuth()
@@ -18,8 +23,8 @@ export function useSortPreference() {
     if (!user) return
 
     const stored = localStorage.getItem(storageKey(user.id))
-    if (stored && (VALID_SORTS as string[]).includes(stored)) {
-      setSortByState(stored as SortBy)
+    if (stored && isSortBy(stored)) {
+      setSortByState(stored)
     }
   }, [user])
 

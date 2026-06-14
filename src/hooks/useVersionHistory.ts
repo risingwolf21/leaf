@@ -18,6 +18,7 @@ export function useVersionHistory(
       .eq('note_id', id)
       .order('saved_at', { ascending: false })
 
+    // Supabase client has no generated Database types, so query/RPC results are `any`.
     setVersions(!error && data ? (data as NoteVersion[]) : [])
     setLoading(false)
   }, [])

@@ -133,6 +133,7 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
                   <DropdownMenuContent align="start">
                     <DropdownMenuRadioGroup
                       value={inviteRole}
+                      // Radio items below are limited to ShareRole; onValueChange is typed (value: string) => void.
                       onValueChange={(value) => setInviteRole(value as ShareRole)}
                     >
                       <DropdownMenuRadioItem value="viewer">Can view</DropdownMenuRadioItem>
@@ -197,6 +198,7 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
                     <DropdownMenuContent align="start">
                       <DropdownMenuRadioGroup
                         value={note.share_link_role}
+                        // Radio items below are limited to ShareRole; onValueChange is typed (value: string) => void.
                         onValueChange={(value) =>
                           onChange(note.id, { share_link_role: value as ShareRole })
                         }

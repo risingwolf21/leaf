@@ -16,6 +16,7 @@ export function useCollaborators(noteId: string | null) {
     }
 
     const { data, error } = await supabase.rpc('get_note_collaborators', { p_note_id: noteId })
+    // Supabase client has no generated Database types, so query/RPC results are `any`.
     if (!error && data) setCollaborators(data as NoteCollaborator[])
   }, [noteId])
 
@@ -58,6 +59,7 @@ export function useCollaborators(noteId: string | null) {
 
       if (error || !data) throw new Error('Could not share this note. Please try again.')
 
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       const row = data as Omit<NoteCollaborator, 'email'>
       setCollaborators((prev) => [...prev, { ...row, email: profile.email }])
     },

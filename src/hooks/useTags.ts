@@ -12,6 +12,7 @@ export function useTags() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_tags_with_counts')
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return (data ?? []) as Tag[]
     },
     enabled: !!user,

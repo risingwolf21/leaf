@@ -23,6 +23,7 @@ export function AuthForm() {
   const [submitting, setSubmitting] = useState(false)
 
   const handleModeChange = (value: string) => {
+    // Tab values are limited to Mode; onValueChange is typed (value: string) => void.
     setMode(value as Mode)
     setError(null)
     setInfo(null)

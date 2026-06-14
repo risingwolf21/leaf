@@ -80,6 +80,7 @@ export function CollaboratorList({
               <DropdownMenuContent align="end">
                 <DropdownMenuRadioGroup
                   value={collaborator.role}
+                  // Radio items below are limited to ShareRole; onValueChange is typed (value: string) => void.
                   onValueChange={(value) => onUpdateRole(collaborator.id, value as ShareRole)}
                 >
                   <DropdownMenuRadioItem value="viewer">Can view</DropdownMenuRadioItem>

@@ -83,6 +83,7 @@ export const ImageUpload = Image.extend({
           apply(tr, set) {
             set = set.map(tr.mapping, tr.doc)
 
+            // ProseMirror's Transaction.getMeta returns `any`.
             const meta = tr.getMeta(imageUploadPluginKey) as UploadMeta | undefined
             if (meta?.add) {
               set = set.add(tr.doc, [Decoration.widget(meta.add.pos, createPlaceholder(), { id: meta.add.id })])

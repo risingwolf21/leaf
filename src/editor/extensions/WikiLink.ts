@@ -198,6 +198,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
         },
         parse: {
           setup(markdownit: MarkdownIt) {
+            // Augments markdown-it's type with a custom flag not in its type definitions.
             const md = markdownit as MarkdownIt & { wikiLinkRuleAdded?: boolean }
             // setup() runs on every parse(), so guard against registering the rule twice
             if (md.wikiLinkRuleAdded) return
@@ -268,6 +269,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
             state.doc.descendants((node, pos) => {
               if (!node.isText) return
               const mark = node.marks.find((item) => item.type.name === 'wikiLink')
+              // ProseMirror mark attrs are typed as Record<string, any>.
               if (!mark || storage.noteTitles.has(mark.attrs.title as string)) return
 
               decorations.push(Decoration.inline(pos, pos + node.nodeSize, { class: 'wiki-link-broken' }))
@@ -278,6 +280,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
           handleClick: (_view, _pos, event) => {
             if (event.button !== 0) return false
 
+            // DOM event targets are typed as EventTarget | null; this handler only runs on element clicks.
             const target = event.target as HTMLElement
             const link = target.closest<HTMLElement>('[data-wiki-link]')
             if (!link) return false

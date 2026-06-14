@@ -19,6 +19,7 @@ export function useTrashedNotes() {
         .order('updated_at', { ascending: false })
 
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return sortByDeletedAtDesc((data ?? []) as Note[])
     },
     enabled: !!user,

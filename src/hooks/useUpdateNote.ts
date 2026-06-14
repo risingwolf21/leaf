@@ -37,6 +37,7 @@ export function useUpdateNote(onTagsSynced?: () => void) {
       const { data, error } = await supabase.from('notes').update(fields).eq('id', id).select().single()
       if (error || !data) throw error ?? new Error('Failed to update note')
 
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       const updated = data as Note
 
       await supabase.rpc('save_note_version', {
