@@ -16,6 +16,7 @@ export function useFolders() {
         .order('created_at', { ascending: true })
 
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return (data ?? []) as Folder[]
     },
     enabled: !!user,

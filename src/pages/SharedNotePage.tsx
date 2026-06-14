@@ -29,6 +29,7 @@ export default function SharedNotePage() {
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return
+        // Supabase client has no generated Database types, so query/RPC results are `any`.
         setNote((data as Note | null) ?? null)
         setLoading(false)
       })

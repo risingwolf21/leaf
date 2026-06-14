@@ -27,6 +27,7 @@ export function LinkEditPopover({ editor }: LinkEditPopoverProps) {
           : null
 
       setText(range ? state.doc.textBetween(range.from, range.to) : '')
+      // Tiptap's getAttributes returns Record<string, any>.
       setUrl(editor.isActive('link') ? (editor.getAttributes('link').href as string) ?? '' : '')
     }
     setOpen(next)

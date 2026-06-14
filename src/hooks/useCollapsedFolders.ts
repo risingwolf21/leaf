@@ -20,6 +20,7 @@ export function useCollapsedFolders() {
     if (!stored) return
 
     try {
+      // JSON.parse returns `any`.
       const ids = JSON.parse(stored) as string[]
       setCollapsedIds(new Set(ids))
     } catch {

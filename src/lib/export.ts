@@ -7,7 +7,8 @@ function folderPath(folders: Folder[], folderId: string | null): string {
   let current = folders.find((folder) => folder.id === folderId)
   while (current) {
     segments.unshift(current.name)
-    current = folders.find((folder) => folder.id === current!.parent_id)
+    const parentId = current.parent_id
+    current = folders.find((folder) => folder.id === parentId)
   }
   return segments.join('/')
 }

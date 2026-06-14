@@ -28,6 +28,7 @@ export function useCreateNote() {
 
       if (error || !data) throw error ?? new Error('Failed to create note')
 
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return { ...(data as Note), tags: [] }
     },
     onSuccess: (note) => {

@@ -17,6 +17,7 @@ export function useSharedNotes() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_shared_notes')
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return (data ?? []) as SharedNote[]
     },
     enabled: !!user,
