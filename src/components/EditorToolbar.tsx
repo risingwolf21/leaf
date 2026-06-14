@@ -4,6 +4,7 @@ import {
   Bold,
   Code,
   Code2,
+  Columns,
   Heading1,
   Heading2,
   Heading3,
@@ -14,8 +15,19 @@ import {
   ListTodo,
   Minus,
   Quote,
+  Rows,
+  Table as TableIcon,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { LinkEditPopover } from '@/components/LinkEditPopover'
 import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
@@ -45,7 +57,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         aria-label="Heading 1"
       >
-        <Heading1 className="h-4 w-4" />
+        <Heading1 className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -53,7 +65,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         aria-label="Heading 2"
       >
-        <Heading2 className="h-4 w-4" />
+        <Heading2 className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -61,7 +73,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         aria-label="Heading 3"
       >
-        <Heading3 className="h-4 w-4" />
+        <Heading3 className="h-5 w-5" />
       </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -72,7 +84,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleBold().run()}
         aria-label="Bold"
       >
-        <Bold className="h-4 w-4" />
+        <Bold className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -80,7 +92,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleItalic().run()}
         aria-label="Italic"
       >
-        <Italic className="h-4 w-4" />
+        <Italic className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -88,7 +100,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleCode().run()}
         aria-label="Inline code"
       >
-        <Code className="h-4 w-4" />
+        <Code className="h-5 w-5" />
       </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -99,7 +111,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
         aria-label="Code block"
       >
-        <Code2 className="h-4 w-4" />
+        <Code2 className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -107,7 +119,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
         aria-label="Blockquote"
       >
-        <Quote className="h-4 w-4" />
+        <Quote className="h-5 w-5" />
       </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -118,7 +130,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
         aria-label="Bullet list"
       >
-        <List className="h-4 w-4" />
+        <List className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -126,7 +138,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
         aria-label="Ordered list"
       >
-        <ListOrdered className="h-4 w-4" />
+        <ListOrdered className="h-5 w-5" />
       </Toggle>
       <Toggle
         size="sm"
@@ -134,8 +146,73 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
         aria-label="Task list"
       >
-        <ListTodo className="h-4 w-4" />
+        <ListTodo className="h-5 w-5" />
       </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <LinkEditPopover editor={editor} />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Toggle size="sm" pressed={editor.isActive('table')} aria-label="Table">
+            <TableIcon className="h-5 w-5" />
+          </Toggle>}>
+          
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {editor.isActive('table') ? (
+            <>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnBefore().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Insert column before
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addColumnAfter().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Insert column after
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteColumn().run()}>
+                <Columns className="mr-2 h-4 w-4" />
+                Delete column
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Insert row above
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Insert row below
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}>
+                <Rows className="mr-2 h-4 w-4" />
+                Delete row
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeaderRow().run()}>
+                <TableIcon className="mr-2 h-4 w-4" />
+                Toggle header row
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete table
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem
+              onClick={() =>
+                editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+              }
+            >
+              <TableIcon className="mr-2 h-4 w-4" />
+              Insert table
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -147,7 +224,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         aria-label="Horizontal rule"
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-5 w-5" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -160,7 +237,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onClick={() => fileInputRef.current?.click()}
         aria-label="Insert image"
       >
-        <ImagePlus className="h-4 w-4" />
+        <ImagePlus className="h-5 w-5" />
       </Button>
       <input
         ref={fileInputRef}

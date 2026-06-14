@@ -1,5 +1,5 @@
 -- Folders table
-create table public.folders (
+create table if not exists public.folders (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users(id) on delete cascade,
   name       text not null,
@@ -8,6 +8,7 @@ create table public.folders (
 
 alter table public.folders enable row level security;
 
+drop policy if exists "Users can manage own folders" on public.folders;
 create policy "Users can manage own folders"
   on public.folders for all
   using (auth.uid() = user_id)
@@ -15,4 +16,4 @@ create policy "Users can manage own folders"
 
 -- Notes can optionally belong to a folder
 alter table public.notes
-  add column folder_id uuid references public.folders(id) on delete set null;
+  add column if not exists folder_id uuid references public.folders(id) on delete set null;

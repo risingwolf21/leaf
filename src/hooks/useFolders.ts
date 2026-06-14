@@ -1,41 +1,34 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import type { Folder } from '@/types'
+import { foldersKeys, notesKeys } from '@/lib/queryKeys'
+import type { Folder, NoteWithTags } from '@/types'
 
 export function useFolders() {
   const { user } = useAuth()
-  const [folders, setFolders] = useState<Folder[]>([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!user) {
-      setFolders([])
-      setLoading(false)
-      return
-    }
+  return useQuery({
+    queryKey: foldersKeys.all(user?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .order('created_at', { ascending: true })
 
-    let cancelled = false
-    setLoading(true)
+      if (error) throw error
+      return (data ?? []) as Folder[]
+    },
+    enabled: !!user,
+  })
+}
 
-    supabase
-      .from('folders')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .then(({ data, error }) => {
-        if (cancelled) return
-        if (!error && data) setFolders(data as Folder[])
-        setLoading(false)
-      })
+export function useCreateFolder() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-    return () => {
-      cancelled = true
-    }
-  }, [user])
-
-  const createFolder = useCallback(
-    async (name: string, parentId: string | null = null): Promise<Folder | null> => {
-      if (!user) return null
+  return useMutation({
+    mutationFn: async ({ name, parentId = null }: { name: string; parentId?: string | null }) => {
+      if (!user) throw new Error('Not authenticated')
 
       const { data, error } = await supabase
         .from('folders')
@@ -43,24 +36,42 @@ export function useFolders() {
         .select()
         .single()
 
-      if (error || !data) return null
-
-      const folder = data as Folder
-      setFolders((prev) => [...prev, folder])
-      return folder
+      if (error || !data) throw error ?? new Error('Failed to create folder')
+      return data as Folder
     },
-    [user]
-  )
+    onSuccess: (folder) => {
+      queryClient.setQueryData<Folder[]>(foldersKeys.all(user?.id), (prev = []) => [...prev, folder])
+    },
+  })
+}
 
-  const renameFolder = useCallback(async (id: string, name: string) => {
-    setFolders((prev) =>
-      prev.map((folder) => (folder.id === id ? { ...folder, name } : folder))
-    )
-    await supabase.from('folders').update({ name }).eq('id', id)
-  }, [])
+export function useRenameFolder() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const deleteFolder = useCallback(
-    async (id: string) => {
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      await supabase.from('folders').update({ name }).eq('id', id)
+    },
+    onMutate: ({ id, name }) => {
+      queryClient.setQueryData<Folder[]>(foldersKeys.all(user?.id), (prev = []) =>
+        prev.map((folder) => (folder.id === id ? { ...folder, name } : folder))
+      )
+    },
+  })
+}
+
+export function useDeleteFolder() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('folders').delete().eq('id', id)
+    },
+    onMutate: (id) => {
+      const folders = queryClient.getQueryData<Folder[]>(foldersKeys.all(user?.id)) ?? []
+
       // Deleting a folder cascades to its subfolders in the database, and notes
       // in any of those folders are set back to Unfiled. Mirror that locally so
       // the UI doesn't keep showing now-deleted descendant folders.
@@ -73,15 +84,78 @@ export function useFolders() {
       }
       collect(id)
 
-      setFolders((prev) => prev.filter((folder) => !idsToRemove.has(folder.id)))
-      await supabase.from('folders').delete().eq('id', id)
+      queryClient.setQueryData<Folder[]>(foldersKeys.all(user?.id), (prev = []) =>
+        prev.filter((folder) => !idsToRemove.has(folder.id))
+      )
+
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) =>
+          note.folder_id && idsToRemove.has(note.folder_id) ? { ...note, folder_id: null } : note
+        )
+      )
     },
-    [folders]
-  )
+  })
+}
 
-  const moveNote = useCallback(async (noteId: string, folderId: string | null) => {
-    await supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
-  }, [])
+export function useMoveNote() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  return { folders, loading, createFolder, renameFolder, deleteFolder, moveNote }
+  return useMutation({
+    mutationFn: async ({ noteId, folderId }: { noteId: string; folderId: string | null }) => {
+      await supabase.from('notes').update({ folder_id: folderId }).eq('id', noteId)
+    },
+    onMutate: ({ noteId, folderId }) => {
+      queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
+        prev.map((note) => (note.id === noteId ? { ...note, folder_id: folderId } : note))
+      )
+    },
+  })
+}
+
+export function useMoveFolder() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ folderId, newParentId }: { folderId: string; newParentId: string | null }) => {
+      if (folderId === newParentId) return null
+
+      // Prevent nesting a folder inside itself or one of its own descendants.
+      const folders = queryClient.getQueryData<Folder[]>(foldersKeys.all(user?.id)) ?? []
+      if (newParentId) {
+        const isDescendant = (id: string): boolean => {
+          const folder = folders.find((item) => item.id === id)
+          if (!folder || !folder.parent_id) return false
+          if (folder.parent_id === folderId) return true
+          return isDescendant(folder.parent_id)
+        }
+        if (isDescendant(newParentId)) return null
+      }
+
+      await supabase.from('folders').update({ parent_id: newParentId }).eq('id', folderId)
+      return { folderId, newParentId }
+    },
+    onSuccess: (result) => {
+      if (!result) return
+      const { folderId, newParentId } = result
+      queryClient.setQueryData<Folder[]>(foldersKeys.all(user?.id), (prev = []) =>
+        prev.map((folder) => (folder.id === folderId ? { ...folder, parent_id: newParentId } : folder))
+      )
+    },
+  })
+}
+
+/** Returns `folderId` plus every ancestor up to the root (via `parent_id`), or `[]` if `folderId` is null. */
+export function getFolderAncestorChain(folderId: string | null, folders: Folder[]): string[] {
+  const byId = new Map(folders.map((folder) => [folder.id, folder]))
+  const chain: string[] = []
+
+  let current = folderId
+  while (current) {
+    chain.push(current)
+    current = byId.get(current)?.parent_id ?? null
+  }
+
+  return chain
 }

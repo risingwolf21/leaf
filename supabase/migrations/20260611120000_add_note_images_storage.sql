@@ -4,6 +4,7 @@ insert into storage.buckets (id, name, public)
 values ('note-images', 'note-images', false)
 on conflict (id) do nothing;
 
+drop policy if exists "Users can upload own images" on storage.objects;
 create policy "Users can upload own images"
   on storage.objects for insert
   with check (
@@ -11,6 +12,7 @@ create policy "Users can upload own images"
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
+drop policy if exists "Users can read own images" on storage.objects;
 create policy "Users can read own images"
   on storage.objects for select
   using (
