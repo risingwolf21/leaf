@@ -10,7 +10,7 @@ import {
 export type Theme = 'light' | 'dark'
 export type ThemePreference = Theme | 'system'
 
-interface ThemeContextValue {
+type ThemeContextValue = {
   /** The resolved theme actually applied to the document (system preference resolved to light/dark). */
   theme: Theme
   /** The user's stored preference, which may be 'system'. */

@@ -2,7 +2,7 @@ import type { BuiltinTemplate } from '@/lib/templates'
 
 export type ShareRole = 'viewer' | 'editor'
 
-export interface Note {
+export type Note = {
   id: string
   user_id: string
   title: string
@@ -17,12 +17,12 @@ export interface Note {
   share_link_role: ShareRole
 }
 
-export interface Profile {
+export type Profile = {
   id: string
   email: string
 }
 
-export interface NoteCollaborator {
+export type NoteCollaborator = {
   id: string
   note_id: string
   owner_id: string
@@ -33,13 +33,13 @@ export interface NoteCollaborator {
 }
 
 /** A note shared with the current user, for the "Shared with me" sidebar section. */
-export interface SharedNote extends Note {
+export type SharedNote = Note & {
   owner_email: string
   my_role: ShareRole
   shared_since: string
 }
 
-export interface NoteVersion {
+export type NoteVersion = {
   id: string
   note_id: string
   user_id: string
@@ -48,7 +48,7 @@ export interface NoteVersion {
   saved_at: string
 }
 
-export interface Folder {
+export type Folder = {
   id: string
   user_id: string
   name: string
@@ -56,7 +56,7 @@ export interface Folder {
   created_at: string
 }
 
-export interface Tag {
+export type Tag = {
   id: string
   user_id: string
   name: string
@@ -66,7 +66,7 @@ export interface Tag {
   note_count?: number
 }
 
-export interface NoteWithTags extends Note {
+export type NoteWithTags = Note & {
   tags: Tag[]
 }
 
@@ -74,14 +74,14 @@ export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_ro
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 
-export interface AuthFormData {
+export type ViewMode = 'preview' | 'edit' | 'source' | 'split'
+
+export type AuthFormData = {
   email: string
   password: string
 }
 
-export type ViewMode = 'preview' | 'edit' | 'source' | 'split'
-
-export interface Template {
+export type Template = {
   id: string
   user_id: string
   name: string

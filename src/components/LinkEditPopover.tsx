@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Toggle } from './ui/toggle'
 
-interface LinkEditPopoverProps {
+type LinkEditPopoverProps = {
   editor: Editor
 }
 
