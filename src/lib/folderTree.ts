@@ -16,3 +16,15 @@ export function flattenFolders(
       ...flattenFolders(folders, folder.id, depth + 1),
     ])
 }
+
+/** Joins a folder and its ancestors' names with " / ", or "Unfiled" if `folderId` is null/unknown. */
+export function folderPath(folders: Folder[], folderId: string | null): string {
+  const segments: string[] = []
+  let current = folders.find((folder) => folder.id === folderId)
+  while (current) {
+    segments.unshift(current.name)
+    const parentId = current.parent_id
+    current = folders.find((folder) => folder.id === parentId)
+  }
+  return segments.length > 0 ? segments.join(' / ') : 'Unfiled'
+}
