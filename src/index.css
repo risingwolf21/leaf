@@ -63,6 +63,18 @@ body {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Custom scale values, kept out of arbitrary Tailwind brackets (e.g.
+   `max-w-[960px]`) per the "off-scale belongs in CSS" rule. */
+@theme {
+  --text-prose: 1.0625rem;
+  --text-prose--line-height: 1.75;
+  --leading-prose: 1.75;
+  --max-width-content: 42.5rem;
+  --max-width-note: 60rem;
+  --max-width-note-wide: 87.5rem;
+  --min-height-editor: 18.75rem;
+}
+
 :root {
   --primary: oklch(0.6242 0.1695 149.09);
   --primary-foreground: oklch(1 0 0);
@@ -162,8 +174,7 @@ body {
 
   /* Rendered markdown preview styling */
   .markdown-preview {
-    @apply font-serif text-foreground text-[17px];
-    line-height: 1.75;
+    @apply font-serif text-foreground text-prose;
   }
 
   .markdown-preview>*+* {
@@ -186,10 +197,6 @@ body {
   .markdown-preview h5,
   .markdown-preview h6 {
     @apply text-lg font-bold font-sans mt-6 mb-2;
-  }
-
-  .markdown-preview p {
-    @apply leading-[1.75];
   }
 
   .markdown-preview a {

@@ -66,7 +66,7 @@ export default function SharedNotePage() {
         )}
       </header>
 
-      <main className="mx-auto w-full max-w-[680px] flex-1 px-4 py-6 sm:px-6 md:py-10">
+      <main className="mx-auto w-full max-w-content flex-1 px-4 py-6 sm:px-6 md:py-10">
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : note ? (

@@ -78,7 +78,7 @@ export function TemplatesView({
   const cancelRename = () => setRenamingId(null)
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[680px] flex-col px-4 py-6 sm:px-6">
+    <div className="mx-auto flex h-full w-full max-w-content flex-col px-4 py-6 sm:px-6">
       <h1 className="mb-4 shrink-0 text-2xl font-semibold text-foreground">Templates</h1>
 
       <ScrollArea className="min-h-0 flex-1">
@@ -97,7 +97,7 @@ export function TemplatesView({
                 placeholder="Template content (Markdown)…"
                 rows={6}
                 spellCheck
-                className="w-full resize-none rounded-md border border-input bg-background p-2 font-mono text-sm leading-[1.6] text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full resize-none rounded-md border border-input bg-background p-2 font-mono text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
               />
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setCreating(false)}>
