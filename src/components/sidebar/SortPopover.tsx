@@ -8,7 +8,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { SortBy } from '@/hooks/useNotes'
+import type { SortBy } from '@/types'
 
 /** Popover for choosing the Files mode sort order, persisted via `useSortPreference`. */
 export function SortPopover({ sortBy, setSortBy }: { sortBy: SortBy; setSortBy: (sortBy: SortBy) => void }) {

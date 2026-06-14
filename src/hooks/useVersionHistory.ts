@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { NoteFields } from '@/hooks/useNotes'
-import type { NoteVersion } from '@/types'
+import type { NoteFields, NoteVersion } from '@/types'
 
 export function useVersionHistory(
   noteId: string | null,

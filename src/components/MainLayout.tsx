@@ -1,6 +1,6 @@
 import { Sidebar } from '@/components/Sidebar'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
-import { useUpdateNote } from '@/hooks/useNotes'
+import { useUpdateNote } from '@/hooks/useUpdateNote'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'
 import { cn } from '@/lib/utils'
 import { SidebarProvider } from './ui/sidebar'

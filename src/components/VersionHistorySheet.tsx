@@ -6,8 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { formatRelativeTime } from '@/lib/utils'
 import { useVersionHistory } from '@/hooks/useVersionHistory'
-import type { NoteFields } from '@/hooks/useNotes'
-import type { Note, NoteVersion } from '@/types'
+import type { Note, NoteFields, NoteVersion } from '@/types'
 
 interface VersionHistorySheetProps {
   note: Note | null

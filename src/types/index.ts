@@ -70,6 +70,10 @@ export interface NoteWithTags extends Note {
   tags: Tag[]
 }
 
+export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_role'>>
+
+export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
+
 export interface AuthFormData {
   email: string
   password: string
