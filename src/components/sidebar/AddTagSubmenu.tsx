@@ -5,7 +5,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAddTagToNote, useTags } from '@/hooks/useTags'
+import { useAddTagToNote } from '@/hooks/useAddTagToNote'
+import { useTags } from '@/hooks/useTags'
 import type { NoteWithTags } from '@/types'
 
 /** "Add tag" submenu listing tags not yet applied to `note`, each adding itself to the note on click. */

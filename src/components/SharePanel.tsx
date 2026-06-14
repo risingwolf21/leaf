@@ -20,8 +20,7 @@ import { CollaboratorList } from '@/components/CollaboratorList'
 import { useAuth } from '@/hooks/useAuth'
 import { useCollaborators } from '@/hooks/useCollaborators'
 import { formatDate } from '@/lib/utils'
-import type { NoteFields } from '@/hooks/useNotes'
-import type { Note, ShareRole } from '@/types'
+import type { Note, NoteFields, ShareRole } from '@/types'
 import { Toggle } from './ui/toggle'
 
 interface SharePanelProps {

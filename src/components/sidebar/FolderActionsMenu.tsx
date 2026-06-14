@@ -11,8 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenuAction } from '@/components/ui/sidebar'
-import { useCreateFolder, useDeleteFolder, useFolders, useMoveFolder } from '@/hooks/useFolders'
-import { useCreateNote } from '@/hooks/useNotes'
+import { useCreateFolder } from '@/hooks/useCreateFolder'
+import { useDeleteFolder } from '@/hooks/useDeleteFolder'
+import { useFolders } from '@/hooks/useFolders'
+import { useMoveFolder } from '@/hooks/useMoveFolder'
+import { useCreateNote } from '@/hooks/useCreateNote'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
 import { usePendingRename } from '@/lib/sidebarStore'
 import type { Folder } from '@/types'

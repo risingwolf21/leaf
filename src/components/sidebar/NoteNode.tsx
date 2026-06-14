@@ -4,7 +4,7 @@ import { NoteActionsMenu } from '@/components/sidebar/NoteActionsMenu'
 import { RenameInput } from '@/components/sidebar/RenameInput'
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { useInlineRename } from '@/hooks/useInlineRename'
-import { useUpdateNote } from '@/hooks/useNotes'
+import { useUpdateNote } from '@/hooks/useUpdateNote'
 import type { NoteWithTags } from '@/types'
 
 /** Renders a single note row with rename, pin, move, tag, share, and delete actions. */

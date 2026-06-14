@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { getFolderAncestorChain, useFolders } from '@/hooks/useFolders'
+import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
+import { getFolderAncestorChain } from '@/lib/folderTree'
 
 /**
  * The open note's `folder_id` (or `null` if unfiled / no note open), used as

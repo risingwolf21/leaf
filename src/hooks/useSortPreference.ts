@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import type { SortBy } from '@/hooks/useNotes'
+import type { SortBy } from '@/types'
 
 const DEFAULT_SORT: SortBy = 'updated_at'
 const VALID_SORTS: SortBy[] = ['updated_at', 'created_at', 'title_asc', 'title_desc']

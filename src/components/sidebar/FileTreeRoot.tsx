@@ -7,9 +7,12 @@ import { SharedNoteRow } from '@/components/sidebar/SharedNoteRow'
 import { TagFilteredView } from '@/components/sidebar/TagFilteredView'
 import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID, VirtualFolderNode } from '@/components/sidebar/VirtualFolderNode'
 import { useFolders } from '@/hooks/useFolders'
-import { sortNotes, useNotes, type SortBy } from '@/hooks/useNotes'
-import { useRemoveSelfFromNote, useSharedNotes } from '@/hooks/useSharedNotes'
+import { useNotes } from '@/hooks/useNotes'
+import { useRemoveSelfFromNote } from '@/hooks/useRemoveSelfFromNote'
+import { useSharedNotes } from '@/hooks/useSharedNotes'
+import { sortNotes } from '@/lib/notes'
 import { useTagFilter } from '@/lib/sidebarStore'
+import type { SortBy } from '@/types'
 
 /** Top-level sidebar tree: folders, unfiled notes, shared notes, and (when a tag filter is active) a flat filtered list. */
 export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
