@@ -348,7 +348,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
     <SidebarMenuItem >
       <SidebarMenuButton
         isActive={isActive}
-        className="data-active:bg-primary/10"
+        className="data-active:bg-primary data-active:text-primary-foreground"
         render={isRenaming ? <div /> : undefined}
         onClick={isRenaming ? undefined : open}
       >

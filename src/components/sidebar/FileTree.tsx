@@ -166,7 +166,7 @@ function SharedNoteRow({ note, onRemove }: { note: SharedNote; onRemove: (id: st
       aria-current={isActive || undefined}
       onClick={open}
       onKeyDown={onActivateKey(open)}
-      className={cn('group cursor-pointer gap-2', isActive && 'bg-primary/10')}
+      className={cn('group cursor-pointer gap-2', isActive && 'bg-primary text-primary-foreground')}
     >
       <span className="size-5 shrink-0" />
       <ItemContent>
