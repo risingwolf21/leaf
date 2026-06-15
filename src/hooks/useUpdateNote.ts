@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { notesKeys } from '@/lib/queryKeys'
 import { mergeTags, syncContentTags } from '@/lib/tags'
-import type { Note, NoteFields, NoteWithTags, Tag } from '@/types'
+import type { NoteFields, NoteWithTags, Tag } from '@/types'
 
 const AUTOSAVE_DELAY = 1000
 
@@ -33,35 +33,33 @@ export function useUpdateNote(onTagsSynced?: () => void) {
   }, [])
 
   const mutation = useMutation({
-    mutationFn: async ({ id, fields }: { id: string; fields: NoteFields }) => {
-      const { data, error } = await supabase.from('notes').update(fields).eq('id', id).select().single()
-      if (error || !data) throw error ?? new Error('Failed to update note')
+    mutationFn: async ({
+      id,
+      fields,
+      title,
+      content,
+    }: { id: string; fields: NoteFields; title: string; content: string }) => {
+      const { error } = await supabase.from('notes').update(fields).eq('id', id)
+      if (error) throw error
 
-      // Supabase client has no generated Database types, so query/RPC results are `any`.
-      const updated = data as Note
-
-      await supabase.rpc('save_note_version', {
-        p_note_id: id,
-        p_title: updated.title,
-        p_content: updated.content,
-      })
+      // A trigger encrypts title/content at rest, so the version snapshot and
+      // hashtag scan use the plaintext we already have rather than reading
+      // ciphertext back from the database.
+      await supabase.rpc('save_note_version', { p_note_id: id, p_title: title, p_content: content })
 
       let syncedTags: Tag[] = []
       if ('content' in fields && user) {
-        syncedTags = await syncContentTags(user.id, id, updated.content)
+        syncedTags = await syncContentTags(user.id, id, content)
       }
 
-      return { updated, syncedTags }
+      return { id, syncedTags }
     },
-    onSuccess: ({ updated, syncedTags }) => {
+    onSuccess: ({ id, syncedTags }) => {
+      if (syncedTags.length === 0) return
       queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
-        prev.map((note) =>
-          note.id === updated.id
-            ? { ...updated, tags: syncedTags.length > 0 ? mergeTags(note.tags, syncedTags) : note.tags }
-            : note
-        )
+        prev.map((note) => (note.id === id ? { ...note, tags: mergeTags(note.tags, syncedTags) } : note))
       )
-      if (syncedTags.length > 0) onTagsSynced?.()
+      onTagsSynced?.()
     },
     onSettled: (_data, _error, variables) => {
       setSavingIds((prev) => {
@@ -74,9 +72,19 @@ export function useUpdateNote(onTagsSynced?: () => void) {
 
   const updateNote = useCallback(
     (id: string, fields: NoteFields) => {
-      // Optimistic local update so the UI feels instant.
+      let title = ''
+      let content = ''
+
+      // Optimistic local update so the UI feels instant; also capture the
+      // resulting plaintext title/content for the debounced save below.
       queryClient.setQueryData<NoteWithTags[]>(notesKeys.all(user?.id), (prev = []) =>
-        prev.map((note) => (note.id === id ? { ...note, ...fields } : note))
+        prev.map((note) => {
+          if (note.id !== id) return note
+          const next: NoteWithTags = { ...note, ...fields }
+          title = next.title
+          content = next.content
+          return next
+        })
       )
 
       setSavingIds((prev) => new Set(prev).add(id))
@@ -86,7 +94,7 @@ export function useUpdateNote(onTagsSynced?: () => void) {
 
       const timer = setTimeout(() => {
         timers.current.delete(id)
-        mutation.mutate({ id, fields })
+        mutation.mutate({ id, fields, title, content })
       }, AUTOSAVE_DELAY)
 
       timers.current.set(id, timer)

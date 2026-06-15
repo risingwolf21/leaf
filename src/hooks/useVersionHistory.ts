@@ -12,11 +12,7 @@ export function useVersionHistory(
   const fetchVersions = useCallback(async (id: string) => {
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from('note_versions')
-      .select('*')
-      .eq('note_id', id)
-      .order('saved_at', { ascending: false })
+    const { data, error } = await supabase.rpc('get_note_versions', { p_note_id: id })
 
     // Supabase client has no generated Database types, so query/RPC results are `any`.
     setVersions(!error && data ? (data as NoteVersion[]) : [])

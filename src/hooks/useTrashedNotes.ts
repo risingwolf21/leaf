@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { notesKeys } from '@/lib/queryKeys'
-import { sortByDeletedAtDesc } from '@/lib/notes'
 import type { Note } from '@/types'
 
 export function useTrashedNotes() {
@@ -11,16 +10,11 @@ export function useTrashedNotes() {
   return useQuery({
     queryKey: notesKeys.trash(user?.id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', user!.id)
-        .not('deleted_at', 'is', null)
-        .order('updated_at', { ascending: false })
+      const { data, error } = await supabase.rpc('get_trashed_notes')
 
       if (error) throw error
       // Supabase client has no generated Database types, so query/RPC results are `any`.
-      return sortByDeletedAtDesc((data ?? []) as Note[])
+      return (data ?? []) as Note[]
     },
     enabled: !!user,
   })
