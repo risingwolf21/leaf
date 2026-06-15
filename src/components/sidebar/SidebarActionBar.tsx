@@ -7,6 +7,7 @@ import { useCreateFolder } from '@/hooks/useCreateFolder'
 import { useCreateNote } from '@/hooks/useCreateNote'
 import { useCreateNoteFromTemplate, useTemplates } from '@/hooks/useTemplates'
 import { usePendingRename } from '@/lib/sidebarStore'
+import { ImportNotesButton } from './ImportNotesButton'
 import { SortPopover } from './SortPopover'
 import type { AnyTemplate, SortBy } from '@/types'
 
@@ -53,6 +54,7 @@ export function SidebarActionBar({
       <Button onClick={handleCreateFolder} variant="outline" size="icon" aria-label="New folder" title="New folder">
         <FolderPlus className="h-4 w-4" />
       </Button>
+      <ImportNotesButton folderId={activeFolderId} />
       <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
     </div>
   )
