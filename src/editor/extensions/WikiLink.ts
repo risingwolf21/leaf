@@ -6,14 +6,14 @@ import type MarkdownIt from 'markdown-it'
 import { cn } from '@/lib/utils'
 
 /** Minimal shape of markdown-it's inline parser state used by {@link wikiLinkInlineRule}. */
-interface MarkdownItInlineState {
+type MarkdownItInlineState = {
   src: string
   pos: number
   posMax: number
   push: (type: string, tag: string, nesting: 1 | 0 | -1) => { content: string }
 }
 
-interface WikiLinkMarkdownSpec {
+type WikiLinkMarkdownSpec = {
   serialize: {
     open: string
     close: string
@@ -24,11 +24,11 @@ interface WikiLinkMarkdownSpec {
   }
 }
 
-export interface WikiLinkOptions {
+export type WikiLinkOptions = {
   HTMLAttributes: Record<string, unknown>
 }
 
-export interface WikiLinkStorage {
+export type WikiLinkStorage = {
   /** Titles of the current user's notes, used to resolve links and drive autocomplete. */
   noteTitles: Set<string>
   /** Called with a note title when a wiki-link is clicked. */
@@ -198,6 +198,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
         },
         parse: {
           setup(markdownit: MarkdownIt) {
+            // Augments markdown-it's type with a custom flag not in its type definitions.
             const md = markdownit as MarkdownIt & { wikiLinkRuleAdded?: boolean }
             // setup() runs on every parse(), so guard against registering the rule twice
             if (md.wikiLinkRuleAdded) return
@@ -268,6 +269,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
             state.doc.descendants((node, pos) => {
               if (!node.isText) return
               const mark = node.marks.find((item) => item.type.name === 'wikiLink')
+              // ProseMirror mark attrs are typed as Record<string, any>.
               if (!mark || storage.noteTitles.has(mark.attrs.title as string)) return
 
               decorations.push(Decoration.inline(pos, pos + node.nodeSize, { class: 'wiki-link-broken' }))
@@ -278,6 +280,7 @@ export const WikiLink = Mark.create<WikiLinkOptions, WikiLinkStorage>({
           handleClick: (_view, _pos, event) => {
             if (event.button !== 0) return false
 
+            // DOM event targets are typed as EventTarget | null; this handler only runs on element clicks.
             const target = event.target as HTMLElement
             const link = target.closest<HTMLElement>('[data-wiki-link]')
             if (!link) return false

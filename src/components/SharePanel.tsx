@@ -20,11 +20,10 @@ import { CollaboratorList } from '@/components/CollaboratorList'
 import { useAuth } from '@/hooks/useAuth'
 import { useCollaborators } from '@/hooks/useCollaborators'
 import { formatDate } from '@/lib/utils'
-import type { NoteFields } from '@/hooks/useNotes'
-import type { Note, ShareRole } from '@/types'
+import type { Note, NoteFields, ShareRole } from '@/types'
 import { Toggle } from './ui/toggle'
 
-interface SharePanelProps {
+type SharePanelProps = {
   note: Note
   onShare: (id: string) => Promise<string>
   onUnshare: (id: string) => Promise<void>
@@ -134,6 +133,7 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
                   <DropdownMenuContent align="start">
                     <DropdownMenuRadioGroup
                       value={inviteRole}
+                      // Radio items below are limited to ShareRole; onValueChange is typed (value: string) => void.
                       onValueChange={(value) => setInviteRole(value as ShareRole)}
                     >
                       <DropdownMenuRadioItem value="viewer">Can view</DropdownMenuRadioItem>
@@ -198,6 +198,7 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
                     <DropdownMenuContent align="start">
                       <DropdownMenuRadioGroup
                         value={note.share_link_role}
+                        // Radio items below are limited to ShareRole; onValueChange is typed (value: string) => void.
                         onValueChange={(value) =>
                           onChange(note.id, { share_link_role: value as ShareRole })
                         }

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { SidebarTrigger } from "./ui/sidebar";
 
-interface AppBarProps extends React.HTMLAttributes<HTMLElement> {
+type AppBarProps = React.HTMLAttributes<HTMLElement> & {
     actions?: React.ReactNode;
     primaryAction?: React.ReactNode | "back" | "default";
     navigateBackPath?: string;

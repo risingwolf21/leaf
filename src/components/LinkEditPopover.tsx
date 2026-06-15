@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Toggle } from './ui/toggle'
 
-interface LinkEditPopoverProps {
+type LinkEditPopoverProps = {
   editor: Editor
 }
 
@@ -27,6 +27,7 @@ export function LinkEditPopover({ editor }: LinkEditPopoverProps) {
           : null
 
       setText(range ? state.doc.textBetween(range.from, range.to) : '')
+      // Tiptap's getAttributes returns Record<string, any>.
       setUrl(editor.isActive('link') ? (editor.getAttributes('link').href as string) ?? '' : '')
     }
     setOpen(next)

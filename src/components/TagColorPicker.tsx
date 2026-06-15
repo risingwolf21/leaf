@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { TAG_COLOR_PRESETS } from '@/lib/tags'
 
-interface TagColorPickerProps {
+type TagColorPickerProps = {
   color: string
   onChange: (color: string) => void
 }

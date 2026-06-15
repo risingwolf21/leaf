@@ -4,11 +4,13 @@ import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '@/components
 import { FolderActionsMenu } from '@/components/sidebar/FolderActionsMenu'
 import { NoteNode } from '@/components/sidebar/NoteNode'
 import { RenameInput } from '@/components/sidebar/RenameInput'
-import { useFolders, useRenameFolder } from '@/hooks/useFolders'
-import { sortNotes, useNotes, type SortBy } from '@/hooks/useNotes'
+import { useFolders } from '@/hooks/useFolders'
+import { useRenameFolder } from '@/hooks/useRenameFolder'
+import { useNotes } from '@/hooks/useNotes'
 import { useInlineRename } from '@/hooks/useInlineRename'
+import { sortNotes } from '@/lib/notes'
 import { cn } from '@/lib/utils'
-import type { Folder } from '@/types'
+import type { Folder, SortBy } from '@/types'
 
 /** Renders a folder row, recursively rendering its subfolders and notes when expanded. */
 export function FolderNode({ folder, sortBy }: { folder: Folder; sortBy: SortBy }) {

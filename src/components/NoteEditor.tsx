@@ -4,14 +4,13 @@ import { EditorToolbar } from '@/components/EditorToolbar'
 import { TagBar } from '@/components/TagBar'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import { cn } from '@/lib/utils'
-import type { NoteFields } from '@/hooks/useNotes'
-import type { Note, ShareRole, Tag, ViewMode } from '@/types'
+import type { Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
 
-export interface SharedContext {
+export type SharedContext = {
   role: ShareRole
 }
 
-interface NoteEditorProps {
+type NoteEditorProps = {
   note: Note
   notes: Note[]
   noteTags: Tag[]

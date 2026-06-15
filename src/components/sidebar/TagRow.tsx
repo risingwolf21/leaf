@@ -10,7 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
-import { useDeleteTag, useRenameTag, useUpdateTagColor } from '@/hooks/useTags'
+import { useDeleteTag } from '@/hooks/useDeleteTag'
+import { useRenameTag } from '@/hooks/useRenameTag'
+import { useUpdateTagColor } from '@/hooks/useUpdateTagColor'
 import { useTagFilter } from '@/lib/sidebarStore'
 import { onActivateKey } from '@/lib/utils'
 import type { Tag } from '@/types'

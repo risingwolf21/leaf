@@ -15,7 +15,7 @@ const BUILTIN_ICONS: Record<string, typeof FileText> = {
   'builtin-project': FileText,
 }
 
-interface TemplatePickerProps {
+type TemplatePickerProps = {
   templates: Template[]
   onCreateBlank: () => void
   onSelectTemplate: (template: AnyTemplate) => void

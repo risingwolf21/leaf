@@ -1,6 +1,9 @@
 import { AppBar } from '@/components/AppBar'
 import { TrashView } from '@/components/TrashView'
-import { useEmptyTrash, usePermanentlyDeleteNote, useRestoreNote, useTrashedNotes } from '@/hooks/useNotes'
+import { useEmptyTrash } from '@/hooks/useEmptyTrash'
+import { usePermanentlyDeleteNote } from '@/hooks/usePermanentlyDeleteNote'
+import { useRestoreNote } from '@/hooks/useRestoreNote'
+import { useTrashedNotes } from '@/hooks/useTrashedNotes'
 
 export default function TrashPage() {
   const { data: trashedNotes = [] } = useTrashedNotes()

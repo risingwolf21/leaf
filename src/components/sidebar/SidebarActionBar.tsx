@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { TemplatePicker } from '@/components/TemplatePicker'
 import { Button } from '@/components/ui/button'
 import { useActiveFolder } from '@/hooks/useActiveFolder'
-import { useCreateFolder } from '@/hooks/useFolders'
-import { useCreateNote, type SortBy } from '@/hooks/useNotes'
+import { useCreateFolder } from '@/hooks/useCreateFolder'
+import { useCreateNote } from '@/hooks/useCreateNote'
 import { useCreateNoteFromTemplate, useTemplates } from '@/hooks/useTemplates'
 import { usePendingRename } from '@/lib/sidebarStore'
 import { SortPopover } from './SortPopover'
-import type { AnyTemplate } from '@/types'
+import type { AnyTemplate, SortBy } from '@/types'
 
 /** Files mode action bar: new note (with template picker), new folder, and sort. */
 export function SidebarActionBar({

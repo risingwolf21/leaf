@@ -1,9 +1,11 @@
 import { FilterChip } from '@/components/sidebar/FilterChip'
 import { NoteNode } from '@/components/sidebar/NoteNode'
-import { sortNotes, useNotes, type SortBy } from '@/hooks/useNotes'
+import { useNotes } from '@/hooks/useNotes'
 import { useTags } from '@/hooks/useTags'
+import { sortNotes } from '@/lib/notes'
 import { useTagFilter } from '@/lib/sidebarStore'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
+import type { SortBy } from '@/types'
 
 /** Flat, filtered note list shown in Files mode when a tag (or "Untagged") filter is active. */
 export function TagFilteredView({ sortBy }: { sortBy: SortBy }) {

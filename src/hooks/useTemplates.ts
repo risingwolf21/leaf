@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import { useCreateNote } from '@/hooks/useNotes'
+import { useCreateNote } from '@/hooks/useCreateNote'
 import { applyTemplateVariables } from '@/lib/templates'
 import { templatesKeys } from '@/lib/queryKeys'
 import type { AnyTemplate, Template } from '@/types'
@@ -19,6 +19,7 @@ export function useTemplates() {
         .order('created_at', { ascending: true })
 
       if (error) throw error
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return (data ?? []) as Template[]
     },
     enabled: !!user,
@@ -40,6 +41,7 @@ export function useSaveAsTemplate() {
         .single()
 
       if (error || !data) throw error ?? new Error('Failed to save template')
+      // Supabase client has no generated Database types, so query/RPC results are `any`.
       return data as Template
     },
     onSuccess: (template) => {

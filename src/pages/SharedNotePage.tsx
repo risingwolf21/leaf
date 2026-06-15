@@ -7,9 +7,11 @@ import { supabase } from '@/lib/supabase'
 import { createEditorExtensions } from '@/lib/editor-extensions'
 import type { Note } from '@/types'
 
+type SharedNotePreview = Pick<Note, 'id' | 'title' | 'content'>
+
 export default function SharedNotePage() {
   const { token } = useParams<{ token: string }>()
-  const [note, setNote] = useState<Note | null>(null)
+  const [note, setNote] = useState<SharedNotePreview | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,14 +24,12 @@ export default function SharedNotePage() {
     setLoading(true)
 
     supabase
-      .from('notes')
-      .select('*')
-      .eq('share_token', token)
-      .is('deleted_at', null)
+      .rpc('get_shared_note_by_token', { p_token: token })
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return
-        setNote((data as Note | null) ?? null)
+        // Supabase client has no generated Database types, so query/RPC results are `any`.
+        setNote((data as SharedNotePreview | null) ?? null)
         setLoading(false)
       })
 

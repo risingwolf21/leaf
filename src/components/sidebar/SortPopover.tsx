@@ -8,7 +8,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { SortBy } from '@/hooks/useNotes'
+import type { SortBy } from '@/types'
 
 /** Popover for choosing the Files mode sort order, persisted via `useSortPreference`. */
 export function SortPopover({ sortBy, setSortBy }: { sortBy: SortBy; setSortBy: (sortBy: SortBy) => void }) {
@@ -22,6 +22,7 @@ export function SortPopover({ sortBy, setSortBy }: { sortBy: SortBy; setSortBy: 
         }
       />
       <DropdownMenuContent align="end">
+        {/* Radio items below are limited to SortBy; onValueChange is typed (value: string) => void. */}
         <DropdownMenuRadioGroup value={sortBy} onValueChange={(value) => setSortBy(value as SortBy)}>
           <DropdownMenuLabel>Sort by</DropdownMenuLabel>
           <DropdownMenuRadioItem value="updated_at">Last updated</DropdownMenuRadioItem>

@@ -1,6 +1,6 @@
 import { formatDate } from '@/lib/utils'
 
-export interface BuiltinTemplate {
+export type BuiltinTemplate = {
   id: string
   name: string
   content: string
