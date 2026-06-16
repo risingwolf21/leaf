@@ -18,7 +18,7 @@ function findPlaceholderPos(view: EditorView, id: object): number | null {
   return found && found.length > 0 ? found[0].from : null
 }
 
-function createPlaceholder() {
+export function createUploadPlaceholder() {
   const wrapper = document.createElement('span')
   wrapper.className =
     'my-1 inline-flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-1.5 align-middle text-sm text-muted-foreground'
@@ -34,7 +34,7 @@ function createPlaceholder() {
   return wrapper
 }
 
-function getImageFiles(fileList: FileList | null | undefined): File[] {
+export function getImageFiles(fileList: FileList | null | undefined): File[] {
   if (!fileList) return []
   return Array.from(fileList).filter((file) => file.type.startsWith('image/'))
 }
@@ -86,7 +86,7 @@ export const ImageUpload = Image.extend({
             // ProseMirror's Transaction.getMeta returns `any`.
             const meta = tr.getMeta(imageUploadPluginKey) as UploadMeta | undefined
             if (meta?.add) {
-              set = set.add(tr.doc, [Decoration.widget(meta.add.pos, createPlaceholder(), { id: meta.add.id })])
+              set = set.add(tr.doc, [Decoration.widget(meta.add.pos, createUploadPlaceholder(), { id: meta.add.id })])
             } else if (meta?.remove) {
               set = set.remove(set.find(undefined, undefined, (spec) => spec.id === meta.remove?.id))
             }
