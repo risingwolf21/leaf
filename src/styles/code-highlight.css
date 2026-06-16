@@ -120,19 +120,3 @@
     opacity: 1;
   }
 }
-
-/* Hide in read-only mode (SharedNotePage) */
-.leaf-code-block-lang-label {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.75rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: #6e7781;
-  pointer-events: none;
-  user-select: none;
-}
-
-.dark .leaf-code-block-lang-label {
-  color: #8b949e;
-}
