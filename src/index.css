@@ -289,6 +289,12 @@ body {
     @apply text-muted-foreground line-through;
   }
 
+  /* TipTap wraps table nodes in this div; scroll horizontally without
+     affecting the page layout. */
+  .tableWrapper {
+    @apply overflow-x-auto;
+  }
+
   /* Inline image node — width is controlled via data-width set by ImageView */
   .leaf-image {
     display: block;

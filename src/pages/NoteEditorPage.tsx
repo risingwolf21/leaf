@@ -7,6 +7,7 @@ import { AppBar } from '@/components/AppBar'
 import { SharePanel } from '@/components/SharePanel'
 import { EditorModeToggle } from '@/components/EditorModeToggle'
 import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
+import { EditorToolbarContainer } from '@/components/editor/EditorToolbarContainer'
 import { useAuth } from '@/hooks/useAuth'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotes } from '@/hooks/useNotes'
@@ -99,6 +100,7 @@ export default function NoteEditorPage() {
     <div className="flex h-dvh flex-col">
       <AppBar
         className='!border-b !shadow-sm'
+        bottomContent={!isReadOnly && mode === 'edit' ? <EditorToolbarContainer /> : null}
         actions={<>
           {!isReadOnly && (
             <span className={cn('shrink-0 text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
@@ -112,7 +114,7 @@ export default function NoteEditorPage() {
           {!sharedContext && <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={handleSaveAsTemplate} />}
         </>}
       />
-      <main className='min-h-0 flex-1 overflow-y-auto pb-safe-bottom'>
+      <main className='min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
         <NoteEditor
           note={activeNote}
           notes={notes}
