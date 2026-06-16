@@ -1,0 +1,123 @@
+/* ─── Code block container ─── */
+.leaf-code-block {
+  position: relative;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  overflow: hidden;
+  background: #f6f8fa;
+  border: 1px solid #e5e7eb;
+}
+
+.leaf-code-block pre {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  /* Override .markdown-preview pre background */
+  background: transparent;
+  border-radius: 0;
+}
+
+.leaf-code-block code {
+  font-family: inherit;
+  background: none;
+  padding: 0;
+}
+
+/* ─── Light theme tokens ─── */
+.leaf-code-block .hljs-keyword,
+.leaf-code-block .hljs-selector-tag,
+.leaf-code-block .hljs-built_in   { color: #cf222e; }
+
+.leaf-code-block .hljs-string,
+.leaf-code-block .hljs-attr       { color: #0a3069; }
+
+.leaf-code-block .hljs-number,
+.leaf-code-block .hljs-literal    { color: #0550ae; }
+
+.leaf-code-block .hljs-comment,
+.leaf-code-block .hljs-quote      { color: #6e7781; font-style: italic; }
+
+.leaf-code-block .hljs-title,
+.leaf-code-block .hljs-name       { color: #8250df; }
+
+.leaf-code-block .hljs-variable,
+.leaf-code-block .hljs-template-variable { color: #953800; }
+
+.leaf-code-block .hljs-tag        { color: #116329; }
+
+.leaf-code-block .hljs-type,
+.leaf-code-block .hljs-class .hljs-title { color: #0550ae; }
+
+.leaf-code-block .hljs-emphasis   { font-style: italic; }
+.leaf-code-block .hljs-strong     { font-weight: bold; }
+
+/* ─── Dark theme ─── */
+.dark .leaf-code-block {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+.dark .leaf-code-block .hljs-keyword,
+.dark .leaf-code-block .hljs-selector-tag,
+.dark .leaf-code-block .hljs-built_in   { color: #ff7b72; }
+
+.dark .leaf-code-block .hljs-string,
+.dark .leaf-code-block .hljs-attr       { color: #a5d6ff; }
+
+.dark .leaf-code-block .hljs-number,
+.dark .leaf-code-block .hljs-literal    { color: #79c0ff; }
+
+.dark .leaf-code-block .hljs-comment,
+.dark .leaf-code-block .hljs-quote      { color: #8b949e; font-style: italic; }
+
+.dark .leaf-code-block .hljs-title,
+.dark .leaf-code-block .hljs-name       { color: #d2a8ff; }
+
+.dark .leaf-code-block .hljs-variable,
+.dark .leaf-code-block .hljs-template-variable { color: #ffa657; }
+
+.dark .leaf-code-block .hljs-tag        { color: #7ee787; }
+
+.dark .leaf-code-block .hljs-type,
+.dark .leaf-code-block .hljs-class .hljs-title { color: #79c0ff; }
+
+/* ─── Language picker ─── */
+.leaf-code-block-lang-picker {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  color: #6e7781;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease, border-color 150ms ease;
+  padding: 2px 6px;
+}
+
+.leaf-code-block:hover .leaf-code-block-lang-picker,
+.leaf-code-block:focus-within .leaf-code-block-lang-picker,
+.leaf-code-block-lang-picker:has([aria-expanded="true"]) {
+  opacity: 1;
+}
+
+.leaf-code-block-lang-picker:hover {
+  border-color: currentColor;
+}
+
+.dark .leaf-code-block-lang-picker {
+  color: #8b949e;
+}
+
+/* Always show on touch devices (no hover state) */
+@media (hover: none) {
+  .leaf-code-block-lang-picker {
+    opacity: 1;
+  }
+}
