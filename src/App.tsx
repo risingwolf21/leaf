@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { queryClient } from '@/lib/queryClient'
+import { ConflictProvider } from '@/lib/conflictStore'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import AuthPage from '@/pages/AuthPage'
 import HomePage from '@/pages/HomePage'
@@ -21,38 +22,40 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter basename="/leaf">
-            <Routes>
-              <Route path="/" element={<AuthPage />} />
-              <Route path="/shared/:token" element={<SharedNotePage />} />
-              <Route
-                path="/app"
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Outlet />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<HomePage />} />
-                <Route path="notes/:noteId" element={<NoteEditorPage />} />
-                <Route path="trash" element={<TrashPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="import" element={<ImportPage />} />
-              </Route>
-              <Route
-                path="/help"
-                element={
-                  <ProtectedRoute>
-                    <HelpPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </BrowserRouter>
-          <Toaster />
+          <ConflictProvider>
+            <BrowserRouter basename="/leaf">
+              <Routes>
+                <Route path="/" element={<AuthPage />} />
+                <Route path="/shared/:token" element={<SharedNotePage />} />
+                <Route
+                  path="/app"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Outlet />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<HomePage />} />
+                  <Route path="notes/:noteId" element={<NoteEditorPage />} />
+                  <Route path="trash" element={<TrashPage />} />
+                  <Route path="templates" element={<TemplatesPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="import" element={<ImportPage />} />
+                </Route>
+                <Route
+                  path="/help"
+                  element={
+                    <ProtectedRoute>
+                      <HelpPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </BrowserRouter>
+            <Toaster />
+          </ConflictProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

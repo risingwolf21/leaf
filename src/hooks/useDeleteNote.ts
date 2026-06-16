@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { notesKeys } from '@/lib/queryKeys'
 import { sortByDeletedAtDesc } from '@/lib/notes'
+import { enqueue } from '@/lib/outbox'
 import type { Note, NoteWithTags } from '@/types'
 
 export function useDeleteNote() {
@@ -11,6 +12,11 @@ export function useDeleteNote() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      if (!navigator.onLine) {
+        // Queue the soft-delete; the optimistic update below already hides the note.
+        await enqueue({ type: 'delete', noteId: id, queuedAt: new Date().toISOString() })
+        return
+      }
       await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
     },
     onMutate: (id) => {

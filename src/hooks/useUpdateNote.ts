@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { notesKeys } from '@/lib/queryKeys'
 import { mergeTags, syncContentTags } from '@/lib/tags'
+import { enqueue } from '@/lib/outbox'
 import type { NoteFields, NoteWithTags, Tag } from '@/types'
 
 const AUTOSAVE_DELAY = 1000
@@ -39,6 +40,12 @@ export function useUpdateNote(onTagsSynced?: () => void) {
       title,
       content,
     }: { id: string; fields: NoteFields; title: string; content: string }) => {
+      if (!navigator.onLine) {
+        // Queue the write for replay when connectivity returns.
+        await enqueue({ type: 'update', noteId: id, fields, queuedAt: new Date().toISOString() })
+        return { id, syncedTags: [] as Tag[] }
+      }
+
       const { error } = await supabase.from('notes').update(fields).eq('id', id)
       if (error) throw error
 
