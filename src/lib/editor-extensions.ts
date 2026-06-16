@@ -11,6 +11,8 @@ import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
 import { ImageUpload } from '@/editor/extensions/ImageUpload'
 import { WikiLink } from '@/editor/extensions/WikiLink'
+import { TableOfContents } from '@/editor/extensions/TableOfContents'
+import { SlashCommands } from '@/editor/extensions/SlashCommands'
 
 export function createEditorExtensions(placeholder = ''): Extensions {
   return [
@@ -27,6 +29,8 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     TableHeader,
     TableCell,
     WikiLink,
+    TableOfContents,
+    SlashCommands,
     Markdown.configure({ html: false, transformPastedText: true }),
   ]
 }
