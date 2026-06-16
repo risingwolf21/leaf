@@ -130,7 +130,7 @@ export function NoteEditor({
       )}
 
       {mode === 'edit' && (
-        <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
+        <div className="sticky top-2 z-10 mb-2 rounded-md border border-border bg-background p-1">
           <EditorToolbar
             editor={editor}
             isRecording={isRecording}
