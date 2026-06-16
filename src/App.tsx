@@ -10,6 +10,7 @@ import NoteEditorPage from '@/pages/NoteEditorPage'
 import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
 import SettingsPage from '@/pages/SettingsPage'
+import ImportPage from '@/pages/ImportPage'
 import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
@@ -39,6 +40,7 @@ function App() {
                 <Route path="trash" element={<TrashPage />} />
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="import" element={<ImportPage />} />
               </Route>
               <Route
                 path="/help"
