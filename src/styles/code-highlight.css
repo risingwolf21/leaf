@@ -102,7 +102,8 @@
 }
 
 .leaf-code-block:hover .leaf-code-block-lang-picker,
-.leaf-code-block:focus-within .leaf-code-block-lang-picker {
+.leaf-code-block:focus-within .leaf-code-block-lang-picker,
+.leaf-code-block-lang-picker:has([aria-expanded="true"]) {
   opacity: 1;
 }
 
