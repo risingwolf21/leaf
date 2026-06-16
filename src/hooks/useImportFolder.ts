@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { foldersKeys, notesKeys } from '@/lib/queryKeys'
 import { uploadNoteImage } from '@/lib/image-upload'
 import { classifyFiles, replaceImageRefs } from '@/lib/import'
+import type { FileEntry } from '@/lib/import'
 import type { Folder, Note, NoteWithTags } from '@/types'
 
 export type ImportFolderStats = {
@@ -23,10 +24,10 @@ export function useImportFolder() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (files: File[]): Promise<ImportFolderStats> => {
+    mutationFn: async (entries: FileEntry[]): Promise<ImportFolderStats> => {
       if (!user) throw new Error('Not authenticated')
 
-      const { notes, images, folderNames } = classifyFiles(files)
+      const { notes, images, folderNames } = classifyFiles(entries)
       if (notes.length === 0) return EMPTY_STATS
 
       // Resolve folders: re-use existing root-level ones, create missing.
@@ -58,7 +59,7 @@ export function useImportFolder() {
       let imagesUploaded = 0, imagesFailed = 0
 
       await Promise.allSettled(
-        [...images.entries()].map(async ([filename, file]) => {
+        [...images.entries()].map(async ([filename, { file }]) => {
           try {
             imageUrlMap.set(filename, await uploadNoteImage(file))
             imagesUploaded++

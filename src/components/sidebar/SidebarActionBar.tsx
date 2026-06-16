@@ -54,7 +54,7 @@ export function SidebarActionBar({
       <Button onClick={handleCreateFolder} variant="outline" size="icon" aria-label="New folder" title="New folder">
         <FolderPlus className="h-4 w-4" />
       </Button>
-      <ImportButton folderId={activeFolderId} />
+      <ImportButton />
       <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
     </div>
   )

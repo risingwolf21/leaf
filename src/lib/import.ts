@@ -1,31 +1,71 @@
 const SKIP_FOLDERS = new Set(['Recently Deleted'])
 const MEDIA_DIRS = new Set(['images', 'attachments'])
 
+export type FileEntry = { file: File; relativePath: string }
 export type ImportNote = { file: File; folderName: string | null }
+export type ImportImage = { file: File; folderName: string | null }
 
 export type ClassifiedFiles = {
   notes: ImportNote[]
-  images: Map<string, File>   // basename (e.g. UUID.png) → File
+  images: Map<string, ImportImage>  // basename (e.g. UUID.png) → ImportImage
   folderNames: Set<string>
 }
 
+/** Converts a File[] from <input webkitdirectory> into FileEntry[]. */
+export function filesToEntries(files: File[]): FileEntry[] {
+  return files.map((f) => ({ file: f, relativePath: f.webkitRelativePath || f.name }))
+}
+
+async function readEntry(entry: FileSystemEntry): Promise<FileEntry[]> {
+  if (entry.isFile) {
+    const file = await new Promise<File>((resolve, reject) => {
+      ;(entry as FileSystemFileEntry).file(resolve, reject)
+    })
+    return [{ file, relativePath: entry.fullPath.replace(/^\//, '') }]
+  }
+
+  const reader = (entry as FileSystemDirectoryEntry).createReader()
+  const all: FileSystemEntry[] = []
+
+  // readEntries returns at most 100 at a time; loop until the batch is empty.
+  while (true) {
+    const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+      reader.readEntries(resolve, reject)
+    })
+    if (batch.length === 0) break
+    all.push(...batch)
+  }
+
+  const nested = await Promise.all(all.map(readEntry))
+  return nested.flat()
+}
+
+/** Traverses all dragged items (files or folders) via the FileSystem Entry API. */
+export async function readDroppedItems(dataTransfer: DataTransfer): Promise<FileEntry[]> {
+  const entries = Array.from(dataTransfer.items)
+    .map((item) => item.webkitGetAsEntry())
+    .filter((e): e is FileSystemEntry => e !== null)
+
+  const results = await Promise.all(entries.map(readEntry))
+  return results.flat()
+}
+
 /**
- * Classifies files from a webkitdirectory folder picker into notes and
- * images. The first path segment (the root directory the user selected)
- * is stripped; Apple's "Recently Deleted" folder is skipped.
+ * Classifies FileEntry[] into notes and images.
+ * Strips the root directory segment, skips "Recently Deleted".
  *
  * Expected structure after stripping root:
- *   FolderName/note.md           → note in FolderName
+ *   FolderName/note.md          → note in FolderName
  *   FolderName/images/UUID.png  → image belonging to FolderName
  */
-export function classifyFiles(files: File[]): ClassifiedFiles {
+export function classifyFiles(entries: FileEntry[]): ClassifiedFiles {
   const notes: ImportNote[] = []
-  const images = new Map<string, File>()
+  const images = new Map<string, ImportImage>()
   const folderNames = new Set<string>()
 
-  for (const file of files) {
-    const parts = file.webkitRelativePath.split('/')
-    const rel = parts.slice(1)           // strip the root directory the user selected
+  for (const { file, relativePath } of entries) {
+    const parts = relativePath.split('/')
+    const rel = parts.slice(1)  // strip the root directory the user selected
     if (rel.length === 0) continue
 
     const filename = rel[rel.length - 1]
@@ -38,7 +78,7 @@ export function classifyFiles(files: File[]): ClassifiedFiles {
       notes.push({ file, folderName })
       if (folderName) folderNames.add(folderName)
     } else if (/\.(png|jpe?g|gif|webp)$/i.test(filename) && parentDir && MEDIA_DIRS.has(parentDir)) {
-      images.set(filename, file)
+      images.set(filename, { file, folderName })
     }
   }
 
