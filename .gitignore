@@ -26,3 +26,6 @@ dist-ssr
 
 .env.local
 .env.production.local
+
+# Claude Code agent artifacts
+.claude/

@@ -84,8 +84,8 @@ export function NoteEditor({
 
   if (isReadOnly) {
     return (
-      <div className="mx-auto flex h-full w-full max-w-note flex-col px-4 py-3 sm:px-6 md:py-6">
-        <div className="mb-4 shrink-0">
+      <div className="mx-auto flex w-full max-w-note flex-col px-4 py-3 sm:px-6 md:py-6">
+        <div className="mb-4">
           <h1 className="truncate text-2xl font-semibold text-foreground">
             {note.title || 'Untitled'}
           </h1>
@@ -93,9 +93,7 @@ export function NoteEditor({
             You can view this note but cannot edit it.
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <EditorContent editor={editor} />
-        </div>
+        <EditorContent editor={editor} />
       </div>
     )
   }
@@ -110,7 +108,7 @@ export function NoteEditor({
   return (
     <div
       className={cn(
-        'mx-auto flex h-full w-full flex-col px-4 py-3 sm:px-6 md:py-6',
+        'mx-auto flex w-full flex-col px-4 py-3 sm:px-6 md:py-6',
         mode === 'split' ? 'max-w-note-wide' : 'max-w-note'
       )}
     >
@@ -131,6 +129,18 @@ export function NoteEditor({
         />
       )}
 
+      {mode === 'edit' && (
+        <div className="sticky top-2 z-10 mb-2 rounded-md border border-border bg-background p-1">
+          <EditorToolbar
+            editor={editor}
+            isRecording={isRecording}
+            isSupported={isSupported}
+            onVoiceToggle={toggleVoice}
+          />
+          <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
+        </div>
+      )}
+
       {mode === 'split' ? (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           <textarea
@@ -144,33 +154,16 @@ export function NoteEditor({
             <EditorContent editor={editor} />
           </div>
         </div>
+      ) : mode === 'source' ? (
+        <textarea
+          value={note.content}
+          onChange={(e) => handleSourceChange(e.target.value)}
+          placeholder="Start writing…"
+          spellCheck
+          className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
+        />
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {mode === 'source' ? (
-            <textarea
-              value={note.content}
-              onChange={(e) => handleSourceChange(e.target.value)}
-              placeholder="Start writing…"
-              spellCheck
-              className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
-            />
-          ) : (
-            <>
-              {mode === 'edit' && (
-                <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
-                  <EditorToolbar
-                    editor={editor}
-                    isRecording={isRecording}
-                    isSupported={isSupported}
-                    onVoiceToggle={toggleVoice}
-                  />
-                  <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
-                </div>
-              )}
-              <EditorContent editor={editor} />
-            </>
-          )}
-        </div>
+        <EditorContent editor={editor} />
       )}
     </div>
   )

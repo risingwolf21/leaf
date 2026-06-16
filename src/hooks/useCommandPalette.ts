@@ -1,7 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
+
+let open = false
+const listeners = new Set<() => void>()
+
+function setOpen(next: boolean | ((prev: boolean) => boolean)) {
+  open = typeof next === 'function' ? next(open) : next
+  listeners.forEach((l) => l())
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
 
 export function useCommandPalette() {
-  const [open, setOpen] = useState(false)
+  const isOpen = useSyncExternalStore(subscribe, () => open)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -14,5 +27,10 @@ export function useCommandPalette() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  return { open, setOpen }
+  return { open: isOpen, setOpen }
+}
+
+/** Open the command palette from anywhere without subscribing to its state. */
+export function openCommandPalette() {
+  setOpen(true)
 }

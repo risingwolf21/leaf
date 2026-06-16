@@ -96,7 +96,7 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div>
+    <div className="flex h-dvh flex-col">
       <AppBar
         className='!border-b !shadow-sm'
         actions={<>
@@ -112,7 +112,7 @@ export default function NoteEditorPage() {
           {!sharedContext && <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={handleSaveAsTemplate} />}
         </>}
       />
-      <main className='flex-1 size-full pb-safe-bottom'>
+      <main className='min-h-0 flex-1 overflow-y-auto pb-safe-bottom'>
         <NoteEditor
           note={activeNote}
           notes={notes}
