@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ArrowRight, Download, LayoutTemplate, LogOut, Moon, Sun, Monitor, Trash2 } from 'lucide-react'
+import { ArrowRight, Download, LayoutTemplate, LogOut, Moon, Sun, Monitor, Trash2, Upload } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -94,6 +94,7 @@ export default function SettingsPage() {
               <div className="flex flex-col divide-y divide-border">
                 <SettingsLink to="/app/trash" icon={Trash2} label="Trash" badge={trashedNotes.length} />
                 <SettingsLink to="/app/templates" icon={LayoutTemplate} label="Manage templates" />
+                <SettingsLink to="/app/import" icon={Upload} label="Import notes" />
                 <button
                   type="button"
                   onClick={handleExport}
