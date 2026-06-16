@@ -19,8 +19,6 @@ export function CodeBlockView({ node, updateAttributes, editor }: NodeViewProps)
           onChange={handleChange}
           contentEditable={false}
           aria-label="Language"
-          // Prevent blur from stealing the editor cursor position
-          onMouseDown={(e) => e.preventDefault()}
         >
           {SUPPORTED_LANGUAGES.map(({ value, label: lbl }) => (
             <option key={value} value={value}>{lbl}</option>
