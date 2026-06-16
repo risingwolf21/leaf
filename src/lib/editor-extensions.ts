@@ -15,6 +15,8 @@ import { ImageExtension } from '@/editor/extensions/ImageExtension'
 import { CodeBlockView } from '@/components/editor/CodeBlockView'
 import { ImageUpload } from '@/editor/extensions/ImageUpload'
 import { WikiLink } from '@/editor/extensions/WikiLink'
+import { TableOfContents } from '@/editor/extensions/TableOfContents'
+import { SlashCommands } from '@/editor/extensions/SlashCommands'
 import { lowlight } from '@/lib/highlight-languages'
 
 const CodeBlock = CodeBlockLowlight.extend({
@@ -63,6 +65,8 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     TableHeader,
     TableCell,
     WikiLink,
+    TableOfContents,
+    SlashCommands,
     CodeBlock,
     Markdown.configure({ html: false, transformPastedText: true }),
   ]
