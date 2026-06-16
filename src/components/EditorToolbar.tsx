@@ -32,12 +32,16 @@ import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
 import { uploadImageAt } from '@/editor/extensions/ImageUpload'
+import { VoiceMicButton } from '@/components/editor/VoiceMicButton'
 
 type EditorToolbarProps = {
   editor: Editor
+  isRecording: boolean
+  isSupported: boolean
+  onVoiceToggle: () => void
 }
 
-export function EditorToolbar({ editor }: EditorToolbarProps) {
+export function EditorToolbar({ editor, isRecording, isSupported, onVoiceToggle }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,6 +249,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         accept={ACCEPTED_IMAGE_TYPES.join(',')}
         className="hidden"
         onChange={handleFileChange}
+      />
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <VoiceMicButton
+        isRecording={isRecording}
+        isSupported={isSupported}
+        onToggle={onVoiceToggle}
       />
     </div>
   )

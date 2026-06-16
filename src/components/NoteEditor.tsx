@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { EditorToolbar } from '@/components/EditorToolbar'
 import { TagBar } from '@/components/TagBar'
+import { RecordingBar } from '@/components/editor/RecordingBar'
 import { createEditorExtensions } from '@/lib/editor-extensions'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 import { cn } from '@/lib/utils'
 import type { Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
 
@@ -40,6 +42,10 @@ export function NoteEditor({
   noteRef.current = note
 
   const isReadOnly = sharedContext?.role === 'viewer'
+
+  const { isRecording, isSupported, toggle: toggleVoice } = useVoiceInput((text) => {
+    editor?.commands.insertContent(text + ' ')
+  })
 
   const editor = useEditor(
     {
@@ -152,7 +158,13 @@ export function NoteEditor({
             <>
               {mode === 'edit' && (
                 <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
-                  <EditorToolbar editor={editor} />
+                  <EditorToolbar
+                    editor={editor}
+                    isRecording={isRecording}
+                    isSupported={isSupported}
+                    onVoiceToggle={toggleVoice}
+                  />
+                  <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
                 </div>
               )}
               <EditorContent editor={editor} />
