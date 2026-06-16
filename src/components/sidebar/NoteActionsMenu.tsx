@@ -29,6 +29,7 @@ import { useShareNote } from '@/hooks/useShareNote'
 import { useTogglePin } from '@/hooks/useTogglePin'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'
+import { PrintButton } from '@/components/PrintButton'
 import type { NoteWithTags } from '@/types'
 
 type NoteActionsMenuProps = {
@@ -128,6 +129,7 @@ export function NoteActionsMenu({ note, onOpen, onStartRename }: NoteActionsMenu
           <Share2 className="mr-2 h-4 w-4" />
           Copy share link
         </DropdownMenuItem>
+        <PrintButton note={note} />
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           <Trash2 className="mr-2 h-4 w-4" />
