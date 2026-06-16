@@ -65,7 +65,9 @@ export function classifyFiles(entries: FileEntry[]): ClassifiedFiles {
 
   for (const { file, relativePath } of entries) {
     const parts = relativePath.split('/')
-    const rel = parts.slice(1)  // strip the root directory the user selected
+    // For directory imports the first segment is the chosen root folder — strip it.
+    // For bare filenames (individual file picker) there is no root to strip.
+    const rel = parts.length > 1 ? parts.slice(1) : parts
     if (rel.length === 0) continue
 
     const filename = rel[rel.length - 1]
