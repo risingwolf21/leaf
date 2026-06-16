@@ -7,19 +7,57 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
+import { ImageExtension } from '@/editor/extensions/ImageExtension'
+import { CodeBlockView } from '@/components/editor/CodeBlockView'
 import { ImageUpload } from '@/editor/extensions/ImageUpload'
 import { WikiLink } from '@/editor/extensions/WikiLink'
+import { TableOfContents } from '@/editor/extensions/TableOfContents'
+import { SlashCommands } from '@/editor/extensions/SlashCommands'
+import { lowlight } from '@/lib/highlight-languages'
+
+const CodeBlock = CodeBlockLowlight.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(CodeBlockView)
+  },
+  // Ensure tiptap-markdown serialises the language attribute (e.g. ```typescript)
+  addStorage() {
+    return {
+      markdown: {
+        // tiptap-markdown calls these with its own internal types (no public exports).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        serialize(state: any, node: any) {
+          const language = (node.attrs.language as string | null) ?? ''
+          state.write(`\`\`\`${language}\n`)
+          state.text(node.textContent, false)
+          state.ensureNewLine()
+          state.write('```')
+          state.closeBlock(node)
+        },
+      },
+    }
+  },
+}).configure({
+  lowlight,
+  defaultLanguage: 'plaintext',
+  exitOnTripleEnter: true,
+  exitOnArrowDown: true,
+  HTMLAttributes: { class: 'leaf-code-block' },
+})
 
 export function createEditorExtensions(placeholder = ''): Extensions {
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
+      // CodeBlockLowlight replaces StarterKit's built-in CodeBlock
+      codeBlock: false,
     }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, autolink: true }),
-    ImageUpload,
+    ImageExtension,
     TaskList,
     TaskItem.configure({ nested: false }),
     Table.configure({ resizable: false }),
@@ -27,6 +65,9 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     TableHeader,
     TableCell,
     WikiLink,
+    TableOfContents,
+    SlashCommands,
+    CodeBlock,
     Markdown.configure({ html: false, transformPastedText: true }),
   ]
 }

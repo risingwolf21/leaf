@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import {
   Bold,
@@ -10,6 +10,7 @@ import {
   Heading3,
   ImagePlus,
   Italic,
+  Link as LinkIcon,
   List,
   ListOrdered,
   ListTodo,
@@ -33,6 +34,7 @@ import { Toggle } from '@/components/ui/toggle'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/image-upload'
 import { uploadImageAt } from '@/editor/extensions/ImageUpload'
 import { VoiceMicButton } from '@/components/editor/VoiceMicButton'
+import { ImageUrlDialog } from '@/components/editor/ImageUrlDialog'
 
 type EditorToolbarProps = {
   editor: Editor
@@ -43,6 +45,7 @@ type EditorToolbarProps = {
 
 export function EditorToolbar({ editor, isRecording, isSupported, onVoiceToggle }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -51,6 +54,12 @@ export function EditorToolbar({ editor, isRecording, isSupported, onVoiceToggle 
 
     const { view, state } = editor
     uploadImageAt(view, file, state.selection.from)
+  }
+
+  const handleImageButtonClick = () => {
+    // Open the URL dialog when no modifier is held; the hidden file input
+    // remains accessible via the dropdown for uploading local files.
+    setIsUrlDialogOpen(true)
   }
 
   return (
@@ -233,16 +242,26 @@ export function EditorToolbar({ editor, isRecording, isSupported, onVoiceToggle 
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-9 px-2.5"
-        onClick={() => fileInputRef.current?.click()}
-        aria-label="Insert image"
-      >
-        <ImagePlus className="h-5 w-5" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Toggle size="sm" aria-label="Insert image">
+              <ImagePlus className="h-5 w-5" />
+            </Toggle>
+          }
+        />
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={handleImageButtonClick}>
+            <LinkIcon className="mr-2 h-4 w-4" />
+            From URL…
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+            <ImagePlus className="mr-2 h-4 w-4" />
+            Upload file…
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -257,6 +276,11 @@ export function EditorToolbar({ editor, isRecording, isSupported, onVoiceToggle 
         isRecording={isRecording}
         isSupported={isSupported}
         onToggle={onVoiceToggle}
+        />
+      <ImageUrlDialog
+        open={isUrlDialogOpen}
+        onOpenChange={setIsUrlDialogOpen}
+        editor={editor}
       />
     </div>
   )
