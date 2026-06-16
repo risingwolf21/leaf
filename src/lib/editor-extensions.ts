@@ -11,6 +11,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
+import { ImageExtension } from '@/editor/extensions/ImageExtension'
 import { CodeBlockView } from '@/components/editor/CodeBlockView'
 import { ImageUpload } from '@/editor/extensions/ImageUpload'
 import { WikiLink } from '@/editor/extensions/WikiLink'
@@ -54,7 +55,7 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, autolink: true }),
-    ImageUpload,
+    ImageExtension,
     TaskList,
     TaskItem.configure({ nested: false }),
     Table.configure({ resizable: false }),
