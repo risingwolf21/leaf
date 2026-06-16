@@ -10,6 +10,7 @@ type AppBarProps = React.HTMLAttributes<HTMLElement> & {
     primaryAction?: React.ReactNode | "back" | "default";
     navigateBackPath?: string;
     withScrollEffect?: boolean;
+    bottomContent?: React.ReactNode;
 }
 
 export function AppBar({
@@ -17,6 +18,7 @@ export function AppBar({
     navigateBackPath,
     actions,
     withScrollEffect = true,
+    bottomContent,
     className,
     ...props
 }: AppBarProps) {
@@ -65,6 +67,7 @@ export function AppBar({
                     {actions}
                 </div>
             </div>
+            {bottomContent}
         </header>
     );
 }

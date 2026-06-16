@@ -1,10 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { EditorToolbar } from '@/components/EditorToolbar'
 import { TagBar } from '@/components/TagBar'
-import { RecordingBar } from '@/components/editor/RecordingBar'
 import { createEditorExtensions } from '@/lib/editor-extensions'
-import { useVoiceInput } from '@/hooks/useVoiceInput'
+import { setActiveEditor } from '@/lib/editorStore'
 import { cn } from '@/lib/utils'
 import type { Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
 
@@ -43,10 +41,6 @@ export function NoteEditor({
 
   const isReadOnly = sharedContext?.role === 'viewer'
 
-  const { isRecording, isSupported, toggle: toggleVoice } = useVoiceInput((text) => {
-    editor?.commands.insertContent(text + ' ')
-  })
-
   const editor = useEditor(
     {
       extensions: createEditorExtensions('Start writing…'),
@@ -78,6 +72,12 @@ export function NoteEditor({
     editor.storage.wikiLink.onNavigate = onNavigateToNote
     editor.view.dispatch(editor.state.tr)
   }, [editor, notes, onNavigateToNote])
+
+  useEffect(() => {
+    if (!editor) return
+    setActiveEditor(editor)
+    return () => setActiveEditor(null)
+  }, [editor])
 
 
   if (!editor) return null
@@ -127,18 +127,6 @@ export function NoteEditor({
           onAddTag={onAddTag}
           onRemoveTag={onRemoveTag}
         />
-      )}
-
-      {mode === 'edit' && (
-        <div className="sticky top-2 z-10 mb-2 rounded-md border border-border bg-background p-1">
-          <EditorToolbar
-            editor={editor}
-            isRecording={isRecording}
-            isSupported={isSupported}
-            onVoiceToggle={toggleVoice}
-          />
-          <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
-        </div>
       )}
 
       {mode === 'split' ? (
