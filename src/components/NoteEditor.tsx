@@ -131,6 +131,18 @@ export function NoteEditor({
         />
       )}
 
+      {mode === 'edit' && (
+        <div className="mb-2 shrink-0 rounded-md border border-border bg-background p-1">
+          <EditorToolbar
+            editor={editor}
+            isRecording={isRecording}
+            isSupported={isSupported}
+            onVoiceToggle={toggleVoice}
+          />
+          <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
+        </div>
+      )}
+
       {mode === 'split' ? (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           <textarea
@@ -155,20 +167,7 @@ export function NoteEditor({
               className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
             />
           ) : (
-            <>
-              {mode === 'edit' && (
-                <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
-                  <EditorToolbar
-                    editor={editor}
-                    isRecording={isRecording}
-                    isSupported={isSupported}
-                    onVoiceToggle={toggleVoice}
-                  />
-                  <RecordingBar isRecording={isRecording} onStop={toggleVoice} />
-                </div>
-              )}
-              <EditorContent editor={editor} />
-            </>
+            <EditorContent editor={editor} />
           )}
         </div>
       )}
