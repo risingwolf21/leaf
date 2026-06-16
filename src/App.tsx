@@ -15,6 +15,54 @@ import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
 import { MainLayout } from './components/MainLayout'
+import { useCommandPalette } from '@/hooks/useCommandPalette'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { CommandPalette } from '@/components/CommandPalette'
+import { CommandPaletteSheet } from '@/components/CommandPaletteSheet'
+
+function AppShell() {
+  const { open, setOpen } = useCommandPalette()
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/shared/:token" element={<SharedNotePage />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Outlet />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="notes/:noteId" element={<NoteEditorPage />} />
+          <Route path="trash" element={<TrashPage />} />
+          <Route path="templates" element={<TemplatesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="import" element={<ImportPage />} />
+        </Route>
+        <Route
+          path="/help"
+          element={
+            <ProtectedRoute>
+              <HelpPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+      {isDesktop ? (
+        <CommandPalette open={open} onOpenChange={setOpen} />
+      ) : (
+        <CommandPaletteSheet open={open} onOpenChange={setOpen} />
+      )}
+    </>
+  )
+}
 
 function App() {
   return (
@@ -22,35 +70,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter basename="/leaf">
-            <Routes>
-              <Route path="/" element={<AuthPage />} />
-              <Route path="/shared/:token" element={<SharedNotePage />} />
-              <Route
-                path="/app"
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Outlet />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<HomePage />} />
-                <Route path="notes/:noteId" element={<NoteEditorPage />} />
-                <Route path="trash" element={<TrashPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="import" element={<ImportPage />} />
-              </Route>
-              <Route
-                path="/help"
-                element={
-                  <ProtectedRoute>
-                    <HelpPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+            <AppShell />
           </BrowserRouter>
           <Toaster />
         </AuthProvider>

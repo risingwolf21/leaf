@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "./styles/code-highlight.css";
 
 html,
 body {
@@ -286,4 +287,17 @@ body {
   .markdown-preview ul[data-type='taskList'] li[data-checked='true']>div {
     @apply text-muted-foreground line-through;
   }
+
+  /* Inline image node — width is controlled via data-width set by ImageView */
+  .leaf-image {
+    display: block;
+    max-width: 100%;
+    border-radius: 0.375rem;
+    margin: 0.75rem 0;
+    cursor: pointer;
+  }
+
+  .leaf-image[data-width="small"]  { width: 240px; }
+  .leaf-image[data-width="medium"] { width: 480px; }
+  .leaf-image[data-width="large"]  { width: 100%; }
 }
