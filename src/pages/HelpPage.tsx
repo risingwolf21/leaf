@@ -39,7 +39,7 @@ const SECTIONS: Section[] = [
   },
   {
     heading: 'Code blocks',
-    markdown: '```ts\nfunction greet(name: string) {\n  return `Hello, ${name}!`\n}\n```',
+    markdown: '```typescript\nfunction greet(name: string) {\n  return `Hello, ${name}!`\n}\n```',
   },
   {
     heading: 'Blockquotes',
