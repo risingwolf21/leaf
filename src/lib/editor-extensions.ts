@@ -9,7 +9,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
-import { ImageUpload } from '@/editor/extensions/ImageUpload'
+import { ImageExtension } from '@/editor/extensions/ImageExtension'
 import { WikiLink } from '@/editor/extensions/WikiLink'
 
 export function createEditorExtensions(placeholder = ''): Extensions {
@@ -19,7 +19,7 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, autolink: true }),
-    ImageUpload,
+    ImageExtension,
     TaskList,
     TaskItem.configure({ nested: false }),
     Table.configure({ resizable: false }),
