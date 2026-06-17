@@ -8,6 +8,8 @@ import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { Markdown } from 'tiptap-markdown'
 import type { Extensions } from '@tiptap/react'
@@ -18,6 +20,8 @@ import { TableOfContents } from '@/editor/extensions/TableOfContents'
 import { SlashCommands } from '@/editor/extensions/SlashCommands'
 import { ReadOnlyTaskItem } from '@/editor/extensions/ReadOnlyTaskItem'
 import { lowlight } from '@/lib/highlight-languages'
+import { YJS_FIELD } from '@/lib/yjsState'
+import type { CollaborationConfig } from '@/types'
 
 const CodeBlock = CodeBlockLowlight.extend({
   addNodeView() {
@@ -48,12 +52,14 @@ const CodeBlock = CodeBlockLowlight.extend({
   HTMLAttributes: { class: 'leaf-code-block' },
 })
 
-export function createEditorExtensions(placeholder = ''): Extensions {
+export function createEditorExtensions(placeholder = '', collaboration?: CollaborationConfig): Extensions {
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
       // CodeBlockLowlight replaces StarterKit's built-in CodeBlock
       codeBlock: false,
+      // Yjs owns document history when collaborative, not ProseMirror's history plugin.
+      ...(collaboration ? { history: false } : {}),
     }),
     Placeholder.configure({ placeholder }),
     Link.configure({ openOnClick: false, autolink: true }),
@@ -79,5 +85,15 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     SlashCommands,
     CodeBlock,
     Markdown.configure({ html: false, transformPastedText: true }),
+    ...(collaboration
+      ? [
+          Collaboration.configure({ document: collaboration.ydoc, field: YJS_FIELD }),
+          CollaborationCursor.configure({
+            // `provider` is typed `any` (built for Hocuspocus); only `.awareness` is read internally.
+            provider: { awareness: collaboration.awareness },
+            user: collaboration.user,
+          }),
+        ]
+      : []),
   ]
 }
