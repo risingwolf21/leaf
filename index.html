@@ -22,7 +22,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="%BASE_URL%icons/icon-192.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-512.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- interactive-widget=resizes-content makes Chrome shrink the layout
+         viewport (and dvh units) when the on-screen keyboard opens, instead
+         of only panning the visual viewport — without this, sticky/dvh-based
+         layouts stay anchored to the pre-keyboard viewport and elements like
+         the editor toolbar appear to scroll off-screen. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="A clean markdown note-taking app." />
     <title>Leaf</title>
