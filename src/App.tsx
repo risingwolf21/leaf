@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { AuthProvider } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { queryClient } from '@/lib/queryClient'
+import { ConflictProvider } from '@/lib/conflictStore'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import AuthPage from '@/pages/AuthPage'
 import HomePage from '@/pages/HomePage'
@@ -69,10 +70,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter basename="/leaf">
-            <AppShell />
-          </BrowserRouter>
-          <Toaster />
+          <ConflictProvider>
+            <BrowserRouter basename="/leaf">
+              <AppShell />
+            </BrowserRouter>
+            <Toaster />
+          </ConflictProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
