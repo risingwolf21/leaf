@@ -59,7 +59,10 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     ImageExtension,
     TaskList,
     TaskItem.configure({ nested: false }),
-    Table.configure({ resizable: false }),
+    // renderWrapper wraps the table in a `.tableWrapper` div so it can scroll
+    // horizontally on its own — without it the table renders bare and gets
+    // clipped by the page's overflow-x: hidden instead of scrolling.
+    Table.configure({ resizable: false, renderWrapper: true }),
     TableRow,
     TableHeader,
     TableCell,
