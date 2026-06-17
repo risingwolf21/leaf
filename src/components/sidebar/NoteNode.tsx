@@ -31,7 +31,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
   }
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className="mr-1">
       <SidebarMenuButton
         isActive={isActive}
         className="data-active:bg-primary data-active:text-primary-foreground"
