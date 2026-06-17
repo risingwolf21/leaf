@@ -16,6 +16,7 @@ import { CodeBlockView } from '@/components/editor/CodeBlockView'
 import { WikiLink } from '@/editor/extensions/WikiLink'
 import { TableOfContents } from '@/editor/extensions/TableOfContents'
 import { SlashCommands } from '@/editor/extensions/SlashCommands'
+import { ReadOnlyTaskItem } from '@/editor/extensions/ReadOnlyTaskItem'
 import { lowlight } from '@/lib/highlight-languages'
 
 const CodeBlock = CodeBlockLowlight.extend({
@@ -58,7 +59,14 @@ export function createEditorExtensions(placeholder = ''): Extensions {
     Link.configure({ openOnClick: false, autolink: true }),
     ImageExtension,
     TaskList,
-    TaskItem.configure({ nested: false }),
+    TaskItem.configure({
+      nested: false,
+      // Without this, TipTap reverts the checkbox on every click while
+      // read-only. ReadOnlyTaskItem (below) does the actual persisting,
+      // since this callback only gets (node, checked) — no position.
+      onReadOnlyChecked: () => true,
+    }),
+    ReadOnlyTaskItem,
     // renderWrapper wraps the table in a `.tableWrapper` div so it can scroll
     // horizontally on its own — without it the table renders bare and gets
     // clipped by the page's overflow-x: hidden instead of scrolling.
