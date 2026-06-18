@@ -6,16 +6,18 @@ import type { ViewMode } from '@/types'
 type EditorModeToggleProps = {
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
+  /** False for collaborative notes, which can't use source/split modes since they bypass the Yjs document. */
+  canUseRawModes?: boolean
 }
 
-export function EditorModeToggle({ mode, onModeChange }: EditorModeToggleProps) {
+export function EditorModeToggle({ mode, onModeChange, canUseRawModes = true }: EditorModeToggleProps) {
   const isMobile = useIsMobile()
 
   return (
     <>
       {mode !== 'split' && (
         <>
-          {mode !== 'preview' && (
+          {mode !== 'preview' && canUseRawModes && (
             <Toggle
               size="sm"
               pressed={mode === 'source'}
@@ -35,7 +37,7 @@ export function EditorModeToggle({ mode, onModeChange }: EditorModeToggleProps) 
           </Toggle>
         </>
       )}
-      {!isMobile && (
+      {!isMobile && canUseRawModes && (
         <Toggle
           size="sm"
           pressed={mode === 'split'}

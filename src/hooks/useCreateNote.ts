@@ -35,6 +35,7 @@ export function useCreateNote() {
             share_token: null,
             shared_at: null,
             share_link_role: 'viewer',
+            ydoc_state: null,
           },
           tempId,
           queuedAt: now,
@@ -52,6 +53,7 @@ export function useCreateNote() {
           share_token: null,
           shared_at: null,
           share_link_role: 'viewer',
+          ydoc_state: null,
           tags: [],
         }
       }

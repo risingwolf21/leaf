@@ -1,3 +1,5 @@
+import type { Doc as YDoc } from 'yjs'
+import type { Awareness } from 'y-protocols/awareness'
 import type { BuiltinTemplate } from '@/lib/templates'
 
 export type ShareRole = 'viewer' | 'editor'
@@ -15,6 +17,7 @@ export type Note = {
   share_token: string | null
   shared_at: string | null
   share_link_role: ShareRole
+  ydoc_state: string | null
 }
 
 export type Profile = {
@@ -70,7 +73,14 @@ export type NoteWithTags = Note & {
   tags: Tag[]
 }
 
-export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_role'>>
+export type NoteFields = Partial<Pick<Note, 'title' | 'content' | 'share_link_role' | 'ydoc_state'>>
+
+/** Shared Yjs state handed to the editor when a note has live collaborators. */
+export type CollaborationConfig = {
+  ydoc: YDoc
+  awareness: Awareness
+  user: { name: string; color: string }
+}
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 

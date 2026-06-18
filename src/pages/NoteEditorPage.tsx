@@ -20,6 +20,7 @@ import { useAddTagToNote } from '@/hooks/useAddTagToNote'
 import { useRemoveTagFromNote } from '@/hooks/useRemoveTagFromNote'
 import { useTags } from '@/hooks/useTags'
 import { useSaveAsTemplate } from '@/hooks/useTemplates'
+import { useNoteCollaboration } from '@/hooks/useNoteCollaboration'
 import { tagsKeys } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 import type { ViewMode } from '@/types'
@@ -58,6 +59,14 @@ export default function NoteEditorPage() {
   const handleChange = sharedContext ? updateSharedNote : updateNote
   const isSaving = activeNote ? (sharedContext ? sharedSavingIds : savingIds).has(activeNote.id) : false
   const isReadOnly = sharedContext?.role === 'viewer'
+
+  const { isCollaborative, collaboration } = useNoteCollaboration(activeNote, !!sharedContext, user)
+
+  // Source/split modes edit raw markdown directly, bypassing the Yjs
+  // document; force collaborative notes back to the rich editor.
+  useEffect(() => {
+    if (isCollaborative && (mode === 'source' || mode === 'split')) setMode('edit')
+  }, [isCollaborative, mode])
 
   const handleNavigateToNote = useCallback(
     (title: string) => {
@@ -110,7 +119,9 @@ export default function NoteEditorPage() {
           {!sharedContext && (
             <SharePanel note={activeNote} onShare={handleShare} onUnshare={unshareNote.mutateAsync} onChange={updateNote} />
           )}
-          {!isReadOnly && <EditorModeToggle mode={mode} onModeChange={setMode} />}
+          {!isReadOnly && (
+            <EditorModeToggle mode={mode} onModeChange={setMode} canUseRawModes={!isCollaborative} />
+          )}
           {!sharedContext && <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={handleSaveAsTemplate} />}
         </>}
       />
@@ -126,6 +137,7 @@ export default function NoteEditorPage() {
           onAddTag={handleAddTag}
           onRemoveTag={handleRemoveTag}
           sharedContext={sharedContext}
+          collaboration={collaboration}
         />
       </main>
     </div>
