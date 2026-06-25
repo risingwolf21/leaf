@@ -51,6 +51,9 @@ export function NoteEditor({
   // Raw markdown editing bypasses the Yjs document, so collaborative notes
   // always fall back to the rich editor instead of source/split mode.
   const effectiveMode: ViewMode = collaboration && (mode === 'source' || mode === 'split') ? 'edit' : mode
+  // Source/split fill the available height and scroll internally; edit mode
+  // keeps its natural content height so the page itself scrolls.
+  const isRawMode = effectiveMode === 'source' || effectiveMode === 'split'
 
   const editor = useEditor(
     {
@@ -116,7 +119,8 @@ export function NoteEditor({
     <div
       className={cn(
         'mx-auto flex w-full flex-col px-4 py-3 sm:px-6 md:py-6',
-        effectiveMode === 'split' ? 'max-w-note-wide' : 'max-w-note'
+        effectiveMode === 'split' ? 'max-w-note-wide' : 'max-w-note',
+        isRawMode && 'h-full min-h-0'
       )}
     >
       <input
