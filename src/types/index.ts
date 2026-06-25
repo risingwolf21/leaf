@@ -84,7 +84,7 @@ export type CollaborationConfig = {
 
 export type SortBy = 'updated_at' | 'created_at' | 'title_asc' | 'title_desc'
 
-export type ViewMode = 'preview' | 'edit' | 'source' | 'split'
+export type ViewMode = 'edit' | 'source' | 'split'
 
 export type AuthFormData = {
   email: string

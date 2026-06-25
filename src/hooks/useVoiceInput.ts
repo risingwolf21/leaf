@@ -32,8 +32,10 @@ declare global {
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-export function useVoiceInput(onTranscript: (text: string) => void) {
+/** Manages a Web Speech API recognition session and exposes its live transcript. */
+export function useVoiceInput() {
   const [isRecording, setIsRecording] = useState(false)
+  const [transcript, setTranscript] = useState('')
   const [isSupported] = useState(
     () => 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
   )
@@ -46,18 +48,18 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     recognition.interimResults = true
     recognition.lang = navigator.language
 
-    let accumulated = ''
+    let finalized = ''
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          accumulated += event.results[i][0].transcript
+          finalized += event.results[i][0].transcript
+        } else {
+          interim += event.results[i][0].transcript
         }
       }
-      if (accumulated) {
-        onTranscript(accumulated)
-        accumulated = ''
-      }
+      setTranscript(`${finalized}${interim}`.trim())
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -70,8 +72,9 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     recognition.onend = () => setIsRecording(false)
     recognition.start()
     recognitionRef.current = recognition
+    setTranscript('')
     setIsRecording(true)
-  }, [onTranscript])
+  }, [])
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop()
@@ -83,5 +86,7 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     else start()
   }, [isRecording, start, stop])
 
-  return { isRecording, isSupported, toggle }
+  const reset = useCallback(() => setTranscript(''), [])
+
+  return { isRecording, isSupported, transcript, toggle, stop, reset }
 }
