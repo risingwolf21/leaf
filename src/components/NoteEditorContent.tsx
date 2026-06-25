@@ -34,7 +34,7 @@ export function NoteEditorContent({ mode, editor, content, onSourceChange }: Not
         onChange={(e) => onSourceChange(e.target.value)}
         placeholder="Start writing…"
         spellCheck
-        className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
+        className="min-h-0 w-full flex-1 resize-none overflow-y-auto bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
       />
     )
   }

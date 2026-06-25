@@ -20,6 +20,7 @@ import { useTags } from '@/hooks/useTags'
 import { useSaveAsTemplate } from '@/hooks/useTemplates'
 import { useNoteCollaboration } from '@/hooks/useNoteCollaboration'
 import { useToolbarVisibility } from '@/hooks/useToolbarVisibility'
+import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
 import { tagsKeys } from '@/lib/queryKeys'
 import type { ViewMode } from '@/types'
 
@@ -31,6 +32,7 @@ export default function NoteEditorPage() {
   const isMobile = useIsMobile()
   const [mode, setMode] = useState<ViewMode>('edit')
   const { isToolbarVisible, toggleToolbar } = useToolbarVisibility()
+  const viewportHeight = useVisualViewportHeight()
 
   // Split view doesn't fit on mobile; fall back if the viewport shrinks while active.
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-dvh flex-col" style={viewportHeight ? { height: viewportHeight } : undefined}>
       <AppBar
         className='!border-b !shadow-sm'
         bottomContent={!isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null}
