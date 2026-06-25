@@ -4,9 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { NoteEditor } from '@/components/NoteEditor'
 import type { SharedContext } from '@/components/NoteEditor'
 import { AppBar } from '@/components/AppBar'
-import { SharePanel } from '@/components/SharePanel'
-import { EditorModeToggle } from '@/components/EditorModeToggle'
-import { SaveAsTemplatePopover } from '@/components/SaveAsTemplatePopover'
+import { NoteEditorActions } from '@/components/NoteEditorActions'
 import { EditorToolbarContainer } from '@/components/editor/EditorToolbarContainer'
 import { useAuth } from '@/hooks/useAuth'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -21,8 +19,8 @@ import { useRemoveTagFromNote } from '@/hooks/useRemoveTagFromNote'
 import { useTags } from '@/hooks/useTags'
 import { useSaveAsTemplate } from '@/hooks/useTemplates'
 import { useNoteCollaboration } from '@/hooks/useNoteCollaboration'
+import { useToolbarVisibility } from '@/hooks/useToolbarVisibility'
 import { tagsKeys } from '@/lib/queryKeys'
-import { cn } from '@/lib/utils'
 import type { ViewMode } from '@/types'
 
 export default function NoteEditorPage() {
@@ -31,11 +29,12 @@ export default function NoteEditorPage() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const isMobile = useIsMobile()
-  const [mode, setMode] = useState<ViewMode>('preview')
+  const [mode, setMode] = useState<ViewMode>('edit')
+  const { isToolbarVisible, toggleToolbar } = useToolbarVisibility()
 
   // Split view doesn't fit on mobile; fall back if the viewport shrinks while active.
   useEffect(() => {
-    if (isMobile && mode === 'split') setMode('preview')
+    if (isMobile && mode === 'split') setMode('edit')
   }, [isMobile, mode])
 
   const { data: notes = [], isLoading: loading } = useNotes()
@@ -109,21 +108,24 @@ export default function NoteEditorPage() {
     <div className="flex h-dvh flex-col">
       <AppBar
         className='!border-b !shadow-sm'
-        bottomContent={!isReadOnly && mode === 'edit' ? <EditorToolbarContainer /> : null}
-        actions={<>
-          {!isReadOnly && (
-            <span className={cn('shrink-0 text-xs', isSaving ? 'text-muted-foreground' : 'text-primary')}>
-              {isSaving ? 'Saving…' : 'Saved'}
-            </span>
-          )}
-          {!sharedContext && (
-            <SharePanel note={activeNote} onShare={handleShare} onUnshare={unshareNote.mutateAsync} onChange={updateNote} />
-          )}
-          {!isReadOnly && (
-            <EditorModeToggle mode={mode} onModeChange={setMode} canUseRawModes={!isCollaborative} />
-          )}
-          {!sharedContext && <SaveAsTemplatePopover note={activeNote} onSaveAsTemplate={handleSaveAsTemplate} />}
-        </>}
+        bottomContent={!isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null}
+        actions={
+          <NoteEditorActions
+            note={activeNote}
+            sharedContext={sharedContext}
+            isSaving={isSaving}
+            isReadOnly={isReadOnly}
+            isCollaborative={isCollaborative}
+            mode={mode}
+            onModeChange={setMode}
+            isToolbarVisible={isToolbarVisible}
+            onToggleToolbar={toggleToolbar}
+            onShare={handleShare}
+            onUnshare={unshareNote.mutateAsync}
+            onChange={updateNote}
+            onSaveAsTemplate={handleSaveAsTemplate}
+          />
+        }
       />
       <main className='min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
         <NoteEditor
