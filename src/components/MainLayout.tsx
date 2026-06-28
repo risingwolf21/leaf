@@ -2,6 +2,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { VersionHistorySheet } from '@/components/VersionHistorySheet'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { ConflictResolver } from '@/components/ConflictResolver'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'
 import { cn } from '@/lib/utils'
@@ -11,6 +12,7 @@ import { Toaster } from './ui/sonner'
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { versionHistoryNote, closeVersionHistory } = useVersionHistorySheet()
   const { updateNote } = useUpdateNote()
+  const isMobile = useIsMobile()
 
   return (
     <div className='flex min-h-dvh w-full flex-col'>
@@ -18,7 +20,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <ConflictResolver />
       <div className='flex flex-1 w-full'>
         <SidebarProvider>
-          <Sidebar />
+          {!isMobile && <Sidebar />}
           <Toaster />
           <main className={cn('h-full min-w-0 flex-1 overflow-hidden')}>
             {children}
