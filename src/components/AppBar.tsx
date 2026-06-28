@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { SidebarTrigger } from "./ui/sidebar";
 
 type AppBarProps = React.HTMLAttributes<HTMLElement> & {
     actions?: React.ReactNode;
@@ -46,9 +45,6 @@ export function AppBar({
         >
             <div className="flex h-14 w-full items-center gap-4 px-4 md:px-4">
                 <div className="flex flex-1 items-center gap-2 md:gap-4">
-                    {primaryAction === "default" && (
-                        <SidebarTrigger className="-ml-1 md:hidden" />
-                    )}
                     {primaryAction === "back" && (
                         <Button
                             variant="ghost"
