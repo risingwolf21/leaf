@@ -7,6 +7,7 @@ import { ConflictProvider } from '@/lib/conflictStore'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import AuthPage from '@/pages/AuthPage'
 import HomePage from '@/pages/HomePage'
+import FolderPage from '@/pages/FolderPage'
 import NoteEditorPage from '@/pages/NoteEditorPage'
 import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
@@ -41,6 +42,7 @@ function AppShell() {
           }
         >
           <Route index element={<HomePage />} />
+          <Route path="folders/:folderId" element={<FolderPage />} />
           <Route path="notes/:noteId" element={<NoteEditorPage />} />
           <Route path="trash" element={<TrashPage />} />
           <Route path="templates" element={<TemplatesPage />} />
