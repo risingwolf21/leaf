@@ -1,8 +1,22 @@
 import { AppBar } from '@/components/AppBar'
+import { FolderBrowser } from '@/components/mobile/FolderBrowser'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotes } from '@/hooks/useNotes'
 
 export default function HomePage() {
   const { isLoading } = useNotes()
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <div>
+        <AppBar className="!border-b !shadow-sm" />
+        <main className="flex-1 size-full pb-safe-bottom">
+          <FolderBrowser folderId={null} />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div>

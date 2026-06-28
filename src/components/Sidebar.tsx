@@ -7,6 +7,7 @@ import { FileTreeRoot } from '@/components/sidebar/FileTreeRoot'
 import { SearchPanel } from '@/components/sidebar/SearchPanel'
 import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
 import { TagsPanel } from '@/components/sidebar/TagsPanel'
+import { openCommandPalette } from '@/hooks/useCommandPalette'
 import { useSidebarMode, type SidebarMode } from '@/lib/sidebarStore'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
@@ -38,7 +39,19 @@ export function Sidebar() {
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
           <Leaf className="h-5 w-5 text-primary" />
           <span className="text-lg font-semibold text-foreground">Leaf</span>
-          <SidebarTrigger className="ml-auto md:hidden" />
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={openCommandPalette}
+              aria-label="Open command palette"
+              title="Command palette (⌘K)"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+            <SidebarTrigger className="md:hidden" />
+          </div>
         </div>
 
         <div className="flex shrink-0 gap-1 border-b border-border p-1.5">

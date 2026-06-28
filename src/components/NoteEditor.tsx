@@ -1,10 +1,15 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { EditorContent, useEditor } from '@tiptap/react'
-import { EditorToolbar } from '@/components/EditorToolbar'
+import { useEditor } from '@tiptap/react'
+import { isChangeOrigin } from '@tiptap/extension-collaboration'
+import * as Y from 'yjs'
 import { TagBar } from '@/components/TagBar'
+import { NoteEditorContent } from '@/components/NoteEditorContent'
+import { ReadOnlyNoteView } from '@/components/ReadOnlyNoteView'
 import { createEditorExtensions } from '@/lib/editor-extensions'
+import { setActiveEditor } from '@/lib/editorStore'
+import { bytesToBase64 } from '@/lib/yjsState'
 import { cn } from '@/lib/utils'
-import type { Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
+import type { CollaborationConfig, Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
 
 export type SharedContext = {
   role: ShareRole
@@ -22,6 +27,8 @@ type NoteEditorProps = {
   onRemoveTag: (noteId: string, tagId: string) => Promise<void>
   /** Set when viewing a note shared by another user; restricts editing and sharing controls. */
   sharedContext?: SharedContext
+  /** Set when the note has live collaborators; binds the editor to a shared Yjs document. */
+  collaboration?: CollaborationConfig
 }
 
 export function NoteEditor({
@@ -35,36 +42,52 @@ export function NoteEditor({
   onAddTag,
   onRemoveTag,
   sharedContext,
+  collaboration,
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
 
   const isReadOnly = sharedContext?.role === 'viewer'
+  // Raw markdown editing bypasses the Yjs document, so collaborative notes
+  // always fall back to the rich editor instead of source/split mode.
+  const effectiveMode: ViewMode = collaboration && (mode === 'source' || mode === 'split') ? 'edit' : mode
+  // Source/split fill the available height and scroll internally; edit mode
+  // keeps its natural content height so the page itself scrolls.
+  const isRawMode = effectiveMode === 'source' || effectiveMode === 'split'
 
   const editor = useEditor(
     {
-      extensions: createEditorExtensions('Start writing…'),
-      content: note.content,
+      extensions: createEditorExtensions('Start writing…', collaboration),
+      content: collaboration ? undefined : note.content,
       editable: false,
       editorProps: {
         attributes: {
           class: 'markdown-preview min-h-editor focus:outline-none pb-8',
         },
       },
-      onUpdate: ({ editor }) => {
-        onChange(noteRef.current.id, { content: editor.storage.markdown.getMarkdown() })
+      onUpdate: ({ editor, transaction }) => {
+        // Remote Yjs changes are mirrored into ProseMirror as their own
+        // transaction; skip those so we only persist the user's own edits.
+        if (collaboration && isChangeOrigin(transaction)) return
+        const fields: NoteFields = { content: editor.storage.markdown.getMarkdown() }
+        if (collaboration) {
+          fields.ydoc_state = bytesToBase64(Y.encodeStateAsUpdate(collaboration.ydoc))
+        }
+        onChange(noteRef.current.id, fields)
       },
     },
-    [note.id]
+    [note.id, collaboration?.ydoc]
   )
 
   useEffect(() => {
     if (!editor) return
-    editor.setEditable(!isReadOnly && mode === 'edit', false)
-    if (mode !== 'source') {
+    editor.setEditable(!isReadOnly && effectiveMode === 'edit', false)
+    // Yjs is the source of truth for collaborative content; pushing the last
+    // saved markdown snapshot in here would clobber newer, unsaved live edits.
+    if (effectiveMode !== 'source' && !collaboration) {
       editor.commands.setContent(noteRef.current.content, false)
     }
-  }, [mode, editor, isReadOnly])
+  }, [effectiveMode, editor, isReadOnly, collaboration])
 
   useLayoutEffect(() => {
     if (!editor) return
@@ -73,30 +96,21 @@ export function NoteEditor({
     editor.view.dispatch(editor.state.tr)
   }, [editor, notes, onNavigateToNote])
 
+  useEffect(() => {
+    if (!editor) return
+    setActiveEditor(editor)
+    return () => setActiveEditor(null)
+  }, [editor])
 
   if (!editor) return null
 
   if (isReadOnly) {
-    return (
-      <div className="mx-auto flex h-full w-full max-w-note flex-col px-4 py-3 sm:px-6 md:py-6">
-        <div className="mb-4 shrink-0">
-          <h1 className="truncate text-2xl font-semibold text-foreground">
-            {note.title || 'Untitled'}
-          </h1>
-          <div className="mt-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm text-secondary-foreground">
-            You can view this note but cannot edit it.
-          </div>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <EditorContent editor={editor} />
-        </div>
-      </div>
-    )
+    return <ReadOnlyNoteView note={note} editor={editor} />
   }
 
   const handleSourceChange = (content: string) => {
     onChange(note.id, { content })
-    if (mode === 'split') {
+    if (effectiveMode === 'split') {
       editor.commands.setContent(content, false)
     }
   }
@@ -104,8 +118,9 @@ export function NoteEditor({
   return (
     <div
       className={cn(
-        'mx-auto flex h-full w-full flex-col px-4 py-3 sm:px-6 md:py-6',
-        mode === 'split' ? 'max-w-note-wide' : 'max-w-note'
+        'mx-auto flex w-full flex-col px-4 py-3 sm:px-6 md:py-6',
+        effectiveMode === 'split' ? 'max-w-note-wide' : 'max-w-note',
+        isRawMode && 'h-full min-h-0'
       )}
     >
       <input
@@ -125,41 +140,12 @@ export function NoteEditor({
         />
       )}
 
-      {mode === 'split' ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-          <textarea
-            value={note.content}
-            onChange={(e) => handleSourceChange(e.target.value)}
-            placeholder="Start writing…"
-            spellCheck
-            className="min-h-0 flex-1 resize-none overflow-y-auto bg-transparent pb-4 font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground md:basis-1/2 md:pb-0 md:pr-4"
-          />
-          <div className="min-h-0 flex-1 overflow-y-auto border-t border-border pt-4 md:basis-1/2 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-            <EditorContent editor={editor} />
-          </div>
-        </div>
-      ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {mode === 'source' ? (
-            <textarea
-              value={note.content}
-              onChange={(e) => handleSourceChange(e.target.value)}
-              placeholder="Start writing…"
-              spellCheck
-              className="min-h-editor w-full resize-none bg-transparent font-mono text-sm leading-prose text-foreground outline-none placeholder:text-muted-foreground"
-            />
-          ) : (
-            <>
-              {mode === 'edit' && (
-                <div className="sticky top-0 z-10 mb-2 rounded-md border border-border bg-background p-1">
-                  <EditorToolbar editor={editor} />
-                </div>
-              )}
-              <EditorContent editor={editor} />
-            </>
-          )}
-        </div>
-      )}
+      <NoteEditorContent
+        mode={effectiveMode}
+        editor={editor}
+        content={note.content}
+        onSourceChange={handleSourceChange}
+      />
     </div>
   )
 }

@@ -42,3 +42,14 @@ export function getFolderAncestorChain(folderId: string | null, folders: Folder[
 
   return chain
 }
+
+/** Number of direct subfolders plus direct notes inside `folderId` (not recursive). */
+export function countDirectChildren(
+  folderId: string,
+  folders: Folder[],
+  notes: { folder_id: string | null }[]
+): number {
+  const subfolderCount = folders.filter((folder) => folder.parent_id === folderId).length
+  const noteCount = notes.filter((note) => note.folder_id === folderId).length
+  return subfolderCount + noteCount
+}
