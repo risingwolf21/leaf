@@ -28,7 +28,7 @@ export function FolderCard({ name, count, icon, variant, onOpen }: FolderCardPro
         className={cn('flex items-center gap-2', variant === 'grid' ? 'flex-col items-start' : 'flex-row')}
       >
         <span className="text-muted-foreground">{icon}</span>
-        <span className="flex-1 truncate text-sm font-medium text-foreground">{name}</span>
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{name}</span>
         <Badge variant="secondary">{count}</Badge>
       </CardContent>
     </Card>
