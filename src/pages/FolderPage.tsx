@@ -1,4 +1,4 @@
-import { AppBar } from '@/components/AppBar'
+import { useSetAppBar } from '@/lib/appBarStore'
 
 /**
  * Desktop shows this folder's notes in the persistent note-list panel
@@ -7,14 +7,11 @@ import { AppBar } from '@/components/AppBar'
  * note-list panel taking over the full viewport.
  */
 export default function FolderPage() {
+  useSetAppBar({ showNewNoteButton: true })
+
   return (
-    <div>
-      <AppBar showNewNoteButton />
-      <main className="flex-1 size-full pb-safe-bottom">
-        <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
-          Select a note or create a new one to get started.
-        </div>
-      </main>
+    <div className="flex h-full items-center justify-center p-4 pb-safe-bottom text-center text-sm text-muted-foreground">
+      Select a note or create a new one to get started.
     </div>
   )
 }

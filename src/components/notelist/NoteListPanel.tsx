@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { NoteListHeader } from '@/components/notelist/NoteListHeader'
 import { NoteListRow } from '@/components/notelist/NoteListRow'
 import { SharedNoteRow } from '@/components/sidebar/SharedNoteRow'
@@ -28,15 +27,11 @@ function matchesSearch(search: string, title: string, content: string) {
 /** Persistent desktop middle column: the active folder/view's notes, with a local search filter and sort. */
 export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelProps) {
   const [search, setSearch] = useState('')
-  const { noteId } = useParams<{ noteId?: string }>()
   const { data: notes = [] } = useNotes()
   const { data: folders = [] } = useFolders()
   const { data: sharedNotes = [] } = useSharedNotes()
   const { activeFolderId, isSharedWithMeActive, isAllNotesActive } = useActiveFolder()
   const removeSelfFromNote = useRemoveSelfFromNote()
-
-  const isSharedNoteOpen =
-    !!noteId && !notes.some((note) => note.id === noteId) && sharedNotes.some((note) => note.id === noteId)
 
   if (isAllNotesActive) {
     const visibleNotes = sortNotes(
@@ -65,7 +60,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
     )
   }
 
-  if (isSharedWithMeActive || isSharedNoteOpen) {
+  if (isSharedWithMeActive) {
     const filteredShared = sharedNotes.filter((note) => matchesSearch(search, note.title, note.content))
 
     return (

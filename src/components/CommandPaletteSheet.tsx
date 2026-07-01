@@ -9,6 +9,7 @@ import { useCreateNote } from '@/hooks/useCreateNote'
 import { useCreateFolder } from '@/hooks/useCreateFolder'
 import { useTheme } from '@/hooks/useTheme'
 import { exportAllNotes } from '@/lib/export'
+import { notePath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { CommandResults } from '@/components/CommandResults'
 import type { NoteWithTags, Folder } from '@/types'
@@ -37,7 +38,7 @@ export function CommandPaletteSheet({ open, onOpenChange }: Props) {
   const folderMap = new Map((folders as Folder[]).map((f) => [f.id, f.name]))
 
   const handleNote = (note: NoteWithTags) => {
-    navigate(`/app/notes/${note.id}`)
+    navigate(notePath(note.id, note.folder_id))
     handleClose()
   }
 
@@ -48,7 +49,7 @@ export function CommandPaletteSheet({ open, onOpenChange }: Props) {
       case 'new-note':
         createNote.mutate(
           { folderId: null, fields: {} },
-          { onSuccess: (note) => navigate(`/app/notes/${note.id}`) }
+          { onSuccess: (note) => navigate(notePath(note.id, null)) }
         )
         break
       case 'new-folder':

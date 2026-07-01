@@ -32,6 +32,7 @@ import { useSortPreference } from '@/hooks/useSortPreference'
 import { useTogglePin } from '@/hooks/useTogglePin'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
 import { sortNotes } from '@/lib/notes'
+import { notePath } from '@/lib/routes'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'
 import { PrintButton } from '@/components/PrintButton'
 import type { NoteWithTags } from '@/types'
@@ -77,7 +78,7 @@ export function NoteActionsMenu({ note, onOpen, onStartRename, trigger }: NoteAc
         sortBy
       )
       const fallbackPath = `/app/folders/${note.folder_id ?? UNFILED_FOLDER_ID}`
-      navigate(siblings.length > 0 ? `/app/notes/${siblings[0].id}` : fallbackPath)
+      navigate(siblings.length > 0 ? notePath(siblings[0].id, note.folder_id) : fallbackPath)
     }
     deleteNote.mutate(note.id)
   }

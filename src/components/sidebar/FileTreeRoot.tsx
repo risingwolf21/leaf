@@ -1,21 +1,26 @@
-import { Folder as FolderIcon, Share2 } from 'lucide-react'
+import { FolderPlus, Folder as FolderIcon, Share2 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { FolderRow } from '@/components/sidebar/FolderRow'
 import { TagFilteredView } from '@/components/sidebar/TagFilteredView'
+import { TagsPanel } from '@/components/sidebar/TagsPanel'
 import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID, UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
+import { useActiveFolder } from '@/hooks/useActiveFolder'
+import { useCreateFolder } from '@/hooks/useCreateFolder'
 import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { flattenFolders } from '@/lib/folderTree'
-import { useTagFilter } from '@/lib/sidebarStore'
+import { usePendingRename, useTagFilter } from '@/lib/sidebarStore'
 import type { SortBy } from '@/types'
 
 /**
- * Top-level sidebar tree: fixed "All Notes"/"Unfiled"/"Shared with me" nav
- * links, a flat depth-indented list of real folders (no expand/collapse —
- * each row navigates to the note-list panel), and (when a tag filter is
- * active) a flat filtered list.
+ * The sidebar's single always-visible content area: fixed "All Notes" /
+ * "Unfiled" / "Shared with me" nav links, a Folders section (flat,
+ * depth-indented, no expand/collapse — each row navigates to the note-list
+ * panel), and a collapsible Tags section. When a tag filter is active, the
+ * Folders section is replaced by a flat filtered note list.
  */
 export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
   const navigate = useNavigate()
@@ -23,9 +28,17 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
   const { data: notes = [] } = useNotes()
   const { data: sharedNotes = [] } = useSharedNotes()
   const { tagFilter } = useTagFilter()
+  const { activeFolderId } = useActiveFolder()
+  const { setPendingRename } = usePendingRename()
+  const createFolder = useCreateFolder()
   const { folderId: activeFolderRouteId } = useParams<{ folderId: string }>()
 
-  if (tagFilter.size > 0) return <TagFilteredView sortBy={sortBy} />
+  const handleCreateFolder = () => {
+    createFolder.mutate(
+      { name: 'New folder', parentId: activeFolderId },
+      { onSuccess: (created) => setPendingRename({ kind: 'folder', id: created.id }) }
+    )
+  }
 
   const flatFolders = flattenFolders(folders)
   const unfiledCount = notes.filter((note) => note.folder_id === null).length
@@ -69,21 +82,38 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
         </SidebarMenuItem>
       )}
 
-      {flatFolders.length > 0 && (
-        <div className="px-2 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Folders
-        </div>
+      {tagFilter.size > 0 ? (
+        <TagFilteredView sortBy={sortBy} />
+      ) : (
+        <>
+          <div className="flex items-center justify-between px-2 pt-3 pb-1">
+            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Folders</span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={handleCreateFolder}
+              aria-label="New folder"
+              title="New folder"
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {flatFolders.map(({ folder, depth }) => (
+            <FolderRow key={folder.id} folder={folder} depth={depth} />
+          ))}
+
+          {isEmpty && (
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+              No notes yet. Create your first note to get started.
+            </p>
+          )}
+        </>
       )}
 
-      {flatFolders.map(({ folder, depth }) => (
-        <FolderRow key={folder.id} folder={folder} depth={depth} />
-      ))}
-
-      {isEmpty && (
-        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-          No notes yet. Create your first note to get started.
-        </p>
-      )}
+      <div className="mt-2 border-t border-border pt-2">
+        <TagsPanel />
+      </div>
     </div>
   )
 }

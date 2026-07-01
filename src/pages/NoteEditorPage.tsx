@@ -3,10 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { NoteEditor } from '@/components/NoteEditor'
 import type { SharedContext } from '@/components/NoteEditor'
-import { AppBar } from '@/components/AppBar'
 import { NoteEditorActions } from '@/components/NoteEditorActions'
 import { EditorToolbarContainer } from '@/components/editor/EditorToolbarContainer'
-import { SHARED_WITH_ME_FOLDER_ID, UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
 import { useAuth } from '@/hooks/useAuth'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotes } from '@/hooks/useNotes'
@@ -21,19 +19,19 @@ import { useTags } from '@/hooks/useTags'
 import { useSaveAsTemplate } from '@/hooks/useTemplates'
 import { useNoteCollaboration } from '@/hooks/useNoteCollaboration'
 import { useToolbarVisibility } from '@/hooks/useToolbarVisibility'
-import { useVisualViewportHeight } from '@/hooks/useVisualViewportHeight'
+import { useSetAppBar } from '@/lib/appBarStore'
 import { tagsKeys } from '@/lib/queryKeys'
+import { notePath } from '@/lib/routes'
 import type { ViewMode } from '@/types'
 
 export default function NoteEditorPage() {
-  const { noteId } = useParams<{ noteId: string }>()
+  const { noteId, folderId: routeFolderId } = useParams<{ noteId: string; folderId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const isMobile = useIsMobile()
   const [mode, setMode] = useState<ViewMode>('edit')
   const { isToolbarVisible, toggleToolbar } = useToolbarVisibility()
-  const viewportHeight = useVisualViewportHeight()
 
   // Split view doesn't fit on mobile; fall back if the viewport shrinks while active.
   useEffect(() => {
@@ -58,7 +56,6 @@ export default function NoteEditorPage() {
   const sharedNote = ownNote ? null : sharedNotes.find((note) => note.id === noteId) ?? null
   const activeNote = ownNote ?? sharedNote
   const sharedContext: SharedContext | undefined = sharedNote ? { role: sharedNote.my_role } : undefined
-  const backFolderId = sharedNote ? SHARED_WITH_ME_FOLDER_ID : ownNote?.folder_id ?? UNFILED_FOLDER_ID
   const handleChange = sharedContext ? updateSharedNote : updateNote
   const isSaving = activeNote ? (sharedContext ? sharedSavingIds : savingIds).has(activeNote.id) : false
   const isReadOnly = sharedContext?.role === 'viewer'
@@ -74,7 +71,7 @@ export default function NoteEditorPage() {
   const handleNavigateToNote = useCallback(
     (title: string) => {
       const target = notes.find((item) => item.title === title)
-      if (target) navigate(`/app/notes/${target.id}`)
+      if (target) navigate(notePath(target.id, target.folder_id))
     },
     [notes, navigate]
   )
@@ -96,6 +93,29 @@ export default function NoteEditorPage() {
     await removeTagFromNote.mutateAsync({ noteId: id, tagId })
   }
 
+  useSetAppBar({
+    primaryAction: isMobile ? 'back' : 'default',
+    navigateBackPath: `/app/folders/${routeFolderId}`,
+    bottomContent: !isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null,
+    actions: activeNote ? (
+      <NoteEditorActions
+        note={activeNote}
+        sharedContext={sharedContext}
+        isSaving={isSaving}
+        isReadOnly={isReadOnly}
+        isCollaborative={isCollaborative}
+        mode={mode}
+        onModeChange={setMode}
+        isToolbarVisible={isToolbarVisible}
+        onToggleToolbar={toggleToolbar}
+        onShare={handleShare}
+        onUnshare={unshareNote.mutateAsync}
+        onChange={updateNote}
+        onSaveAsTemplate={handleSaveAsTemplate}
+      />
+    ) : null,
+  })
+
   if (loading || sharedLoading) {
     return (
       <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
@@ -109,44 +129,20 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="flex h-dvh flex-col" style={viewportHeight ? { height: viewportHeight } : undefined}>
-      <AppBar
-        primaryAction={isMobile ? 'back' : 'default'}
-        navigateBackPath={`/app/folders/${backFolderId}`}
-        bottomContent={!isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null}
-        actions={
-          <NoteEditorActions
-            note={activeNote}
-            sharedContext={sharedContext}
-            isSaving={isSaving}
-            isReadOnly={isReadOnly}
-            isCollaborative={isCollaborative}
-            mode={mode}
-            onModeChange={setMode}
-            isToolbarVisible={isToolbarVisible}
-            onToggleToolbar={toggleToolbar}
-            onShare={handleShare}
-            onUnshare={unshareNote.mutateAsync}
-            onChange={updateNote}
-            onSaveAsTemplate={handleSaveAsTemplate}
-          />
-        }
+    <div className='scrollbar-thin h-full min-h-0 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
+      <NoteEditor
+        note={activeNote}
+        notes={notes}
+        noteTags={ownNote?.tags ?? []}
+        allTags={tags}
+        mode={mode}
+        onChange={handleChange}
+        onNavigateToNote={handleNavigateToNote}
+        onAddTag={handleAddTag}
+        onRemoveTag={handleRemoveTag}
+        sharedContext={sharedContext}
+        collaboration={collaboration}
       />
-      <main className='scrollbar-thin min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
-        <NoteEditor
-          note={activeNote}
-          notes={notes}
-          noteTags={ownNote?.tags ?? []}
-          allTags={tags}
-          mode={mode}
-          onChange={handleChange}
-          onNavigateToNote={handleNavigateToNote}
-          onAddTag={handleAddTag}
-          onRemoveTag={handleRemoveTag}
-          sharedContext={sharedContext}
-          collaboration={collaboration}
-        />
-      </main>
     </div>
   )
 }

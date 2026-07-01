@@ -6,6 +6,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/co
 import { useInlineRename } from '@/hooks/useInlineRename'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
 import { getPreviewText } from '@/lib/notePreview'
+import { notePath } from '@/lib/routes'
 import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { NoteWithTags } from '@/types'
 
@@ -24,7 +25,7 @@ export function NoteListRow({ note }: NoteListRowProps) {
   )
 
   const isActive = activeNoteId === note.id
-  const open = () => navigate(`/app/notes/${note.id}`)
+  const open = () => navigate(notePath(note.id, note.folder_id))
 
   const commitRename = () => {
     stopRename()

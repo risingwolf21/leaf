@@ -2,9 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import type { Note } from '@/types'
 
-export type SidebarMode = 'files' | 'search' | 'tags'
-
-function createStore<T>(initialValue: T) {
+export function createStore<T>(initialValue: T) {
   let state = initialValue
   const listeners = new Set<() => void>()
 
@@ -19,14 +17,6 @@ function createStore<T>(initialValue: T) {
       listeners.forEach((listener) => listener())
     },
   }
-}
-
-const sidebarModeStore = createStore<SidebarMode>('files')
-
-/** Cross-page sidebar mode (files/search/tags), shared without a context provider. */
-export function useSidebarMode() {
-  const mode = useSyncExternalStore(sidebarModeStore.subscribe, sidebarModeStore.getSnapshot)
-  return [mode, sidebarModeStore.setState] as const
 }
 
 const tagFilterStore = createStore<Set<string>>(new Set())

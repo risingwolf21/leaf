@@ -1,34 +1,22 @@
 import { useEffect } from 'react'
-import { Folder, Leaf, Search, Settings, Tag } from 'lucide-react'
+import { Leaf, Search, Settings } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTreeRoot } from '@/components/sidebar/FileTreeRoot'
-import { SearchPanel } from '@/components/sidebar/SearchPanel'
 import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
-import { TagsPanel } from '@/components/sidebar/TagsPanel'
 import { openCommandPalette } from '@/hooks/useCommandPalette'
-import { useSidebarMode, type SidebarMode } from '@/lib/sidebarStore'
-import { cn } from '@/lib/utils'
 import type { SortBy } from '@/types'
 import { Sidebar as SidebarPrimitive, SidebarTrigger, useSidebar } from './ui/sidebar'
 
-const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
-  { id: 'files', label: 'Files', icon: Folder },
-  { id: 'search', label: 'Search', icon: Search },
-  { id: 'tags', label: 'Tags', icon: Tag },
-]
-
 type SidebarProps = {
   sortBy: SortBy
-  setSortBy: (sortBy: SortBy) => void
 }
 
-/** App sidebar: branding header, mode switcher, action bar, file tree / search / tags, and a settings link. */
-export function Sidebar({ sortBy, setSortBy }: SidebarProps) {
+/** App sidebar: branding header, action bar, file tree, and a settings link. */
+export function Sidebar({ sortBy }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarMode, setSidebarMode] = useSidebarMode()
   const { isMobile, setOpenMobile } = useSidebar()
 
   // On mobile the sidebar takes the full screen, so hide it whenever navigation
@@ -58,41 +46,12 @@ export function Sidebar({ sortBy, setSortBy }: SidebarProps) {
           </div>
         </div>
 
-        <div className="flex shrink-0 gap-1 border-b border-border p-1.5">
-          {MODES.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSidebarMode(id)}
-              aria-label={label}
-              aria-pressed={sidebarMode === id}
-              title={label}
-              className={cn(
-                'flex flex-1 items-center justify-center rounded-md py-1.5 text-sm font-medium transition-colors',
-                sidebarMode === id
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-              )}
-            >
-              <Icon className="h-4 w-4" />
-            </button>
-          ))}
-        </div>
-
-        {sidebarMode === 'files' && <SidebarActionBar sortBy={sortBy} setSortBy={setSortBy} />}
+        <SidebarActionBar />
 
         <div className="flex-1 overflow-hidden">
-          {sidebarMode === 'files' && (
-            <ScrollArea className="h-full p-2">
-              <FileTreeRoot sortBy={sortBy} />
-            </ScrollArea>
-          )}
-          {sidebarMode === 'search' && <SearchPanel />}
-          {sidebarMode === 'tags' && (
-            <ScrollArea className="h-full">
-              <TagsPanel />
-            </ScrollArea>
-          )}
+          <ScrollArea className="h-full p-2">
+            <FileTreeRoot sortBy={sortBy} />
+          </ScrollArea>
         </div>
 
         <div className="shrink-0 border-t border-border p-2">

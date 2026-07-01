@@ -12,6 +12,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { useSortPreference } from '@/hooks/useSortPreference'
 import { useTogglePin } from '@/hooks/useTogglePin'
 import { sortNotes } from '@/lib/notes'
+import { notePath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import type { SharedContext } from '@/components/NoteEditor'
 import type { Note, NoteFields, ViewMode } from '@/types'
@@ -61,7 +62,7 @@ export function NoteEditorActions({
       sortBy
     )
     const fallbackPath = `/app/folders/${note.folder_id ?? UNFILED_FOLDER_ID}`
-    navigate(siblings.length > 0 ? `/app/notes/${siblings[0].id}` : fallbackPath)
+    navigate(siblings.length > 0 ? notePath(siblings[0].id, note.folder_id) : fallbackPath)
     deleteNote.mutate(note.id)
   }
 

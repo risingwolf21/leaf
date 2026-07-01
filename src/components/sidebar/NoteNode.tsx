@@ -5,6 +5,7 @@ import { RenameInput } from '@/components/sidebar/RenameInput'
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { useInlineRename } from '@/hooks/useInlineRename'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
+import { notePath } from '@/lib/routes'
 import type { NoteWithTags } from '@/types'
 
 /** Renders a single note row with rename, pin, move, tag, share, and delete actions. */
@@ -21,7 +22,7 @@ export function NoteNode({ note }: { note: NoteWithTags }) {
   const isActive = activeNoteId === note.id
 
   const open = () => {
-    navigate(`/app/notes/${note.id}`)
+    navigate(notePath(note.id, note.folder_id))
     setOpenMobile(false)
   }
 

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCreateNote } from '@/hooks/useCreateNote'
 import { useFolders } from '@/hooks/useFolders'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
+import { notePath } from '@/lib/routes'
 
 const UNFILED_VALUE = 'Unfiled'
 
@@ -42,7 +43,7 @@ export function NewNoteModal({ open, onOpenChange, defaultFolderId = null }: New
       {
         onSuccess: (note) => {
           onOpenChange(false)
-          navigate(`/app/notes/${note.id}`)
+          navigate(notePath(note.id, folderId))
         },
       }
     )
