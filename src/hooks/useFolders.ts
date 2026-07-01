@@ -13,7 +13,7 @@ export function useFolders() {
       const { data, error } = await supabase
         .from('folders')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('name', { ascending: true })
 
       if (error) throw error
       // Supabase client has no generated Database types, so query/RPC results are `any`.

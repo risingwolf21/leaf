@@ -7,7 +7,6 @@ import { ConflictProvider } from '@/lib/conflictStore'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import AuthPage from '@/pages/AuthPage'
 import HomePage from '@/pages/HomePage'
-import FolderPage from '@/pages/FolderPage'
 import NoteEditorPage from '@/pages/NoteEditorPage'
 import TrashPage from '@/pages/TrashPage'
 import TemplatesPage from '@/pages/TemplatesPage'
@@ -17,14 +16,9 @@ import HelpPage from '@/pages/HelpPage'
 import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
 import { MainLayout } from './components/MainLayout'
-import { useCommandPalette } from '@/hooks/useCommandPalette'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { CommandPalette } from '@/components/CommandPalette'
-import { CommandPaletteSheet } from '@/components/CommandPaletteSheet'
+import { FolderLayout } from './components/FolderLayout'
 
 function AppShell() {
-  const { open, setOpen } = useCommandPalette()
-  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   return (
     <>
@@ -42,8 +36,11 @@ function AppShell() {
           }
         >
           <Route index element={<HomePage />} />
-          <Route path="folders/:folderId" element={<FolderPage />} />
-          <Route path="notes/:noteId" element={<NoteEditorPage />} />
+
+          <Route path="folders/:folderId" element={<FolderLayout />}>
+            <Route path="notes/:noteId" element={<NoteEditorPage />} />
+          </Route>
+
           <Route path="trash" element={<TrashPage />} />
           <Route path="templates" element={<TemplatesPage />} />
           <Route path="settings" element={<SettingsPage />} />
@@ -58,11 +55,6 @@ function AppShell() {
           }
         />
       </Routes>
-      {isDesktop ? (
-        <CommandPalette open={open} onOpenChange={setOpen} />
-      ) : (
-        <CommandPaletteSheet open={open} onOpenChange={setOpen} />
-      )}
     </>
   )
 }

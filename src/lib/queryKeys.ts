@@ -1,5 +1,6 @@
 export const notesKeys = {
   all: (userId?: string) => ['notes', userId] as const,
+  folder: (folderId: string) => ['notes', folderId] as const,
   trash: (userId?: string) => ['notes', userId, 'trash'] as const,
 }
 
