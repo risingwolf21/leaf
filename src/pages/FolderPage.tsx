@@ -1,17 +1,25 @@
-import { useSetAppBar } from '@/lib/appBarStore'
+import { NoteListPanel } from "@/components/notelist/NoteListPanel";
+import { useSortPreference } from "@/hooks/useSortPreference";
+import { cn } from "@/lib/utils";
+import { Outlet, useParams } from "react-router-dom";
 
-/**
- * Desktop shows this folder's notes in the persistent note-list panel
- * (MainLayout); this page is just the right-hand placeholder until a note
- * is opened. On mobile, MainLayout hides this page entirely in favor of the
- * note-list panel taking over the full viewport.
- */
 export default function FolderPage() {
-  useSetAppBar({ showNewNoteButton: true })
+  const { noteId } = useParams<{ noteId: string; }>()
+
+  const [sortBy, setSortBy] = useSortPreference()
 
   return (
-    <div className="flex h-full items-center justify-center p-4 pb-safe-bottom text-center text-sm text-muted-foreground">
-      Select a note or create a new one to get started.
+    <div className="flex h-full w-full">
+
+      <NoteListPanel
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        className={cn('flex',
+          noteId !== undefined && 'max-md:hidden'
+        )}
+      />
+
+      <Outlet />
     </div>
   )
 }

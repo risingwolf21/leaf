@@ -1,6 +1,5 @@
 import { NoteListSearch } from '@/components/notelist/NoteListSearch'
 import { SortPopover } from '@/components/sidebar/SortPopover'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import type { SortBy } from '@/types'
 
 type NoteListHeaderProps = {
@@ -17,7 +16,6 @@ export function NoteListHeader({ title, count, search, onSearchChange, sortBy, s
   return (
     <div className="flex shrink-0 flex-col border-b border-border">
       <div className="flex items-center gap-2 p-3">
-        <SidebarTrigger className="-ml-1 shrink-0 md:hidden" />
         <NoteListSearch value={search} onChange={onSearchChange} />
         <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
       </div>

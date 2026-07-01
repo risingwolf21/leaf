@@ -10,6 +10,8 @@ import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { sortNotes } from '@/lib/notes'
 import { cn } from '@/lib/utils'
 import type { SortBy } from '@/types'
+import { SortPopover } from '../sidebar/SortPopover'
+import { NoteListSearch } from './NoteListSearch'
 
 type NoteListPanelProps = {
   sortBy: SortBy
@@ -41,14 +43,18 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
 
     return (
       <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
-        <NoteListHeader
-          title="All Notes"
-          count={visibleNotes.length}
-          search={search}
-          onSearchChange={setSearch}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-        />
+        <div className="flex shrink-0 flex-col border-b border-border">
+          <div className="flex items-center gap-2 p-3">
+            <NoteListSearch value={search} onChange={setSearch} />
+            <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
+          </div>
+          <div className="flex items-center justify-between px-4 py-2">
+            <span className="truncate text-xs font-medium text-muted-foreground">All notes</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {visibleNotes.length} note{visibleNotes.length === 1 ? '' : 's'}
+            </span>
+          </div>
+        </div>
         <div className="scrollbar-thin flex-1 overflow-y-auto">
           {visibleNotes.length === 0 ? (
             <p className="p-4 text-center text-sm text-muted-foreground">No notes here yet.</p>

@@ -42,8 +42,11 @@ function AppShell() {
           }
         >
           <Route index element={<HomePage />} />
-          <Route path="folders/:folderId" element={<FolderPage />} />
-          <Route path="folders/:folderId/notes/:noteId" element={<NoteEditorPage />} />
+          
+          <Route path="folders/:folderId" element={<FolderPage />}>
+            <Route path="notes/:noteId" element={<NoteEditorPage />} />
+          </Route>
+
           <Route path="trash" element={<TrashPage />} />
           <Route path="templates" element={<TemplatesPage />} />
           <Route path="settings" element={<SettingsPage />} />

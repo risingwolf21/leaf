@@ -25,13 +25,12 @@ import { notePath } from '@/lib/routes'
 import type { ViewMode } from '@/types'
 
 export default function NoteEditorPage() {
-  const { noteId, folderId: routeFolderId } = useParams<{ noteId: string; folderId: string }>()
+  const { noteId } = useParams<{ noteId: string; folderId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const isMobile = useIsMobile()
   const [mode, setMode] = useState<ViewMode>('edit')
-  const { isToolbarVisible, toggleToolbar } = useToolbarVisibility()
 
   // Split view doesn't fit on mobile; fall back if the viewport shrinks while active.
   useEffect(() => {
@@ -60,13 +59,7 @@ export default function NoteEditorPage() {
   const isSaving = activeNote ? (sharedContext ? sharedSavingIds : savingIds).has(activeNote.id) : false
   const isReadOnly = sharedContext?.role === 'viewer'
 
-  const { isCollaborative, collaboration } = useNoteCollaboration(activeNote, !!sharedContext, user)
-
-  // Source/split modes edit raw markdown directly, bypassing the Yjs
-  // document; force collaborative notes back to the rich editor.
-  useEffect(() => {
-    if (isCollaborative && (mode === 'source' || mode === 'split')) setMode('edit')
-  }, [isCollaborative, mode])
+  const { collaboration } = useNoteCollaboration(activeNote, !!sharedContext, user)
 
   const handleNavigateToNote = useCallback(
     (title: string) => {
@@ -93,28 +86,28 @@ export default function NoteEditorPage() {
     await removeTagFromNote.mutateAsync({ noteId: id, tagId })
   }
 
-  useSetAppBar({
-    primaryAction: isMobile ? 'back' : 'default',
-    navigateBackPath: `/app/folders/${routeFolderId}`,
-    bottomContent: !isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null,
-    actions: activeNote ? (
-      <NoteEditorActions
-        note={activeNote}
-        sharedContext={sharedContext}
-        isSaving={isSaving}
-        isReadOnly={isReadOnly}
-        isCollaborative={isCollaborative}
-        mode={mode}
-        onModeChange={setMode}
-        isToolbarVisible={isToolbarVisible}
-        onToggleToolbar={toggleToolbar}
-        onShare={handleShare}
-        onUnshare={unshareNote.mutateAsync}
-        onChange={updateNote}
-        onSaveAsTemplate={handleSaveAsTemplate}
-      />
-    ) : null,
-  })
+  // useSetAppBar({
+  //   primaryAction: isMobile ? 'back' : 'default',
+  //   navigateBackPath: `/app/folders/${routeFolderId}`,
+  //   bottomContent: !isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null,
+  //   actions: activeNote ? (
+  //     <NoteEditorActions
+  //       note={activeNote}
+  //       sharedContext={sharedContext}
+  //       isSaving={isSaving}
+  //       isReadOnly={isReadOnly}
+  //       isCollaborative={isCollaborative}
+  //       mode={mode}
+  //       onModeChange={setMode}
+  //       isToolbarVisible={isToolbarVisible}
+  //       onToggleToolbar={toggleToolbar}
+  //       onShare={handleShare}
+  //       onUnshare={unshareNote.mutateAsync}
+  //       onChange={updateNote}
+  //       onSaveAsTemplate={handleSaveAsTemplate}
+  //     />
+  //   ) : null,
+  // })
 
   if (loading || sharedLoading) {
     return (
