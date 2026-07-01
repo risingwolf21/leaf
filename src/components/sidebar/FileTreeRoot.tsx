@@ -1,19 +1,21 @@
 import { Folder as FolderIcon, Share2 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
-import { FolderNode } from '@/components/sidebar/FolderNode'
+import { FolderRow } from '@/components/sidebar/FolderRow'
 import { TagFilteredView } from '@/components/sidebar/TagFilteredView'
 import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
 import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
+import { flattenFolders } from '@/lib/folderTree'
 import { useTagFilter } from '@/lib/sidebarStore'
 import type { SortBy } from '@/types'
 
 /**
- * Top-level sidebar tree: fixed "All notes"/"Shared with me" nav links (which
- * route to the note-list panel), real folders, and (when a tag filter is
- * active) a flat filtered list.
+ * Top-level sidebar tree: fixed "All notes"/"Shared with me" nav links, a
+ * flat depth-indented list of real folders (no expand/collapse — each row
+ * navigates to the note-list panel), and (when a tag filter is active) a
+ * flat filtered list.
  */
 export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
   const navigate = useNavigate()
@@ -25,9 +27,9 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
 
   if (tagFilter.size > 0) return <TagFilteredView sortBy={sortBy} />
 
-  const rootFolders = folders.filter((folder) => folder.parent_id === null)
+  const flatFolders = flattenFolders(folders)
   const unfiledCount = notes.filter((note) => note.folder_id === null).length
-  const isEmpty = rootFolders.length === 0 && unfiledCount === 0 && sharedNotes.length === 0
+  const isEmpty = flatFolders.length === 0 && unfiledCount === 0 && sharedNotes.length === 0
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -55,14 +57,14 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
         </SidebarMenuItem>
       )}
 
-      {rootFolders.length > 0 && (
+      {flatFolders.length > 0 && (
         <div className="px-2 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Folders
         </div>
       )}
 
-      {rootFolders.map((folder) => (
-        <FolderNode key={folder.id} folder={folder} sortBy={sortBy} />
+      {flatFolders.map(({ folder, depth }) => (
+        <FolderRow key={folder.id} folder={folder} depth={depth} />
       ))}
 
       {isEmpty && (

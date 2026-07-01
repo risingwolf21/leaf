@@ -9,11 +9,14 @@ import { useNotes } from '@/hooks/useNotes'
 import { useRemoveSelfFromNote } from '@/hooks/useRemoveSelfFromNote'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
 import { sortNotes } from '@/lib/notes'
+import { cn } from '@/lib/utils'
 import type { SortBy } from '@/types'
 
 type NoteListPanelProps = {
   sortBy: SortBy
   setSortBy: (sortBy: SortBy) => void
+  /** Controls the panel's display/visibility (e.g. hidden on mobile when a note is open). */
+  className?: string
 }
 
 function matchesSearch(search: string, title: string, content: string) {
@@ -23,7 +26,7 @@ function matchesSearch(search: string, title: string, content: string) {
 }
 
 /** Persistent desktop middle column: the active folder/view's notes, with a local search filter and sort. */
-export function NoteListPanel({ sortBy, setSortBy }: NoteListPanelProps) {
+export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelProps) {
   const [search, setSearch] = useState('')
   const { noteId } = useParams<{ noteId?: string }>()
   const { data: notes = [] } = useNotes()
@@ -39,7 +42,7 @@ export function NoteListPanel({ sortBy, setSortBy }: NoteListPanelProps) {
     const filteredShared = sharedNotes.filter((note) => matchesSearch(search, note.title, note.content))
 
     return (
-      <div className="flex h-full w-72 shrink-0 flex-col border-r border-border lg:w-80">
+      <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
         <NoteListHeader
           title="Shared with me"
           count={filteredShared.length}
@@ -68,7 +71,7 @@ export function NoteListPanel({ sortBy, setSortBy }: NoteListPanelProps) {
   )
 
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col border-r border-border lg:w-80">
+    <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
       <NoteListHeader
         title={activeFolder?.name ?? 'All notes'}
         count={visibleNotes.length}
