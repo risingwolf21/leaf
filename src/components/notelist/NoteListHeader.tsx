@@ -12,22 +12,20 @@ type NoteListHeaderProps = {
   setSortBy: (sortBy: SortBy) => void
 }
 
-/** Note-list panel header: mobile sidebar-drawer trigger, current view title + note count, a local search filter, and sort. */
+/** Note-list panel header: mobile sidebar-drawer trigger + search + sort, then the current view title and note count. */
 export function NoteListHeader({ title, count, search, onSearchChange, sortBy, setSortBy }: NoteListHeaderProps) {
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-b border-border p-3">
-      <div className="flex items-center justify-between px-1">
-        <div className="flex min-w-0 items-center gap-1">
-          <SidebarTrigger className="-ml-1 md:hidden" />
-          <span className="truncate text-xs font-medium text-muted-foreground">{title}</span>
-        </div>
+    <div className="flex shrink-0 flex-col border-b border-border">
+      <div className="flex items-center gap-2 p-3">
+        <SidebarTrigger className="-ml-1 shrink-0 md:hidden" />
+        <NoteListSearch value={search} onChange={onSearchChange} />
+        <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
+      </div>
+      <div className="flex items-center justify-between px-4 py-2">
+        <span className="truncate text-xs font-medium text-muted-foreground">{title}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
           {count} note{count === 1 ? '' : 's'}
         </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <NoteListSearch value={search} onChange={onSearchChange} />
-        <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
       </div>
     </div>
   )

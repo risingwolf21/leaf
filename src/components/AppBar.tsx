@@ -42,25 +42,22 @@ export function AppBar({
     return (
         <header
             className={cn(
-                "pt-safe-top sticky top-0 z-50 w-full transition-all duration-200 text-foreground",
-                // OPTIMIERT: Der Blur-Effekt funktioniert jetzt in beiden Themes perfekt
-                "bg-header/80 text-header-foreground backdrop-blur-md",
-                // OPTIMIERT: border-border greift automatisch auf deine global.css zurück
-                scrolled ? "border-b border-border shadow-sm" : "border-b border-transparent",
+                "pt-safe-top sticky top-0 z-50 w-full border-b border-border bg-background text-foreground transition-all duration-200",
+                scrolled && "shadow-sm",
                 className
             )}
             {...props}
         >
-            <div className="flex h-14 w-full items-center gap-4 px-4 md:px-4">
+            <div className="flex h-12 w-full items-center gap-4 px-4 md:px-4">
                 <div className="flex flex-1 items-center gap-2 md:gap-4">
                     {primaryAction === "back" && (
                         <Button
                             variant="ghost"
-                            size="icon"
                             onClick={() => navigateBackPath ? navigate(navigateBackPath) : navigate(-1)}
-                            className="shrink-0 rounded-full -ml-1 text-foreground"
+                            className="shrink-0 -ml-2 gap-1.5 rounded-full px-2 text-foreground"
                         >
                             <ArrowLeft className="h-5 w-5" />
+                            <span className="text-sm">Notes</span>
                         </Button>
                     )}
                     {React.isValidElement(primaryAction) && primaryAction}

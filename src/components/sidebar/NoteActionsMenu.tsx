@@ -22,12 +22,16 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenuAction } from '@/components/ui/sidebar'
 import { AddTagSubmenu } from '@/components/sidebar/AddTagSubmenu'
+import { UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
 import { useFolders } from '@/hooks/useFolders'
 import { useMoveNote } from '@/hooks/useMoveNote'
 import { useDeleteNote } from '@/hooks/useDeleteNote'
+import { useNotes } from '@/hooks/useNotes'
 import { useShareNote } from '@/hooks/useShareNote'
+import { useSortPreference } from '@/hooks/useSortPreference'
 import { useTogglePin } from '@/hooks/useTogglePin'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
+import { sortNotes } from '@/lib/notes'
 import { useVersionHistorySheet } from '@/lib/sidebarStore'
 import { PrintButton } from '@/components/PrintButton'
 import type { NoteWithTags } from '@/types'
@@ -45,6 +49,8 @@ export function NoteActionsMenu({ note, onOpen, onStartRename, trigger }: NoteAc
   const navigate = useNavigate()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const { data: folders = [] } = useFolders()
+  const { data: notes = [] } = useNotes()
+  const [sortBy] = useSortPreference()
   const { openVersionHistory } = useVersionHistorySheet()
   const moveNote = useMoveNote()
   const togglePin = useTogglePin()
@@ -65,8 +71,15 @@ export function NoteActionsMenu({ note, onOpen, onStartRename, trigger }: NoteAc
 
   const handleDelete = () => {
     if (!window.confirm('Move this note to trash?')) return
+    if (isActive) {
+      const siblings = sortNotes(
+        notes.filter((sibling) => sibling.folder_id === note.folder_id && sibling.id !== note.id),
+        sortBy
+      )
+      const fallbackPath = `/app/folders/${note.folder_id ?? UNFILED_FOLDER_ID}`
+      navigate(siblings.length > 0 ? `/app/notes/${siblings[0].id}` : fallbackPath)
+    }
     deleteNote.mutate(note.id)
-    if (isActive) navigate('/app')
   }
 
   return (

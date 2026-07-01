@@ -2,7 +2,7 @@ import { MoreHorizontal, Pin } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { NoteActionsMenu } from '@/components/sidebar/NoteActionsMenu'
 import { RenameInput } from '@/components/sidebar/RenameInput'
-import { Item, ItemActions, ItemContent, ItemDescription, ItemHeader, ItemTitle } from '@/components/ui/item'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item'
 import { useInlineRename } from '@/hooks/useInlineRename'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
 import { getPreviewText } from '@/lib/notePreview'
@@ -13,7 +13,7 @@ type NoteListRowProps = {
   note: NoteWithTags
 }
 
-/** Desktop note-list row: title + timestamp on one line, a preview below, up to 2 tags, and a hover actions menu. */
+/** Desktop note-list row: title on its own line, a 2-line preview, and a meta row combining relative date + up to 2 tags. */
 export function NoteListRow({ note }: NoteListRowProps) {
   const navigate = useNavigate()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
@@ -43,33 +43,29 @@ export function NoteListRow({ note }: NoteListRowProps) {
       )}
     >
       <ItemContent className="min-w-0">
-        <ItemHeader>
-          <ItemTitle className="min-w-0 flex-1">
-            {note.pinned && <Pin className="h-3 w-3 shrink-0 fill-current text-primary" />}
-            {isRenaming ? (
-              <RenameInput
-                value={value}
-                onChange={setValue}
-                onCommit={commitRename}
-                onCancel={stopRename}
-                placeholder="Untitled"
-              />
-            ) : (
-              <span className="min-w-0 flex-1 truncate">{note.title || 'Untitled'}</span>
-            )}
-          </ItemTitle>
-          <ItemDescription className="shrink-0">{formatRelativeTime(note.updated_at)}</ItemDescription>
-        </ItemHeader>
-        <ItemDescription className="truncate">{getPreviewText(note.content)}</ItemDescription>
-        {note.tags.length > 0 && (
-          <div className="flex items-center gap-2 font-tag text-xs text-muted-foreground/70">
-            {note.tags.slice(0, 2).map((tag) => (
-              <span key={tag.id} className="truncate">
-                #{tag.name}
-              </span>
-            ))}
-          </div>
-        )}
+        <ItemTitle className="min-w-0">
+          {note.pinned && <Pin className="h-3 w-3 shrink-0 fill-current text-primary" />}
+          {isRenaming ? (
+            <RenameInput
+              value={value}
+              onChange={setValue}
+              onCommit={commitRename}
+              onCancel={stopRename}
+              placeholder="Untitled"
+            />
+          ) : (
+            <span className="min-w-0 flex-1 truncate">{note.title || 'Untitled'}</span>
+          )}
+        </ItemTitle>
+        <ItemDescription>{getPreviewText(note.content)}</ItemDescription>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+          <span className="shrink-0 tabular-nums">{formatRelativeTime(note.updated_at)}</span>
+          {note.tags.slice(0, 2).map((tag) => (
+            <span key={tag.id} className="truncate font-tag text-muted-foreground/60">
+              #{tag.name}
+            </span>
+          ))}
+        </div>
       </ItemContent>
       {!isRenaming && (
         <ItemActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">

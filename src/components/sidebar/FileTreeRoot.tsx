@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { FolderRow } from '@/components/sidebar/FolderRow'
 import { TagFilteredView } from '@/components/sidebar/TagFilteredView'
-import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
+import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID, UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
 import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
@@ -12,10 +12,10 @@ import { useTagFilter } from '@/lib/sidebarStore'
 import type { SortBy } from '@/types'
 
 /**
- * Top-level sidebar tree: fixed "All notes"/"Shared with me" nav links, a
- * flat depth-indented list of real folders (no expand/collapse — each row
- * navigates to the note-list panel), and (when a tag filter is active) a
- * flat filtered list.
+ * Top-level sidebar tree: fixed "All Notes"/"Unfiled"/"Shared with me" nav
+ * links, a flat depth-indented list of real folders (no expand/collapse —
+ * each row navigates to the note-list panel), and (when a tag filter is
+ * active) a flat filtered list.
  */
 export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
   const navigate = useNavigate()
@@ -29,18 +29,30 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
 
   const flatFolders = flattenFolders(folders)
   const unfiledCount = notes.filter((note) => note.folder_id === null).length
-  const isEmpty = flatFolders.length === 0 && unfiledCount === 0 && sharedNotes.length === 0
+  const isEmpty = flatFolders.length === 0 && notes.length === 0 && sharedNotes.length === 0
 
   return (
     <div className="flex flex-col gap-0.5">
-      {unfiledCount > 0 && (
+      {notes.length > 0 && (
         <SidebarMenuItem>
           <SidebarMenuButton
             isActive={activeFolderRouteId === ALL_NOTES_FOLDER_ID}
             onClick={() => navigate(`/app/folders/${ALL_NOTES_FOLDER_ID}`)}
           >
             <FolderIcon />
-            <span className="truncate font-medium">All notes</span>
+            <span className="truncate font-medium">All Notes</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )}
+
+      {unfiledCount > 0 && (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={activeFolderRouteId === UNFILED_FOLDER_ID}
+            onClick={() => navigate(`/app/folders/${UNFILED_FOLDER_ID}`)}
+          >
+            <FolderIcon />
+            <span className="truncate font-medium">Unfiled</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       )}

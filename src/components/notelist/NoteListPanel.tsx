@@ -32,11 +32,38 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
   const { data: notes = [] } = useNotes()
   const { data: folders = [] } = useFolders()
   const { data: sharedNotes = [] } = useSharedNotes()
-  const { activeFolderId, isSharedWithMeActive } = useActiveFolder()
+  const { activeFolderId, isSharedWithMeActive, isAllNotesActive } = useActiveFolder()
   const removeSelfFromNote = useRemoveSelfFromNote()
 
   const isSharedNoteOpen =
     !!noteId && !notes.some((note) => note.id === noteId) && sharedNotes.some((note) => note.id === noteId)
+
+  if (isAllNotesActive) {
+    const visibleNotes = sortNotes(
+      notes.filter((note) => matchesSearch(search, note.title, note.content)),
+      sortBy
+    )
+
+    return (
+      <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
+        <NoteListHeader
+          title="All Notes"
+          count={visibleNotes.length}
+          search={search}
+          onSearchChange={setSearch}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+        <div className="scrollbar-thin flex-1 overflow-y-auto">
+          {visibleNotes.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted-foreground">No notes here yet.</p>
+          ) : (
+            visibleNotes.map((note) => <NoteListRow key={note.id} note={note} />)
+          )}
+        </div>
+      </div>
+    )
+  }
 
   if (isSharedWithMeActive || isSharedNoteOpen) {
     const filteredShared = sharedNotes.filter((note) => matchesSearch(search, note.title, note.content))
@@ -51,7 +78,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
           sortBy={sortBy}
           setSortBy={setSortBy}
         />
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+        <div className="scrollbar-thin flex flex-1 flex-col gap-1 overflow-y-auto p-2">
           {filteredShared.length === 0 ? (
             <p className="p-4 text-center text-sm text-muted-foreground">No shared notes yet.</p>
           ) : (
@@ -73,7 +100,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
   return (
     <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
       <NoteListHeader
-        title={activeFolder?.name ?? 'All notes'}
+        title={activeFolder?.name ?? 'Unfiled'}
         count={visibleNotes.length}
         search={search}
         onSearchChange={setSearch}

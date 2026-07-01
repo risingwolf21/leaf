@@ -6,7 +6,7 @@ import type { SharedContext } from '@/components/NoteEditor'
 import { AppBar } from '@/components/AppBar'
 import { NoteEditorActions } from '@/components/NoteEditorActions'
 import { EditorToolbarContainer } from '@/components/editor/EditorToolbarContainer'
-import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
+import { SHARED_WITH_ME_FOLDER_ID, UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
 import { useAuth } from '@/hooks/useAuth'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotes } from '@/hooks/useNotes'
@@ -58,7 +58,7 @@ export default function NoteEditorPage() {
   const sharedNote = ownNote ? null : sharedNotes.find((note) => note.id === noteId) ?? null
   const activeNote = ownNote ?? sharedNote
   const sharedContext: SharedContext | undefined = sharedNote ? { role: sharedNote.my_role } : undefined
-  const backFolderId = sharedNote ? SHARED_WITH_ME_FOLDER_ID : ownNote?.folder_id ?? ALL_NOTES_FOLDER_ID
+  const backFolderId = sharedNote ? SHARED_WITH_ME_FOLDER_ID : ownNote?.folder_id ?? UNFILED_FOLDER_ID
   const handleChange = sharedContext ? updateSharedNote : updateNote
   const isSaving = activeNote ? (sharedContext ? sharedSavingIds : savingIds).has(activeNote.id) : false
   const isReadOnly = sharedContext?.role === 'viewer'
@@ -111,7 +111,6 @@ export default function NoteEditorPage() {
   return (
     <div className="flex h-dvh flex-col" style={viewportHeight ? { height: viewportHeight } : undefined}>
       <AppBar
-        className='!border-b !shadow-sm'
         primaryAction={isMobile ? 'back' : 'default'}
         navigateBackPath={`/app/folders/${backFolderId}`}
         bottomContent={!isReadOnly && mode === 'edit' && isToolbarVisible ? <EditorToolbarContainer /> : null}
@@ -133,7 +132,7 @@ export default function NoteEditorPage() {
           />
         }
       />
-      <main className='min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
+      <main className='scrollbar-thin min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-safe-bottom'>
         <NoteEditor
           note={activeNote}
           notes={notes}

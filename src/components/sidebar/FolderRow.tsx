@@ -1,4 +1,4 @@
-import { Folder as FolderIcon } from 'lucide-react'
+import { Folder as FolderIcon, FolderOpen } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FolderActionsMenu } from '@/components/sidebar/FolderActionsMenu'
 import { RenameInput } from '@/components/sidebar/RenameInput'
@@ -45,7 +45,7 @@ export function FolderRow({ folder, depth }: FolderRowProps) {
         onClick={isRenaming ? undefined : open}
         style={{ paddingLeft: `${0.5 + depth * INDENT_REM}rem` }}
       >
-        <FolderIcon />
+        {isActive ? <FolderOpen /> : <FolderIcon />}
         {isRenaming ? (
           <RenameInput value={value} onChange={setValue} onCommit={commitRename} onCancel={stopRename} />
         ) : (
