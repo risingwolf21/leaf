@@ -36,10 +36,12 @@ type NoteActionsMenuProps = {
   note: NoteWithTags
   onOpen: () => void
   onStartRename: () => void
+  /** Custom trigger element; defaults to a sidebar-style hover-reveal "..." button (requires a SidebarMenuItem ancestor). */
+  trigger?: React.ReactElement
 }
 
-/** Dropdown menu of actions ("..." button) for a sidebar note row: open, rename, pin, move, tag, share, delete. */
-export function NoteActionsMenu({ note, onOpen, onStartRename }: NoteActionsMenuProps) {
+/** Dropdown menu of actions ("..." button) for a note row: open, rename, pin, move, tag, share, delete. */
+export function NoteActionsMenu({ note, onOpen, onStartRename, trigger }: NoteActionsMenuProps) {
   const navigate = useNavigate()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const { data: folders = [] } = useFolders()
@@ -71,9 +73,11 @@ export function NoteActionsMenu({ note, onOpen, onStartRename }: NoteActionsMenu
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <SidebarMenuAction showOnHover aria-label="Note actions">
-            <MoreHorizontal />
-          </SidebarMenuAction>
+          trigger ?? (
+            <SidebarMenuAction showOnHover aria-label="Note actions">
+              <MoreHorizontal />
+            </SidebarMenuAction>
+          )
         }
       />
       <DropdownMenuContent align="end">

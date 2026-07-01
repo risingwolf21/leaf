@@ -10,14 +10,16 @@ type TagBarProps = {
   onAddTag: (noteId: string, tagName: string) => Promise<void>
   onRemoveTag: (noteId: string, tagId: string) => Promise<void>
   readOnly?: boolean
+  /** Overrides the default standalone wrapper (border/margin/padding) when composed inside another row, e.g. NoteMetaRow. */
+  className?: string
 }
 
 /** Tag chips row rendered below the note title, above the editor content. */
-export function TagBar({ noteId, tags, allTags, onAddTag, onRemoveTag, readOnly = false }: TagBarProps) {
+export function TagBar({ noteId, tags, allTags, onAddTag, onRemoveTag, readOnly = false, className }: TagBarProps) {
   if (readOnly && tags.length === 0) return null
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
+    <div className={className ?? 'mb-4 flex flex-wrap items-center gap-1.5 border-b border-border pb-3'}>
       <TagIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       {tags.map((tag) => (
         <Badge key={tag.id} variant="secondary" className="gap-1.5 pr-1">
@@ -26,7 +28,7 @@ export function TagBar({ noteId, tags, allTags, onAddTag, onRemoveTag, readOnly 
             style={{ backgroundColor: tag.color }}
             aria-hidden="true"
           />
-          #{tag.name}
+          <span className="font-tag">#{tag.name}</span>
           {!readOnly && (
             <button
               type="button"

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useEditor } from '@tiptap/react'
 import { isChangeOrigin } from '@tiptap/extension-collaboration'
 import * as Y from 'yjs'
-import { TagBar } from '@/components/TagBar'
+import { NoteMetaRow } from '@/components/NoteMetaRow'
 import { NoteEditorContent } from '@/components/NoteEditorContent'
 import { ReadOnlyNoteView } from '@/components/ReadOnlyNoteView'
 import { createEditorExtensions } from '@/lib/editor-extensions'
@@ -127,12 +127,12 @@ export function NoteEditor({
         value={note.title}
         onChange={(e) => onChange(note.id, { title: e.target.value })}
         placeholder="Untitled"
-        className="mb-2 w-full shrink-0 bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground/50"
+        className="mb-2 w-full shrink-0 bg-transparent font-display text-2xl font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
       />
 
       {!sharedContext && (
-        <TagBar
-          noteId={note.id}
+        <NoteMetaRow
+          note={note}
           tags={noteTags}
           allTags={allTags}
           onAddTag={onAddTag}

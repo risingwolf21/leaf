@@ -1,6 +1,9 @@
+import { NewNoteModal } from "@/components/NewNoteModal";
+import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { Button } from "@/components/ui/button";
+import { useActiveFolder } from "@/hooks/useActiveFolder";
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -10,6 +13,8 @@ type AppBarProps = React.HTMLAttributes<HTMLElement> & {
     navigateBackPath?: string;
     withScrollEffect?: boolean;
     bottomContent?: React.ReactNode;
+    /** Shows a "New note" button that opens NewNoteModal, pre-filled to the active folder. Desktop pages opt in. */
+    showNewNoteButton?: boolean;
 }
 
 export function AppBar({
@@ -18,11 +23,14 @@ export function AppBar({
     actions,
     withScrollEffect = true,
     bottomContent,
+    showNewNoteButton = false,
     className,
     ...props
 }: AppBarProps) {
     const [scrolled, setScrolled] = useState(false);
+    const [newNoteOpen, setNewNoteOpen] = useState(false);
     const navigate = useNavigate();
+    const { activeFolderId } = useActiveFolder();
 
     useEffect(() => {
         if (!withScrollEffect) return;
@@ -60,10 +68,20 @@ export function AppBar({
 
 
                 <div className="flex items-center justify-end gap-2">
+                    <ThemeToggleButton />
+                    {showNewNoteButton && (
+                        <Button size="sm" className="gap-1.5" onClick={() => setNewNoteOpen(true)}>
+                            <Plus className="h-4 w-4" />
+                            New note
+                        </Button>
+                    )}
                     {actions}
                 </div>
             </div>
             {bottomContent}
+            {showNewNoteButton && (
+                <NewNoteModal open={newNoteOpen} onOpenChange={setNewNoteOpen} defaultFolderId={activeFolderId} />
+            )}
         </header>
     );
 }

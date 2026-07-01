@@ -9,8 +9,8 @@ import { SidebarActionBar } from '@/components/sidebar/SidebarActionBar'
 import { TagsPanel } from '@/components/sidebar/TagsPanel'
 import { openCommandPalette } from '@/hooks/useCommandPalette'
 import { useSidebarMode, type SidebarMode } from '@/lib/sidebarStore'
-import { useSortPreference } from '@/hooks/useSortPreference'
 import { cn } from '@/lib/utils'
+import type { SortBy } from '@/types'
 import { Sidebar as SidebarPrimitive, SidebarTrigger, useSidebar } from './ui/sidebar'
 
 const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
@@ -19,12 +19,16 @@ const MODES: { id: SidebarMode; label: string; icon: typeof Folder }[] = [
   { id: 'tags', label: 'Tags', icon: Tag },
 ]
 
+type SidebarProps = {
+  sortBy: SortBy
+  setSortBy: (sortBy: SortBy) => void
+}
+
 /** App sidebar: branding header, mode switcher, action bar, file tree / search / tags, and a settings link. */
-export function Sidebar() {
+export function Sidebar({ sortBy, setSortBy }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarMode, setSidebarMode] = useSidebarMode()
-  const [sortBy, setSortBy] = useSortPreference()
   const { isMobile, setOpenMobile } = useSidebar()
 
   // On mobile the sidebar takes the full screen, so hide it whenever navigation
@@ -38,7 +42,7 @@ export function Sidebar() {
       <div className="flex h-full flex-col">
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
           <Leaf className="h-5 w-5 text-primary" />
-          <span className="text-lg font-semibold text-foreground">Leaf</span>
+          <span className="font-display text-lg font-medium text-foreground">Leaf</span>
           <div className="ml-auto flex items-center gap-1">
             <Button
               variant="ghost"
