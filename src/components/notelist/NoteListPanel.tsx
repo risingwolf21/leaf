@@ -3,10 +3,12 @@ import { NoteListHeader } from '@/components/notelist/NoteListHeader'
 import { NoteListRow } from '@/components/notelist/NoteListRow'
 import { SharedNoteRow } from '@/components/sidebar/SharedNoteRow'
 import { useActiveFolder } from '@/hooks/useActiveFolder'
+import { useActiveTag } from '@/hooks/useActiveTag'
 import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
 import { useRemoveSelfFromNote } from '@/hooks/useRemoveSelfFromNote'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
+import { useTags } from '@/hooks/useTags'
 import { sortNotes } from '@/lib/notes'
 import { cn } from '@/lib/utils'
 import type { SortBy } from '@/types'
@@ -32,8 +34,42 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
   const { data: notes = [] } = useNotes()
   const { data: folders = [] } = useFolders()
   const { data: sharedNotes = [] } = useSharedNotes()
+  const { data: tags = [] } = useTags()
   const { activeFolderId, isSharedWithMeActive, isAllNotesActive } = useActiveFolder()
+  const { activeTagId, isUntaggedActive } = useActiveTag()
   const removeSelfFromNote = useRemoveSelfFromNote()
+
+  if (activeTagId) {
+    const activeTag = tags.find((tag) => tag.id === activeTagId)
+    const visibleNotes = sortNotes(
+      notes.filter(
+        (note) =>
+          (isUntaggedActive ? note.tags.length === 0 : note.tags.some((tag) => tag.id === activeTagId)) &&
+          matchesSearch(search, note.title, note.content)
+      ),
+      sortBy
+    )
+
+    return (
+      <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
+        <NoteListHeader
+          title={isUntaggedActive ? 'Untagged' : activeTag ? `#${activeTag.name}` : 'Tag'}
+          count={visibleNotes.length}
+          search={search}
+          onSearchChange={setSearch}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+        <div className="flex-1 overflow-y-auto">
+          {visibleNotes.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted-foreground">No notes with this tag yet.</p>
+          ) : (
+            visibleNotes.map((note) => <NoteListRow key={note.id} note={note} tagId={activeTagId} />)
+          )}
+        </div>
+      </div>
+    )
+  }
 
   if (isAllNotesActive) {
     const visibleNotes = sortNotes(

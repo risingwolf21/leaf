@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource/instrument-serif";
 @import "@fontsource-variable/jetbrains-mono";
 @import "./styles/print.css";
 @import "./styles/code-highlight.css";

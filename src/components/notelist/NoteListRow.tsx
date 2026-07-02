@@ -6,16 +6,18 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/co
 import { useInlineRename } from '@/hooks/useInlineRename'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
 import { getPreviewText } from '@/lib/notePreview'
-import { notePath } from '@/lib/routes'
+import { notePath, tagNotePath } from '@/lib/routes'
 import { cn, formatRelativeTime, onActivateKey } from '@/lib/utils'
 import type { NoteWithTags } from '@/types'
 
 type NoteListRowProps = {
   note: NoteWithTags
+  /** When set, this row is rendered inside a tag-filtered list; link into that tag route instead of the note's real folder. */
+  tagId?: string
 }
 
 /** Desktop note-list row: title on its own line, a 2-line preview, and a meta row combining relative date + up to 2 tags. */
-export function NoteListRow({ note }: NoteListRowProps) {
+export function NoteListRow({ note, tagId }: NoteListRowProps) {
   const navigate = useNavigate()
   const { noteId: activeNoteId } = useParams<{ noteId: string }>()
   const { updateNote } = useUpdateNote()
@@ -25,7 +27,7 @@ export function NoteListRow({ note }: NoteListRowProps) {
   )
 
   const isActive = activeNoteId === note.id
-  const open = () => navigate(notePath(note.id, note.folder_id))
+  const open = () => navigate(tagId ? tagNotePath(note.id, tagId) : notePath(note.id, note.folder_id))
 
   const commitRename = () => {
     stopRename()

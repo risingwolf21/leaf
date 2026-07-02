@@ -9,3 +9,8 @@ export function notePath(noteId: string, folderId: string | null, isShared = fal
   if (isShared) return `/app/folders/${SHARED_WITH_ME_FOLDER_ID}/notes/${noteId}`
   return `/app/folders/${folderId ?? UNFILED_FOLDER_ID}/notes/${noteId}`
 }
+
+/** Builds a note's URL when reached from a tag's filtered list, keeping that list visible beside it. */
+export function tagNotePath(noteId: string, tagId: string): string {
+  return `/app/tags/${tagId}/notes/${noteId}`
+}

@@ -53,7 +53,7 @@ export function NewNoteModal({ open, onOpenChange, defaultFolderId = null }: New
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="gap-0 rounded-xl border border-border bg-card p-0 shadow-xl ring-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="font-display text-xl font-medium">New note</DialogTitle>
+          <DialogTitle className="text-xl font-medium">New note</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 p-6">
           <input

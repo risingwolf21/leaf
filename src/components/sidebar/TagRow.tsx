@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { MouseEvent } from 'react'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { TagColorPicker } from '@/components/TagColorPicker'
 import { RenameInput } from '@/components/sidebar/RenameInput'
 import {
@@ -10,24 +11,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
+import { useActiveTag } from '@/hooks/useActiveTag'
 import { useDeleteTag } from '@/hooks/useDeleteTag'
 import { useRenameTag } from '@/hooks/useRenameTag'
 import { useUpdateTagColor } from '@/hooks/useUpdateTagColor'
-import { useTagFilter } from '@/lib/sidebarStore'
 import { onActivateKey } from '@/lib/utils'
 import type { Tag } from '@/types'
 
 /** A single tag row in the Tags panel: colour picker, name (or rename input), note count, and actions menu. */
 export function TagRow({ tag }: { tag: Tag }) {
-  const { tagFilter, toggleTagFilter } = useTagFilter()
+  const navigate = useNavigate()
+  const { activeTagId } = useActiveTag()
   const updateTagColor = useUpdateTagColor()
   const deleteTag = useDeleteTag()
   const renameTag = useRenameTag()
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState(tag.name)
 
-  const isActive = tagFilter.has(tag.id)
-  const select = () => toggleTagFilter(tag.id)
+  const isActive = activeTagId === tag.id
+  const select = () => navigate(`/app/tags/${tag.id}`)
 
   const startRename = () => {
     setRenameValue(tag.name)

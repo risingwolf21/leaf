@@ -127,7 +127,7 @@ export function NoteEditor({
         value={note.title}
         onChange={(e) => onChange(note.id, { title: e.target.value })}
         placeholder="Untitled"
-        className="mb-2 w-full shrink-0 bg-transparent font-display text-2xl font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
+        className="mb-2 w-full shrink-0 bg-transparent text-2xl font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
       />
 
       {!sharedContext && (

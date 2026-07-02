@@ -5,8 +5,6 @@ export type AppBarConfig = {
   primaryAction?: ReactNode | 'back' | 'default'
   navigateBackPath?: string
   actions?: ReactNode
-  showNewNoteButton?: boolean
-  bottomContent?: ReactNode
 }
 
 const appBarConfigStore = createStore<AppBarConfig>({})
@@ -22,8 +20,7 @@ export function useAppBarConfig() {
  * even with no args, for a plain bar — so navigating away always replaces
  * the previous page's config instead of momentarily inheriting it. Setting
  * directly during render (not in a useEffect) keeps the header in sync
- * immediately and avoids ever needing JSX (actions/bottomContent) in a
- * dependency array.
+ * immediately and avoids ever needing JSX (actions) in a dependency array.
  */
 export function useSetAppBar(config: AppBarConfig = {}) {
   appBarConfigStore.setState(config)

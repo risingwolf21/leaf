@@ -1,20 +1,22 @@
 import { useState } from 'react'
 import { ChevronDown, Hash } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Item, ItemContent, ItemGroup, ItemSeparator, ItemTitle } from '@/components/ui/item'
 import { TagRow } from '@/components/sidebar/TagRow'
+import { useActiveTag } from '@/hooks/useActiveTag'
 import { useNotes } from '@/hooks/useNotes'
 import { useTags } from '@/hooks/useTags'
-import { useTagFilter } from '@/lib/sidebarStore'
 import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import { cn, onActivateKey } from '@/lib/utils'
 
-/** Collapsible sidebar section: alphabetical tag list (colour, name, count) that filters the folder list on click. */
+/** Collapsible sidebar section: alphabetical tag list (colour, name, count) that navigates like a folder on click. */
 export function TagsPanel() {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const { data: tags = [], isLoading: tagsLoading } = useTags()
   const { data: notes = [] } = useNotes()
-  const { tagFilter, toggleTagFilter } = useTagFilter()
+  const { isUntaggedActive } = useActiveTag()
 
   const untaggedCount = notes.filter((note) => note.tags.length === 0).length
 
@@ -41,13 +43,13 @@ export function TagsPanel() {
             <ItemSeparator />
 
             <Item
-              variant={tagFilter.has(UNTAGGED_FILTER_ID) ? 'muted' : 'default'}
+              variant={isUntaggedActive ? 'muted' : 'default'}
               size="sm"
               role="button"
               tabIndex={0}
-              aria-pressed={tagFilter.has(UNTAGGED_FILTER_ID)}
-              onClick={() => toggleTagFilter(UNTAGGED_FILTER_ID)}
-              onKeyDown={onActivateKey(() => toggleTagFilter(UNTAGGED_FILTER_ID))}
+              aria-pressed={isUntaggedActive}
+              onClick={() => navigate(`/app/tags/${UNTAGGED_FILTER_ID}`)}
+              onKeyDown={onActivateKey(() => navigate(`/app/tags/${UNTAGGED_FILTER_ID}`))}
               className="cursor-pointer gap-2"
             >
               <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground" />

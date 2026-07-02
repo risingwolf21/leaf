@@ -1,5 +1,4 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { UNTAGGED_FILTER_ID } from '@/lib/tags'
 import type { Note } from '@/types'
 
 export function createStore<T>(initialValue: T) {
@@ -17,31 +16,6 @@ export function createStore<T>(initialValue: T) {
       listeners.forEach((listener) => listener())
     },
   }
-}
-
-const tagFilterStore = createStore<Set<string>>(new Set())
-
-/** Cross-page tag filter for the Files sidebar, shared without a context provider. */
-export function useTagFilter() {
-  const tagFilter = useSyncExternalStore(tagFilterStore.subscribe, tagFilterStore.getSnapshot)
-
-  const toggleTagFilter = useCallback((tagId: string) => {
-    tagFilterStore.setState((prev) => {
-      if (tagId === UNTAGGED_FILTER_ID) {
-        return prev.has(UNTAGGED_FILTER_ID) ? new Set() : new Set([UNTAGGED_FILTER_ID])
-      }
-
-      const next = new Set(prev)
-      next.delete(UNTAGGED_FILTER_ID)
-      if (next.has(tagId)) next.delete(tagId)
-      else next.add(tagId)
-      return next
-    })
-  }, [])
-
-  const clearTagFilter = useCallback(() => tagFilterStore.setState(new Set()), [])
-
-  return { tagFilter, toggleTagFilter, clearTagFilter }
 }
 
 export type PendingRename = { kind: 'folder' | 'note'; id: string } | null

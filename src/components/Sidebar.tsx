@@ -1,17 +1,21 @@
+import { useEffect } from 'react'
 import { Settings } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTreeRoot } from '@/components/sidebar/FileTreeRoot'
-import type { SortBy } from '@/types'
-import { Sidebar as SidebarPrimitive } from './ui/sidebar'
+import { Sidebar as SidebarPrimitive, useSidebar } from './ui/sidebar'
 
-type SidebarProps = {
-  sortBy: SortBy
-}
-
-export function Sidebar({ sortBy }: SidebarProps) {
+export function Sidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  // On mobile the sidebar takes the full screen, so hide it whenever navigation
+  // reveals a page (e.g. opening a folder or note) to act like the previous "page".
+  useEffect(() => {
+    if (isMobile) setOpenMobile(false)
+  }, [location.pathname, isMobile, setOpenMobile])
 
   return (
     <SidebarPrimitive>
@@ -19,7 +23,7 @@ export function Sidebar({ sortBy }: SidebarProps) {
 
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full p-2">
-            <FileTreeRoot sortBy={sortBy} />
+            <FileTreeRoot />
           </ScrollArea>
         </div>
 
