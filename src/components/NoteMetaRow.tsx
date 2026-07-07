@@ -8,6 +8,7 @@ import { useShareNote } from '@/hooks/useShareNote'
 import { queryClient } from '@/lib/queryClient'
 import { tagsKeys } from '@/lib/queryKeys'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
+import { useAuth } from '@/hooks/useAuth'
 
 type NoteMetaRowProps = {
   note: Note
@@ -19,9 +20,10 @@ type NoteMetaRowProps = {
 
 /** Row below the note title: relative date, folder picker, and the tag bar. */
 export function NoteMetaRow({ note, tags, allTags, onAddTag, onRemoveTag }: NoteMetaRowProps) {
+  const { user } = useAuth()
   const shareNote = useShareNote()
   const unshareNote = useUnshareNote()
-  const { updateNote, savingIds } = useUpdateNote(() => {
+  const { updateNote } = useUpdateNote(() => {
     queryClient.invalidateQueries({ queryKey: tagsKeys.all(user?.id) })
   })
 

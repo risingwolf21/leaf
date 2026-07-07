@@ -1,4 +1,4 @@
-import { FolderPlus, Folder as FolderIcon, Share2, FolderOpen } from 'lucide-react'
+import { FolderPlus, Folder as FolderIcon, FolderOpen } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
