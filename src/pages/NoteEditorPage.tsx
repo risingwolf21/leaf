@@ -12,7 +12,6 @@ import { useTags } from '@/hooks/useTags'
 import { useNoteCollaboration } from '@/hooks/useNoteCollaboration'
 import { notePath } from '@/lib/routes'
 import type { ViewMode } from '@/types'
-import { useSetAppBar } from '@/lib/appBarStore'
 
 export default function NoteEditorPage() {
   const { noteId, folderId, tagId } = useParams<{ noteId: string; folderId?: string; tagId?: string }>()
