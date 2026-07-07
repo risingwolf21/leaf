@@ -78,7 +78,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
     )
 
     return (
-      <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
+      <div className={cn('h-full w-full shrink-0 flex-col border-r border-border lg:w-80', className)}>
         <div className="flex shrink-0 flex-col border-b border-border">
           <div className="flex items-center gap-2 p-3">
             <NoteListSearch value={search} onChange={setSearch} />
@@ -106,7 +106,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
     const filteredShared = sharedNotes.filter((note) => matchesSearch(search, note.title, note.content))
 
     return (
-      <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
+      <div className={cn('h-full w-full shrink-0 flex-col border-r border-border lg:w-80', className)}>
         <NoteListHeader
           title="Shared with me"
           count={filteredShared.length}
@@ -135,7 +135,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
   )
 
   return (
-    <div className={cn('h-full w-72 shrink-0 flex-col border-r border-border lg:w-80', className)}>
+    <div className={cn('h-full w-full shrink-0 flex-col border-r border-border lg:w-80', className)}>
       <NoteListHeader
         title={activeFolder?.name ?? 'Unfiled'}
         count={visibleNotes.length}
