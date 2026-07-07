@@ -7,7 +7,7 @@ export function EditorToolbarContainer() {
   if (!editor) return null
 
   return (
-    <div className="border-b border-border bg-background p-1 mb-4">
+    <div className="sticky top-0 border-b border-border bg-background p-1 mb-4">
       <EditorToolbar editor={editor} />
     </div>
   )
