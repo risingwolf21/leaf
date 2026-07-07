@@ -64,7 +64,7 @@ export function NoteListPanel({ sortBy, setSortBy, className }: NoteListPanelPro
           {visibleNotes.length === 0 ? (
             <p className="p-4 text-center text-sm text-muted-foreground">No notes with this tag yet.</p>
           ) : (
-            visibleNotes.map((note) => <NoteListRow key={note.id} note={note} tagId={activeTagId} />)
+            visibleNotes.map((note) => <NoteListRow key={note.id} note={note} />)
           )}
         </div>
       </div>

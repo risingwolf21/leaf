@@ -1,4 +1,4 @@
-import { FolderPlus, Folder as FolderIcon, Share2 } from 'lucide-react'
+import { FolderPlus, Folder as FolderIcon, Share2, FolderOpen } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
@@ -48,7 +48,7 @@ export function FileTreeRoot() {
             isActive={activeFolderRouteId === ALL_NOTES_FOLDER_ID}
             onClick={() => navigate(`/app/folders/${ALL_NOTES_FOLDER_ID}`)}
           >
-            <FolderIcon />
+            {activeFolderRouteId === ALL_NOTES_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
             <span className="truncate font-medium">All Notes</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -60,7 +60,7 @@ export function FileTreeRoot() {
             isActive={activeFolderRouteId === UNFILED_FOLDER_ID}
             onClick={() => navigate(`/app/folders/${UNFILED_FOLDER_ID}`)}
           >
-            <FolderIcon />
+            {activeFolderRouteId === UNFILED_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
             <span className="truncate font-medium">Unfiled</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -72,7 +72,7 @@ export function FileTreeRoot() {
             isActive={activeFolderRouteId === SHARED_WITH_ME_FOLDER_ID}
             onClick={() => navigate(`/app/folders/${SHARED_WITH_ME_FOLDER_ID}`)}
           >
-            <Share2 />
+            {activeFolderRouteId === SHARED_WITH_ME_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
             <span className="truncate font-medium">Shared with me</span>
           </SidebarMenuButton>
         </SidebarMenuItem>

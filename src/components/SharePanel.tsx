@@ -19,7 +19,7 @@ import {
 import { CollaboratorList } from '@/components/CollaboratorList'
 import { useAuth } from '@/hooks/useAuth'
 import { useCollaborators } from '@/hooks/useCollaborators'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import type { Note, NoteFields, ShareRole } from '@/types'
 import { Toggle } from './ui/toggle'
 
@@ -100,13 +100,13 @@ export function SharePanel({ note, onShare, onUnshare, onChange }: SharePanelPro
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Toggle size="sm" pressed={isShared} aria-label="Share note">
-          <Share2 className="h-4 w-4" />
+          <Share2 className={cn("h-4 w-4", isShared && "text-primary fill-current")} />
         </Toggle>}>
         
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="min-w-0 flex-1 truncate pr-6">Share “{note.title || 'Untitled'}”</DialogTitle>
+      <DialogContent >
+        <DialogHeader className="p-0">
+          <DialogTitle className="min-w-0 flex-1 truncate">Share “{note.title || 'Untitled'}”</DialogTitle>
         </DialogHeader>
 
         <div className="flex min-w-0 flex-col gap-5">

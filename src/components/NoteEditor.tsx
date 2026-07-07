@@ -10,6 +10,15 @@ import { setActiveEditor } from '@/lib/editorStore'
 import { bytesToBase64 } from '@/lib/yjsState'
 import { cn } from '@/lib/utils'
 import type { CollaborationConfig, Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
+import { EditorToolbarContainer } from './editor/EditorToolbarContainer'
+import { Input } from './ui/input'
+import { useUpdateSharedNote } from '@/hooks/useUpdateSharedNote'
+import { useUpdateNote } from '@/hooks/useUpdateNote'
+import { queryClient } from '@/lib/queryClient'
+import { tagsKeys } from '@/lib/queryKeys'
+import { Spinner } from './ui/spinner'
+import { BadgeCheck } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 
 export type SharedContext = {
   role: ShareRole
@@ -21,7 +30,6 @@ type NoteEditorProps = {
   noteTags: Tag[]
   allTags: Tag[]
   mode: ViewMode
-  onChange: (id: string, fields: NoteFields) => void
   onNavigateToNote: (title: string) => void
   onAddTag: (noteId: string, tagName: string) => Promise<void>
   onRemoveTag: (noteId: string, tagId: string) => Promise<void>
@@ -37,7 +45,6 @@ export function NoteEditor({
   noteTags,
   allTags,
   mode,
-  onChange,
   onNavigateToNote,
   onAddTag,
   onRemoveTag,
@@ -46,7 +53,12 @@ export function NoteEditor({
 }: NoteEditorProps) {
   const noteRef = useRef(note)
   noteRef.current = note
+  const { user } = useAuth()
 
+  const { updateNote, savingIds } = useUpdateNote(() => {
+    queryClient.invalidateQueries({ queryKey: tagsKeys.all(user?.id) })
+  })
+  const { updateSharedNote, savingIds: sharedSavingIds } = useUpdateSharedNote()
   const isReadOnly = sharedContext?.role === 'viewer'
   // Raw markdown editing bypasses the Yjs document, so collaborative notes
   // always fall back to the rich editor instead of source/split mode.
@@ -54,6 +66,11 @@ export function NoteEditor({
   // Source/split fill the available height and scroll internally; edit mode
   // keeps its natural content height so the page itself scrolls.
   const isRawMode = effectiveMode === 'source' || effectiveMode === 'split'
+
+  const isSaving = note ? (sharedContext ? sharedSavingIds : savingIds).has(note.id) : false
+
+  const handleChange = sharedContext ? updateSharedNote : updateNote
+
 
   const editor = useEditor(
     {
@@ -73,7 +90,7 @@ export function NoteEditor({
         if (collaboration) {
           fields.ydoc_state = bytesToBase64(Y.encodeStateAsUpdate(collaboration.ydoc))
         }
-        onChange(noteRef.current.id, fields)
+        handleChange(noteRef.current.id, fields)
       },
     },
     [note.id, collaboration?.ydoc]
@@ -109,7 +126,7 @@ export function NoteEditor({
   }
 
   const handleSourceChange = (content: string) => {
-    onChange(note.id, { content })
+    handleChange(note.id, { content })
     if (effectiveMode === 'split') {
       editor.commands.setContent(content, false)
     }
@@ -123,12 +140,19 @@ export function NoteEditor({
         isRawMode && 'h-full min-h-0'
       )}
     >
-      <input
-        value={note.title}
-        onChange={(e) => onChange(note.id, { title: e.target.value })}
-        placeholder="Untitled"
-        className="mb-2 w-full shrink-0 bg-transparent text-2xl font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
-      />
+      <div className="flex flex-row items-center gap-2">
+        <div className="flex items-center justify-center">
+          {
+            isSaving ? <Spinner /> : <BadgeCheck className="size-4 text-green-500" />
+          }
+        </div>
+        <Input
+          value={note.title}
+          onChange={(e) => handleChange(note.id, { title: e.target.value })}
+          placeholder="Untitled"
+          className="flex-1 bg-transparent border-none pl-0 text-2xl font-medium text-foreground outline-none placeholder:text-muted-foreground/50 active:border-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-3xl"
+        />
+      </div>
 
       {!sharedContext && (
         <NoteMetaRow
@@ -139,6 +163,8 @@ export function NoteEditor({
           onRemoveTag={onRemoveTag}
         />
       )}
+
+      {!isReadOnly && mode === 'edit' && <EditorToolbarContainer />}
 
       <NoteEditorContent
         mode={effectiveMode}
