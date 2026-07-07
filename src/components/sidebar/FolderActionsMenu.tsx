@@ -17,6 +17,7 @@ import { useFolders } from '@/hooks/useFolders'
 import { useMoveFolder } from '@/hooks/useMoveFolder'
 import { useCreateNote } from '@/hooks/useCreateNote'
 import { flattenFolders, INDENT_REM } from '@/lib/folderTree'
+import { notePath } from '@/lib/routes'
 import { usePendingRename } from '@/lib/sidebarStore'
 import type { Folder } from '@/types'
 
@@ -38,7 +39,7 @@ export function FolderActionsMenu({ folder, onStartRename }: FolderActionsMenuPr
   const moveTargets = flattenFolders(folders).filter(({ folder: target }) => target.id !== folder.id)
 
   const handleNewNoteInside = () => {
-    createNote.mutate({ folderId: folder.id }, { onSuccess: (note) => navigate(`/app/notes/${note.id}`) })
+    createNote.mutate({ folderId: folder.id }, { onSuccess: (note) => navigate(notePath(note.id, folder.id)) })
   }
 
   const handleNewSubfolder = () => {

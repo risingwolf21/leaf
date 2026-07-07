@@ -10,7 +10,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { useTrashedNotes } from '@/hooks/useTrashedNotes'
 import { useTheme, type ThemePreference } from '@/hooks/useTheme'
 import { exportAllNotes } from '@/lib/export'
-import { AppBar } from '@/components/AppBar'
+import { useSetAppBar } from '@/lib/appBarStore'
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -47,83 +47,76 @@ export default function SettingsPage() {
   const { data: notes = [] } = useNotes()
   const { data: folders = [] } = useFolders()
   const { data: trashedNotes = [] } = useTrashedNotes()
+  useSetAppBar()
 
   const handleExport = () => {
     void exportAllNotes(notes, folders)
   }
 
   return (
-    <div>
-      <AppBar
-        className='!border-b !shadow-sm'
-        title={""}
-      />
-      <main className='flex-1 size-full pb-safe-bottom'>
-        <ScrollArea className="h-full">
-          <div className="mx-auto flex max-w-xl flex-col gap-6 p-4 sm:p-6">
-            <h1 className="text-xl font-semibold text-foreground">Settings</h1>
+    <ScrollArea className="h-full">
+      <div className="mx-auto flex max-w-xl flex-col gap-6 p-4 pb-safe-bottom sm:p-6">
+        <h1 className="text-xl font-semibold text-foreground">Settings</h1>
 
-            <SettingsSection title="Account">
-              <div className="flex items-center justify-between gap-3 px-3 py-3">
-                <span className="min-w-0 truncate text-sm text-foreground">{user?.email}</span>
-                <Button variant="outline" size="sm" onClick={signOut} className="shrink-0 gap-2">
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </Button>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection title="Appearance">
-              <div className="flex gap-2 p-3">
-                {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <Button
-                    key={value}
-                    variant={themePreference === value ? 'secondary' : 'outline'}
-                    className="flex-1 gap-2"
-                    aria-pressed={themePreference === value}
-                    onClick={() => setThemePreference(value)}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </SettingsSection>
-
-            <SettingsSection title="Data">
-              <div className="flex flex-col divide-y divide-border">
-                <SettingsLink to="/app/trash" icon={Trash2} label="Trash" badge={trashedNotes.length} />
-                <SettingsLink to="/app/templates" icon={LayoutTemplate} label="Manage templates" />
-                <SettingsLink to="/app/import" icon={Upload} label="Import notes" />
-                <button
-                  type="button"
-                  onClick={handleExport}
-                  className="flex items-center gap-2 px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
-                >
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span className="flex-1">Export all notes</span>
-                </button>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection title="About">
-              <div className="flex flex-col divide-y divide-border">
-                <div className="flex items-center justify-between gap-2 px-3 py-3 text-sm">
-                  <span className="text-foreground">Leaf</span>
-                  <span className="text-muted-foreground">v1.0.0</span>
-                </div>
-                <Link
-                  to="/help"
-                  className="flex items-center gap-2 px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-                >
-                  <span className="flex-1">Markdown guide</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-              </div>
-            </SettingsSection>
+        <SettingsSection title="Account">
+          <div className="flex items-center justify-between gap-3 px-3 py-3">
+            <span className="min-w-0 truncate text-sm text-foreground">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={signOut} className="shrink-0 gap-2">
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </Button>
           </div>
-        </ScrollArea>
-      </main>
-    </div>
+        </SettingsSection>
+
+        <SettingsSection title="Appearance">
+          <div className="flex gap-2 p-3">
+            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <Button
+                key={value}
+                variant={themePreference === value ? 'secondary' : 'outline'}
+                className="flex-1 gap-2"
+                aria-pressed={themePreference === value}
+                onClick={() => setThemePreference(value)}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Button>
+            ))}
+          </div>
+        </SettingsSection>
+
+        <SettingsSection title="Data">
+          <div className="flex flex-col divide-y divide-border">
+            <SettingsLink to="/app/trash" icon={Trash2} label="Trash" badge={trashedNotes.length} />
+            <SettingsLink to="/app/templates" icon={LayoutTemplate} label="Manage templates" />
+            <SettingsLink to="/app/import" icon={Upload} label="Import notes" />
+            <button
+              type="button"
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <Download className="h-4 w-4 text-muted-foreground" />
+              <span className="flex-1">Export all notes</span>
+            </button>
+          </div>
+        </SettingsSection>
+
+        <SettingsSection title="About">
+          <div className="flex flex-col divide-y divide-border">
+            <div className="flex items-center justify-between gap-2 px-3 py-3 text-sm">
+              <span className="text-foreground">Leaf</span>
+              <span className="text-muted-foreground">v1.0.0</span>
+            </div>
+            <Link
+              to="/help"
+              className="flex items-center gap-2 px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <span className="flex-1">Markdown guide</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
+        </SettingsSection>
+      </div>
+    </ScrollArea>
   )
 }

@@ -1,66 +1,98 @@
-import { Folder as FolderIcon, Share2 } from 'lucide-react'
-import { useParams } from 'react-router-dom'
-import { SidebarMenuItem } from '@/components/ui/sidebar'
-import { FolderNode } from '@/components/sidebar/FolderNode'
-import { NoteNode } from '@/components/sidebar/NoteNode'
-import { SharedNoteRow } from '@/components/sidebar/SharedNoteRow'
-import { TagFilteredView } from '@/components/sidebar/TagFilteredView'
-import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID, VirtualFolderNode } from '@/components/sidebar/VirtualFolderNode'
+import { FolderPlus, Folder as FolderIcon, FolderOpen } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { FolderRow } from '@/components/sidebar/FolderRow'
+import { TagsPanel } from '@/components/sidebar/TagsPanel'
+import { ALL_NOTES_FOLDER_ID, SHARED_WITH_ME_FOLDER_ID, UNFILED_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
+import { useActiveFolder } from '@/hooks/useActiveFolder'
+import { useCreateFolder } from '@/hooks/useCreateFolder'
 import { useFolders } from '@/hooks/useFolders'
 import { useNotes } from '@/hooks/useNotes'
-import { useRemoveSelfFromNote } from '@/hooks/useRemoveSelfFromNote'
 import { useSharedNotes } from '@/hooks/useSharedNotes'
-import { sortNotes } from '@/lib/notes'
-import { useTagFilter } from '@/lib/sidebarStore'
-import type { SortBy } from '@/types'
+import { flattenFolders } from '@/lib/folderTree'
+import { usePendingRename } from '@/lib/sidebarStore'
 
-/** Top-level sidebar tree: folders, unfiled notes, shared notes, and (when a tag filter is active) a flat filtered list. */
-export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
+/**
+ * The sidebar's single always-visible content area: fixed "All Notes" /
+ * "Unfiled" / "Shared with me" nav links, a Folders section (flat,
+ * depth-indented, no expand/collapse — each row navigates to the note-list
+ * panel), and a collapsible Tags section.
+ */
+export function FileTreeRoot() {
+  const navigate = useNavigate()
   const { data: folders = [] } = useFolders()
   const { data: notes = [] } = useNotes()
   const { data: sharedNotes = [] } = useSharedNotes()
-  const { tagFilter } = useTagFilter()
-  const { noteId: activeNoteId } = useParams<{ noteId: string }>()
-  const removeSelfFromNote = useRemoveSelfFromNote()
+  const { activeFolderId } = useActiveFolder()
+  const { setPendingRename } = usePendingRename()
+  const createFolder = useCreateFolder()
+  const { folderId: activeFolderRouteId } = useParams<{ folderId: string }>()
 
-  if (tagFilter.size > 0) return <TagFilteredView sortBy={sortBy} />
+  const handleCreateFolder = () => {
+    createFolder.mutate(
+      { name: 'New folder', parentId: activeFolderId },
+      { onSuccess: (created) => setPendingRename({ kind: 'folder', id: created.id }) }
+    )
+  }
 
-  const rootFolders = folders.filter((folder) => folder.parent_id === null)
-  const unfiledNotes = sortNotes(notes.filter((note) => note.folder_id === null), sortBy)
-  const isEmpty = rootFolders.length === 0 && unfiledNotes.length === 0 && sharedNotes.length === 0
+  const flatFolders = flattenFolders(folders)
+  const unfiledCount = notes.filter((note) => note.folder_id === null).length
+  const isEmpty = flatFolders.length === 0 && notes.length === 0 && sharedNotes.length === 0
 
   return (
     <div className="flex flex-col gap-0.5">
-      {unfiledNotes.length > 0 && (
-        <VirtualFolderNode
-          id={ALL_NOTES_FOLDER_ID}
-          label="All notes"
-          icon={<FolderIcon />}
-          forceOpen={unfiledNotes.some((note) => note.id === activeNoteId)}
-        >
-          {unfiledNotes.map((note) => (
-            <NoteNode key={note.id} note={note} />
-          ))}
-        </VirtualFolderNode>
+      {notes.length > 0 && (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={activeFolderRouteId === ALL_NOTES_FOLDER_ID}
+            onClick={() => navigate(`/app/folders/${ALL_NOTES_FOLDER_ID}`)}
+          >
+            {activeFolderRouteId === ALL_NOTES_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
+            <span className="truncate font-medium">All Notes</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )}
+
+      {unfiledCount > 0 && (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={activeFolderRouteId === UNFILED_FOLDER_ID}
+            onClick={() => navigate(`/app/folders/${UNFILED_FOLDER_ID}`)}
+          >
+            {activeFolderRouteId === UNFILED_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
+            <span className="truncate font-medium">Unfiled</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       )}
 
       {sharedNotes.length > 0 && (
-        <VirtualFolderNode
-          id={SHARED_WITH_ME_FOLDER_ID}
-          label="Shared with me"
-          icon={<Share2 />}
-          forceOpen={sharedNotes.some((note) => note.id === activeNoteId)}
-        >
-          {sharedNotes.map((note) => (
-            <SidebarMenuItem key={note.id}>
-              <SharedNoteRow note={note} onRemove={(id) => removeSelfFromNote.mutate(id)} />
-            </SidebarMenuItem>
-          ))}
-        </VirtualFolderNode>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={activeFolderRouteId === SHARED_WITH_ME_FOLDER_ID}
+            onClick={() => navigate(`/app/folders/${SHARED_WITH_ME_FOLDER_ID}`)}
+          >
+            {activeFolderRouteId === SHARED_WITH_ME_FOLDER_ID ? <FolderOpen /> : <FolderIcon />}
+            <span className="truncate font-medium">Shared with me</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       )}
 
-      {rootFolders.map((folder) => (
-        <FolderNode key={folder.id} folder={folder} sortBy={sortBy} />
+      <div className="flex items-center justify-between px-2 pt-3 pb-1">
+        <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Folders</span>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={handleCreateFolder}
+          aria-label="New folder"
+          title="New folder"
+        >
+          <FolderPlus className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      {flatFolders.map(({ folder, depth }) => (
+        <FolderRow key={folder.id} folder={folder} depth={depth} />
       ))}
 
       {isEmpty && (
@@ -68,6 +100,10 @@ export function FileTreeRoot({ sortBy }: { sortBy: SortBy }) {
           No notes yet. Create your first note to get started.
         </p>
       )}
+
+      <div className="mt-2 border-t border-border pt-2">
+        <TagsPanel />
+      </div>
     </div>
   )
 }
