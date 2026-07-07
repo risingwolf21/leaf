@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item'
 import { useSidebar } from '@/components/ui/sidebar'
+import { notePath } from '@/lib/routes'
 import { cn, onActivateKey } from '@/lib/utils'
 import type { SharedNote } from '@/types'
 
@@ -26,7 +27,7 @@ export function SharedNoteRow({ note, onRemove }: SharedNoteRowProps) {
   const roleLabel = note.my_role === 'editor' ? 'Can edit' : 'Can view'
 
   const open = () => {
-    navigate(`/app/notes/${note.id}`)
+    navigate(notePath(note.id, null, true))
     setOpenMobile(false)
   }
 

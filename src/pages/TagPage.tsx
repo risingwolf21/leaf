@@ -3,7 +3,7 @@ import { useSortPreference } from "@/hooks/useSortPreference";
 import { cn } from "@/lib/utils";
 import { Outlet, useParams } from "react-router-dom";
 
-export default function FolderPage() {
+export default function TagPage() {
   const { noteId } = useParams<{ noteId: string; }>()
 
   const [sortBy, setSortBy] = useSortPreference()

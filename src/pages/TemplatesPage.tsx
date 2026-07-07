@@ -9,7 +9,8 @@ import {
   useTemplates,
 } from '@/hooks/useTemplates'
 import type { AnyTemplate } from '@/types'
-import { AppBar } from '@/components/AppBar'
+import { useSetAppBar } from '@/lib/appBarStore'
+import { notePath } from '@/lib/routes'
 
 export default function TemplatesPage() {
   const navigate = useNavigate()
@@ -19,10 +20,11 @@ export default function TemplatesPage() {
   const renameTemplate = useRenameTemplate()
   const deleteTemplate = useDeleteTemplate()
   const { createNoteFromTemplate } = useCreateNoteFromTemplate()
+  useSetAppBar()
 
   const handleUseTemplate = (template: AnyTemplate) => {
     createNoteFromTemplate(template, activeFolderId, {
-      onSuccess: (note) => navigate(`/app/notes/${note.id}`),
+      onSuccess: (note) => navigate(notePath(note.id, activeFolderId)),
     })
   }
 
@@ -31,20 +33,14 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div>
-      <AppBar
-        className='!border-b !shadow-sm'
-        title={""}
+    <div className="size-full pb-safe-bottom">
+      <TemplatesView
+        templates={templates}
+        onUseTemplate={handleUseTemplate}
+        onSaveTemplate={handleSaveTemplate}
+        onRenameTemplate={(id, name) => renameTemplate.mutate({ id, name })}
+        onDeleteTemplate={deleteTemplate.mutate}
       />
-      <main className='flex-1 size-full pb-safe-bottom'>
-        <TemplatesView
-          templates={templates}
-          onUseTemplate={handleUseTemplate}
-          onSaveTemplate={handleSaveTemplate}
-          onRenameTemplate={(id, name) => renameTemplate.mutate({ id, name })}
-          onDeleteTemplate={deleteTemplate.mutate}
-        />
-      </main>
     </div>
   )
 }

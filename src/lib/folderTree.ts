@@ -28,28 +28,3 @@ export function folderPath(folders: Folder[], folderId: string | null): string {
   }
   return segments.length > 0 ? segments.join(' / ') : 'Unfiled'
 }
-
-/** Returns `folderId` plus every ancestor up to the root (via `parent_id`), or `[]` if `folderId` is null. */
-export function getFolderAncestorChain(folderId: string | null, folders: Folder[]): string[] {
-  const byId = new Map(folders.map((folder) => [folder.id, folder]))
-  const chain: string[] = []
-
-  let current = folderId
-  while (current) {
-    chain.push(current)
-    current = byId.get(current)?.parent_id ?? null
-  }
-
-  return chain
-}
-
-/** Number of direct subfolders plus direct notes inside `folderId` (not recursive). */
-export function countDirectChildren(
-  folderId: string,
-  folders: Folder[],
-  notes: { folder_id: string | null }[]
-): number {
-  const subfolderCount = folders.filter((folder) => folder.parent_id === folderId).length
-  const noteCount = notes.filter((note) => note.folder_id === folderId).length
-  return subfolderCount + noteCount
-}
