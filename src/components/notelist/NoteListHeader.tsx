@@ -1,6 +1,7 @@
 import { NoteListSearch } from '@/components/notelist/NoteListSearch'
 import { SortPopover } from '@/components/sidebar/SortPopover'
 import type { SortBy } from '@/types'
+import { FolderOpen } from 'lucide-react'
 
 type NoteListHeaderProps = {
   title: string
@@ -20,8 +21,11 @@ export function NoteListHeader({ title, count, search, onSearchChange, sortBy, s
         <SortPopover sortBy={sortBy} setSortBy={setSortBy} />
       </div>
       <div className="flex items-center justify-between px-4 py-2">
-        <span className="truncate text-xs font-medium text-muted-foreground">{title}</span>
-        <span className="shrink-0 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate text-md font-bold text-muted-foreground">{title}</span>
+        </div>
+        <span className="shrink-0 text-md text-muted-foreground">
           {count} note{count === 1 ? '' : 's'}
         </span>
       </div>

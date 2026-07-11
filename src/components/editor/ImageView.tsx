@@ -15,7 +15,7 @@ export function ImageView({ node, selected, updateAttributes }: NodeViewProps) {
 
   return (
     <NodeViewWrapper>
-      <div className="relative inline-block">
+      <div className="relative w-full flex justify-center">
         {selected && (
           <div
             className="absolute -top-10 left-1/2 -translate-x-1/2 flex gap-1 rounded border bg-popover p-1 shadow-md z-10"
