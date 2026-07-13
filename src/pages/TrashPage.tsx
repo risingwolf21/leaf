@@ -3,7 +3,6 @@ import { useEmptyTrash } from '@/hooks/useEmptyTrash'
 import { usePermanentlyDeleteNote } from '@/hooks/usePermanentlyDeleteNote'
 import { useRestoreNote } from '@/hooks/useRestoreNote'
 import { useTrashedNotes } from '@/hooks/useTrashedNotes'
-import { useSetAppBar } from '@/lib/appBarStore'
 
 export default function TrashPage() {
   const { data: trashedNotes = [] } = useTrashedNotes()
