@@ -10,7 +10,6 @@ export default function TrashPage() {
   const restoreNote = useRestoreNote()
   const permanentlyDeleteNote = usePermanentlyDeleteNote()
   const emptyTrash = useEmptyTrash()
-  useSetAppBar()
 
   return (
     <div className="size-full pb-safe-bottom">

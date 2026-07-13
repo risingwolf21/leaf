@@ -9,7 +9,6 @@ import {
   useTemplates,
 } from '@/hooks/useTemplates'
 import type { AnyTemplate } from '@/types'
-import { useSetAppBar } from '@/lib/appBarStore'
 import { notePath } from '@/lib/routes'
 
 export default function TemplatesPage() {
@@ -20,7 +19,6 @@ export default function TemplatesPage() {
   const renameTemplate = useRenameTemplate()
   const deleteTemplate = useDeleteTemplate()
   const { createNoteFromTemplate } = useCreateNoteFromTemplate()
-  useSetAppBar()
 
   const handleUseTemplate = (template: AnyTemplate) => {
     createNoteFromTemplate(template, activeFolderId, {

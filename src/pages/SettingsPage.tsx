@@ -10,7 +10,6 @@ import { useNotes } from '@/hooks/useNotes'
 import { useTrashedNotes } from '@/hooks/useTrashedNotes'
 import { useTheme, type ThemePreference } from '@/hooks/useTheme'
 import { exportAllNotes } from '@/lib/export'
-import { useSetAppBar } from '@/lib/appBarStore'
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -47,7 +46,6 @@ export default function SettingsPage() {
   const { data: notes = [] } = useNotes()
   const { data: folders = [] } = useFolders()
   const { data: trashedNotes = [] } = useTrashedNotes()
-  useSetAppBar()
 
   const handleExport = () => {
     void exportAllNotes(notes, folders)

@@ -18,14 +18,8 @@ import SharedNotePage from '@/pages/SharedNotePage'
 import { Toaster } from '@/components/ui/sonner'
 import { MainLayout } from './components/MainLayout'
 import { ALL_NOTES_FOLDER_ID } from '@/components/sidebar/VirtualFolderNode'
-import { useCommandPalette } from '@/hooks/useCommandPalette'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { CommandPalette } from '@/components/CommandPalette'
-import { CommandPaletteSheet } from '@/components/CommandPaletteSheet'
 
 function AppShell() {
-  const { open, setOpen } = useCommandPalette()
-  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   return (
     <>
@@ -66,11 +60,6 @@ function AppShell() {
           }
         />
       </Routes>
-      {isDesktop ? (
-        <CommandPalette open={open} onOpenChange={setOpen} />
-      ) : (
-        <CommandPaletteSheet open={open} onOpenChange={setOpen} />
-      )}
     </>
   )
 }

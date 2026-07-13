@@ -10,7 +10,6 @@ import { setActiveEditor } from '@/lib/editorStore'
 import { bytesToBase64 } from '@/lib/yjsState'
 import { cn } from '@/lib/utils'
 import type { CollaborationConfig, Note, NoteFields, ShareRole, Tag, ViewMode } from '@/types'
-import { EditorToolbarContainer } from './editor/EditorToolbarContainer'
 import { Input } from './ui/input'
 import { useUpdateSharedNote } from '@/hooks/useUpdateSharedNote'
 import { useUpdateNote } from '@/hooks/useUpdateNote'
@@ -19,6 +18,7 @@ import { tagsKeys } from '@/lib/queryKeys'
 import { Spinner } from './ui/spinner'
 import { BadgeCheck } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { EditorToolbar } from './EditorToolbar'
 
 export type SharedContext = {
   role: ShareRole
@@ -125,13 +125,6 @@ export function NoteEditor({
     return <ReadOnlyNoteView note={note} editor={editor} />
   }
 
-  const handleSourceChange = (content: string) => {
-    handleChange(note.id, { content })
-    if (effectiveMode === 'split') {
-      editor.commands.setContent(content, false)
-    }
-  }
-
   return (
     <div
       className={cn(
@@ -164,13 +157,14 @@ export function NoteEditor({
         />
       )}
 
-      {!isReadOnly && mode === 'edit' && <EditorToolbarContainer />}
+      {!isReadOnly && mode === 'edit' && (
+        <div className="sticky top-0 md:top-14 z-40 border-b border-border bg-background p-1 mb-4">
+          <EditorToolbar editor={editor} />
+        </div>
+      )}
 
       <NoteEditorContent
-        mode={effectiveMode}
         editor={editor}
-        content={note.content}
-        onSourceChange={handleSourceChange}
       />
     </div>
   )
